@@ -1,5 +1,6 @@
 ﻿using EFT;
 using EFT.Interactive;
+using EFT.UI;
 using UnityEngine;
 
 namespace WTTClientCommonLib.Components;

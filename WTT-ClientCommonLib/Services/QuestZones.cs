@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Comfort.Common;
+using EFT;
 using EFT.Interactive;
 using EFT.InventoryLogic;
 using EFT.UI;

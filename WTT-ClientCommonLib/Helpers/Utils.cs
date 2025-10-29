@@ -7,8 +7,6 @@ using EFT.UI;
 using Newtonsoft.Json;
 using SPT.Common.Http;
 using UnityEngine;
-using UnityEngine.Rendering;
-using WTTClientCommonLib.Configuration;
 using WTTClientCommonLib.Models;
 
 namespace WTTClientCommonLib.Helpers;
@@ -16,10 +14,6 @@ namespace WTTClientCommonLib.Helpers;
 internal static class Utils
 
 {
-    private static readonly int SrcBlend = Shader.PropertyToID("_SrcBlend");
-    private static readonly int DstBlend = Shader.PropertyToID("_DstBlend");
-    private static readonly int ZWrite = Shader.PropertyToID("_ZWrite");
-
     public static Vector3? GetPlayerPosition()
     {
         if (!Singleton<GameWorld>.Instance.MainPlayer)
@@ -66,35 +60,6 @@ internal static class Utils
             Console.WriteLine($"Error fetching {url}: {ex.Message}");
             return default;
         }
-    }
-
-
-    // Create and return a basic cube to represent a zone position
-    public static GameObject? CreateNewZoneCube(string objectName)
-    {
-        var position = GetPlayerPosition();
-        if (position == null) return null;
-        var vectorPosition = (Vector3)position;
-
-        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        var renderer = cube.GetComponent<Renderer>();
-
-        // Thank you Timber for this 
-        renderer.material.SetOverrideTag("RenderType", "Transparent");
-        renderer.material.SetInt(SrcBlend, (int)BlendMode.SrcAlpha);
-        renderer.material.SetInt(DstBlend, (int)BlendMode.OneMinusSrcAlpha);
-        renderer.material.SetInt(ZWrite, 0);
-        renderer.material.DisableKeyword("_ALPHATEST_ON");
-        renderer.material.EnableKeyword("_ALPHABLEND_ON");
-        renderer.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        renderer.material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-        renderer.shadowCastingMode = ShadowCastingMode.Off;
-        renderer.material.color = ZoneConfigManager.ColorZoneRed;
-        cube.GetComponent<Collider>().enabled = false;
-        cube.transform.position = new Vector3(vectorPosition.x, vectorPosition.y, vectorPosition.z);
-        cube.transform.localScale = new Vector3(1f, 1f, 1f);
-        cube.name = objectName;
-        return cube;
     }
 
     // Convert zone list from custom type to type used by the loader

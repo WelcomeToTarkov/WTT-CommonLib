@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Comfort.Common;
 using EFT;
 using SPT.Reflection.Patching;
+using WTTClientCommonLib.Components;
 using WTTClientCommonLib.Configuration;
 using WTTClientCommonLib.Services;
 
@@ -29,7 +31,11 @@ internal class OnGameStarted : ModulePatch
             }
 
             var validZones = questZones.Where(zone => zone.ZoneLocation.ToLower() == currentMap.ToLower()).ToList();
-            ZoneConfigManager.ExistingQuestZones = validZones;
+            Settings.ExistingQuestZones = validZones;
+            
+            ZoneCreatorComponent.Enable();
+        
+            Settings.CurrentMapName.Value = Singleton<GameWorld>.Instance.MainPlayer.Location;
             QuestZones.CreateZones(validZones);
 
             var player = __instance.MainPlayer;
