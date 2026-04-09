@@ -45,7 +45,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="SPTarkov.Server.Core" Version="4.0.2" />
+        <PackageReference Include="SPTarkov.Reflection" Version="4.0.13" />
+        <PackageReference Include="SPTarkov.Server.Core" Version="4.0.13" />
     </ItemGroup>
 
     <ItemGroup>
