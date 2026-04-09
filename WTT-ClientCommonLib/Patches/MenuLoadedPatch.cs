@@ -1,0 +1,33 @@
+using EFT;
+using EFT.UI;
+using HarmonyLib;
+using SPT.Reflection.Patching;
+using System.Reflection;
+using WTTClientCommonLib.Services;
+
+namespace WTTClientCommonLib.Patches;
+
+public class MenuLoadedPatch : ModulePatch
+{
+    private static bool _menuShown = false;
+    
+    protected override MethodBase GetTargetMethod()
+    {
+        return AccessTools.Method(typeof(MenuScreen), nameof(MenuScreen.Show), [
+            typeof(Profile),
+            typeof(MatchmakerPlayerControllerClass),
+            typeof(ESessionMode)
+        ]);
+    }
+
+    [PatchPostfix]
+    private static void PatchPostfix()
+    {
+        if (!_menuShown)
+        {
+            ExtendedRecipeLoader.Instance.LoadExtendedRecipeResults();
+            
+            _menuShown = true;
+        }
+    }
+}

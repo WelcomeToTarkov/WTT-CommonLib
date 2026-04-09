@@ -5,6 +5,7 @@ using BepInEx;
 using BepInEx.Bootstrap;
 using Comfort.Common;
 using EFT;
+using SPT.Reflection.Patching;
 using UnityEngine;
 using WTTClientCommonLib.CommandProcessor;
 using WTTClientCommonLib.Components;
@@ -56,6 +57,7 @@ public class WTTClientCommonLib : BaseUnityPlugin
 
         try
         {
+            var patchManager = new PatchManager(this, true);
             AssetLoader = new AssetLoader(Logger);
             SpawnCommands = new SpawnCommands(Logger, AssetLoader);
             _playerWorldStats = new PlayerWorldStats(Logger);
@@ -66,23 +68,13 @@ public class WTTClientCommonLib : BaseUnityPlugin
             
             RadioSettings.Init(Config);
             
-            new FaceCardViewInitPatch().Enable();
-            new FaceCardViewTogglePatch().Enable();
-            new BoomboxAudioPatch().Enable();
-            new OnGameStarted().Enable();
-            new ClothingBundleRendererPatch().Enable();
-            new HideoutCustomizationIconPatch().Enable();
-            new HideoutCustomizationTexturesPatch().Enable();
-            new HideSecretLockedQuestsPatch().Enable();
-            new GetActionsPatch().Enable();
-            new ConditionSerializerCtorPatch().Enable();
-            new Salvage_AddTriggerZonePatch().Enable();
-            new Salvage_RemoveTriggerZonePatch().Enable();
-            new Salvage_InteractionsChangedPatch().Enable();
-            new Salvage_InvokeConditionsPatch().Enable();
-            new FixCustomItemSortingOrderPatch().Enable();
+            patchManager.EnablePatches();
+            
             var resourceLoader = new ResourceLoader(Logger, AssetLoader);
             resourceLoader.LoadAllResourcesFromServer();
+
+            var extendedRecipeLoader = new ExtendedRecipeLoader();
+            extendedRecipeLoader.FetchExtendedRecipesFromServer();
         }
         catch (Exception ex)
         {
