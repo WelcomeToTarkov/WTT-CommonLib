@@ -145,6 +145,10 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\WTT-ClientCommonLib\WTT-ClientCommonLib.csproj" />
+    </ItemGroup>
+
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
       <Exec Command="@echo off&#xA;setlocal enabledelayedexpansion&#xA;&#xA;REM Set variables&#xA;set MODNAME=WTT-ClientCommonLib&#xA;set DLLPATH=$(TargetDir)$(TargetName).dll&#xA;set XMLPATH=$(TargetDir)$(TargetName).xml&#xA;set OUTDIR=..\..\..\BepInEx\plugins\%MODNAME%&#xA;set BUILDOUTDIR=..\Build\BepInEx\plugins\%MODNAME%&#xA;&#xA;REM Create output directories if they don't exist&#xA;if not exist &quot;%OUTDIR%&quot; mkdir &quot;%OUTDIR%&quot;&#xA;if not exist &quot;%BUILDOUTDIR%&quot; mkdir &quot;%BUILDOUTDIR%&quot;&#xA;&#xA;REM Copy the DLL to BepInEx plugins directory&#xA;copy /Y &quot;%DLLPATH%&quot; &quot;%OUTDIR%\&quot; &gt;nul 2&gt;&amp;1&#xA;echo [PostBuild] Copied %MODNAME%.dll to %OUTDIR%&#xA;&#xA;REM Copy the XML file to BepInEx plugins directory&#xA;if exist &quot;%XMLPATH%&quot; (&#xA;    copy /Y &quot;%XMLPATH%&quot; &quot;%OUTDIR%\&quot; &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied %MODNAME%.xml to %OUTDIR%&#xA;)&#xA;&#xA;REM Copy the DLL to Build/BepInEx plugins directory&#xA;copy /Y &quot;%DLLPATH%&quot; &quot;%BUILDOUTDIR%\&quot; &gt;nul 2&gt;&amp;1&#xA;echo [PostBuild] Copied %MODNAME%.dll to %BUILDOUTDIR%&#xA;&#xA;echo [PostBuild] BepInEx build output: %OUTDIR% and %BUILDOUTDIR%&#xA;&#xA;endlocal&#xA;" />
     </Target>
