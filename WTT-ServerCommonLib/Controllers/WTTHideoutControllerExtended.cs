@@ -16,6 +16,8 @@ using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Services;
 using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Cloners;
+using WTTServerCommonLib.Models;
+using WTTServerCommonLib.Services;
 
 namespace WTTServerCommonLib.Controllers;
 
@@ -39,7 +41,8 @@ public class WTTHideoutControllerExtended(
     FenceService fenceService,
     CircleOfCultistService circleOfCultistService,
     ICloner cloner,
-    ConfigServer configServer) : HideoutController(
+    ConfigServer configServer,
+    WTTCustomHideoutRecipeService recipeService) : HideoutController(
     logger,
     timeUtil,
     databaseService,
@@ -104,14 +107,26 @@ public class WTTHideoutControllerExtended(
         // Array of arrays of item + children
         List<List<Item>> itemAndChildrenToSendToPlayer = [];
 
+        // Reward is a list of multiple items, handle differently compared to regular end product
+        var extendedRecipe = recipeService.GetExtendedRecipe(recipe.Id);
+        var recipeIsExtended = false;
+        if (extendedRecipe != null)
+        {
+            if (extendedRecipe.EndProductItems?.Count > 0)
+            {
+                itemAndChildrenToSendToPlayer = HandleExtendedReward(extendedRecipe);
+                recipeIsExtended = true;
+            }
+        }
+        
         // Reward is weapon/armor preset, handle differently compared to 'normal' items
-        var rewardIsPreset = presetHelper.HasPreset(recipe.EndProduct);
+        var rewardIsPreset = !recipeIsExtended && presetHelper.HasPreset(recipe.EndProduct);
         if (rewardIsPreset)
         {
             itemAndChildrenToSendToPlayer = HandlePresetReward(recipe);
         }
 
-        UnstackRewardIntoValidSize(recipe, itemAndChildrenToSendToPlayer, rewardIsPreset);
+        UnstackRewardIntoValidSize(recipe, itemAndChildrenToSendToPlayer, rewardIsPreset || recipeIsExtended);
 
         // Recipe has an `isEncoded` requirement for reward(s), Add `RecodableComponent` property
         if (recipe.IsEncoded ?? false)
@@ -254,5 +269,13 @@ public class WTTHideoutControllerExtended(
         {
             hideoutProduction.InProgress = false;
         }
+    }
+
+    protected List<List<Item>> HandleExtendedReward(HideoutProductionExtended recipe)
+    {
+        var items = recipe.EndProductItems;
+        var itemsClone = cloner.Clone(items)?.ReplaceIDs().ToList();
+        itemsClone.RemapRootItemId();
+        return [itemsClone];
     }
 }
