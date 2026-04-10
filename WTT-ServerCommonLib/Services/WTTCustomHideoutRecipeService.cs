@@ -93,7 +93,7 @@ public class WTTCustomHideoutRecipeService(
 
                 if (recipe.EndProductItems != null && recipe.EndProductItems.Count > 0)
                 {
-                    _extendedRecipes.Add(recipe.EndProduct, recipe);
+                    _extendedRecipes.Add(recipe.Id, recipe);
                 }
                 
                 LogHelper.Debug(logger, $"Added hideout recipe {recipe.Id} for item {recipe.EndProduct}");

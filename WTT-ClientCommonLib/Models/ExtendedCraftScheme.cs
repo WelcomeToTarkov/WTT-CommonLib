@@ -1,19 +1,53 @@
 using Comfort.Common;
+using EFT;
 using EFT.InventoryLogic;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using ProductionScheme = GClass2440;
 
 namespace WTTClientCommonLib.Models;
 
-public class ExtendedProductionScheme : ProductionScheme
+public class ExtendedProductionScheme
 {
     private bool _itemsLoaded = false;
     
+    [JsonProperty("_id")]
+    public string _id { get; set; }
+    
     [JsonProperty("endProductItems")]
     public FlatItemsDataClass[] EndProductItems { get; set; }
+    
+    [JsonProperty("areaType")]
+    public EAreaType AreaType { get; set; }
+
+    // no clue how to get this to work, unnecessary anyway for current purposes
+    /*
+    [JsonProperty("requirements")]
+    public List<Requirement> Requirements { get; set; }
+    */
+
+    [JsonProperty("productionTime")]
+    public int ProductionTime { get; set; }
+    
+    [JsonProperty("endProduct")]
+    public string EndProduct { get; set; }
+    
+    [JsonProperty("isEncoded")]
+    public bool IsEncoded { get; set; }
+    
+    [JsonProperty("locked")]
+    public bool Locked { get; set; }
+    
+    [JsonProperty("needFuelForAllProductionTime")]
+    public bool NeedFuelForAllProductionTime { get; set; }
+    
+    [JsonProperty("continuous")]
+    public bool Continuous { get; set; }
+    
+    [JsonProperty("count")]
+    public int Count { get; set; }
+    
+    [JsonProperty("productionLimitCount")]
+    public int ProductionLimitCount { get; set; }
     
     public List<Item> ResultItems = [];
     public List<Item> BaseItems = [];
@@ -25,7 +59,7 @@ public class ExtendedProductionScheme : ProductionScheme
             List<string> baseItemTpls = [];
             foreach (var flatItem in EndProductItems)
             {
-                if (flatItem.slotId == String.Empty)
+                if (flatItem.slotId != string.Empty)
                 {
                     baseItemTpls.Add(flatItem._tpl);
                 }

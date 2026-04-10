@@ -5,6 +5,7 @@ using HarmonyLib;
 using SPT.Reflection.Patching;
 using System;
 using System.Reflection;
+using WTTClientCommonLib.Helpers;
 using WTTClientCommonLib.Models;
 using WTTClientCommonLib.Services;
 
@@ -26,16 +27,30 @@ public class ProduceViewShowPatch : ModulePatch
     }
 
     [PatchPostfix]
-    private static void PatchPostfix(ProduceView __instance, GClass2440 scheme, HideoutItemViewFactory ___resultItemIconViewFactory)
+    private static void PatchPostfix(ProduceView __instance, GClass2440 scheme, HideoutItemViewFactory ____resultItemIconViewFactory)
     {
-        HideoutItemViewFactory viewFactory = ___resultItemIconViewFactory;
+        HideoutItemViewFactory viewFactory = ____resultItemIconViewFactory;
         ExtendedRecipeLoader recipeLoader = ExtendedRecipeLoader.Instance;
         string schemeId = scheme._id;
         ExtendedProductionScheme extendedScheme = recipeLoader.GetExtendedScheme(schemeId);
 
         if (extendedScheme != null)
         {
-            viewFactory.Show(extendedScheme.BaseItems[0], __instance.InventoryController, __instance.ItemUiContext);
+            LogHelper.LogInfo($"found extended scheme for craft scheme: {schemeId}");
+            
+            // TODO: add support for multiple recipe results
+            Item recipeResult = extendedScheme.BaseItems[0];
+            viewFactory.Show(recipeResult, __instance.InventoryController, __instance.ItemUiContext);
+
+            if (extendedScheme.Count > 1)
+            {
+                viewFactory.SetCounterText(extendedScheme.Count.ToString());
+                viewFactory.ShowInfo(true, false);
+            }
+            else
+            {
+                viewFactory.ShowInfo(false, false);
+            }
         }
     }
 }
