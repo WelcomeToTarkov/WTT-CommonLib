@@ -273,9 +273,15 @@ public class WTTHideoutControllerExtended(
 
     protected List<List<Item>> HandleExtendedReward(HideoutProductionExtended recipe)
     {
-        var items = recipe.EndProductItems;
-        var itemsClone = cloner.Clone(items)?.ReplaceIDs().ToList();
-        itemsClone.RemapRootItemId();
-        return [itemsClone];
+        List<Item> resultItems = recipe.GetResultItems();
+        
+        List<Item>? cloned = cloner.Clone(resultItems)?.ReplaceIDs().ToList();
+        if (cloned != null)
+        {
+            cloned.RemapRootItemId();
+            return [cloned];
+        }
+
+        return [];
     }
 }
