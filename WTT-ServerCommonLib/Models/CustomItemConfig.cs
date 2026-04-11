@@ -143,6 +143,10 @@ public class CustomItemConfig
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public RewardDetails? RandomLootContainerRewards { get; set; }
 
+    [JsonPropertyName("addtoItemBlacklist")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? AddToItemBlacklist { get; set; }
+
     public void Validate(string itemId)
 {
     if (!itemId.IsValidMongoId())

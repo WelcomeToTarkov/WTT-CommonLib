@@ -39,7 +39,8 @@ public class WTTCustomItemServiceExtended(
     StaticAmmoHelper staticAmmoHelper,
     EmptyPropSlotHelper emptyPropSlotHelper,
     SecureFiltersHelper secureFiltersHelper,
-    RandomLootContainerHelper randomLootContainerHelper
+    RandomLootContainerHelper randomLootContainerHelper,
+    ItemBlacklistHelper rewardItemBlacklistHelper
 )
 {
     private readonly List<(string newItemId, CustomItemConfig config)> _deferredModSlotConfigs = new();
@@ -187,6 +188,9 @@ public class WTTCustomItemServiceExtended(
         
         if (config is { ParentId: "62f109593b54472778797866", IsRandomLootContainer: true } && config.RandomLootContainerRewards != null)
             randomLootContainerHelper.ConfigureRandomLootContainer(config, newItemId);
+
+        if (config.AddToItemBlacklist == true)
+            rewardItemBlacklistHelper.AddToItemBlacklist(newItemId);
 
     }
     

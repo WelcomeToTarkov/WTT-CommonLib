@@ -34,18 +34,35 @@ public class SlotHelper
     }
     public void AddIdsToNamedSlot(TemplateItem item, string slotName, params string[] ids)
     {
-        var slot = item.Properties.Slots.FirstOrDefault(s => s.Name == slotName);
-        var slotFilter = slot?.Properties?.Filters?.FirstOrDefault();
+        item.Properties ??= new TemplateItemProperties();
 
-        if (slotFilter?.Filter == null)
-            return;
+        var slots = item.Properties.Slots?.ToList() ?? new List<Slot>();
+
+        var slot = slots.FirstOrDefault(s => s.Name == slotName);
+        if (slot == null)
+        {
+            slot = new Slot { Name = slotName };
+            slots.Add(slot);
+            item.Properties.Slots = slots;
+        }
+
+        slot.Properties ??= new SlotProperties();
+
+        var filters = slot.Properties.Filters?.ToList() ?? new List<SlotFilter>();
+
+        var filterContainer = filters.FirstOrDefault();
+        if (filterContainer == null)
+        {
+            filterContainer = new SlotFilter();
+            filters.Add(filterContainer);
+            slot.Properties.Filters = filters;
+        }
+
+        filterContainer.Filter ??= new HashSet<MongoId>();
 
         foreach (var id in ids)
         {
-            if (!slotFilter.Filter.Contains(id))
-            {
-                slotFilter.Filter.Add(id);
-            }
+            filterContainer.Filter.Add(id);
         }
     }
     private SlotFilter GetSlotFilterAtIndex(Slot slot, int index)

@@ -1,0 +1,10 @@
+<Project>
+    <ItemGroup>
+        <None Update="@(None)">
+            <Visible Condition="'%(NuGetPackageId)' == 'WTT-ServerCommonLib'">false</Visible>
+        </None>
+        <Content Update="@(Content)">
+            <Visible Condition="'%(NuGetPackageId)' == 'WTT-ServerCommonLib'">false</Visible>
+        </Content>
+    </ItemGroup>
+</Project>
