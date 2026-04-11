@@ -1,12 +1,14 @@
 using Comfort.Common;
-using EFT;
+using EFT.Hideout;
 using EFT.InventoryLogic;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using WTTClientCommonLib.Converters;
 
 namespace WTTClientCommonLib.Models;
 
-public class ExtendedProductionScheme
+public class ExtendedProductionScheme : ProductionBuildAbstractClass
 {
     private bool _itemsLoaded = false;
     
@@ -15,39 +17,10 @@ public class ExtendedProductionScheme
     
     [JsonProperty("endProductItems")]
     public FlatItemsDataClass[] EndProductItems { get; set; }
-    
-    [JsonProperty("areaType")]
-    public EAreaType AreaType { get; set; }
 
-    // no clue how to get this to work, unnecessary anyway for current purposes
-    /*
     [JsonProperty("requirements")]
-    public List<Requirement> Requirements { get; set; }
-    */
-
-    [JsonProperty("productionTime")]
-    public int ProductionTime { get; set; }
-    
-    [JsonProperty("endProduct")]
-    public string EndProduct { get; set; }
-    
-    [JsonProperty("isEncoded")]
-    public bool IsEncoded { get; set; }
-    
-    [JsonProperty("locked")]
-    public bool Locked { get; set; }
-    
-    [JsonProperty("needFuelForAllProductionTime")]
-    public bool NeedFuelForAllProductionTime { get; set; }
-    
-    [JsonProperty("continuous")]
-    public bool Continuous { get; set; }
-    
-    [JsonProperty("count")]
-    public int Count { get; set; }
-    
-    [JsonProperty("productionLimitCount")]
-    public int ProductionLimitCount { get; set; }
+    [JsonConverter(typeof(RequirementArrayConverter))]
+    public new Requirement[] requirements { get; set; }
     
     public List<Item> ResultItems = [];
     public List<Item> BaseItems = [];
@@ -56,12 +29,12 @@ public class ExtendedProductionScheme
     {
         if (!_itemsLoaded)
         {
-            List<string> baseItemTpls = [];
+            List<string> baseItemTemplateIds = [];
             foreach (var flatItem in EndProductItems)
             {
                 if (flatItem.slotId != string.Empty)
                 {
-                    baseItemTpls.Add(flatItem._tpl);
+                    baseItemTemplateIds.Add(flatItem._tpl);
                 }
             }
             
@@ -70,7 +43,7 @@ public class ExtendedProductionScheme
             {
                 ResultItems.Add(item);
 
-                if (baseItemTpls.Contains(item.StringTemplateId))
+                if (baseItemTemplateIds.Contains(item.StringTemplateId))
                 {
                     BaseItems.Add(item);
                 }

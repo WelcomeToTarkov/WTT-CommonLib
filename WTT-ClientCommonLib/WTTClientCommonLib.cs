@@ -57,7 +57,6 @@ public class WTTClientCommonLib : BaseUnityPlugin
 
         try
         {
-            var patchManager = new PatchManager(this, true);
             AssetLoader = new AssetLoader(Logger);
             SpawnCommands = new SpawnCommands(Logger, AssetLoader);
             _playerWorldStats = new PlayerWorldStats(Logger);
@@ -68,6 +67,7 @@ public class WTTClientCommonLib : BaseUnityPlugin
             
             RadioSettings.Init(Config);
             
+            var patchManager = new PatchManager(this, true);
             patchManager.EnablePatches();
             
             var resourceLoader = new ResourceLoader(Logger, AssetLoader);

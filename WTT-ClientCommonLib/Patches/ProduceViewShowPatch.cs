@@ -42,9 +42,9 @@ public class ProduceViewShowPatch : ModulePatch
             Item recipeResult = extendedScheme.BaseItems[0];
             viewFactory.Show(recipeResult, __instance.InventoryController, __instance.ItemUiContext);
 
-            if (extendedScheme.Count > 1)
+            if (extendedScheme.count > 1)
             {
-                viewFactory.SetCounterText(extendedScheme.Count.ToString());
+                viewFactory.SetCounterText(extendedScheme.count.ToString());
                 viewFactory.ShowInfo(true, false);
             }
             else
