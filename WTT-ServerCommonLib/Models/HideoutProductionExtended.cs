@@ -10,12 +10,12 @@ public record HideoutProductionExtended : HideoutProduction
     [JsonPropertyName("endProductItems")]
     public Dictionary<MongoId, CustomCraftResult>? EndProductItems { get; set; }
 
-    public List<Item> GetResultItems()
+    public List<List<Item>> GetResultItems()
     {
         if (EndProductItems == null) return [];
         
         List<CustomCraftResult> craftResults = EndProductItems.Values.ToList();
-        List<Item> items = [];
+        List<List<Item>> finalItems = [];
         
         if (craftResults.Count == 0)
         {
@@ -28,11 +28,11 @@ public record HideoutProductionExtended : HideoutProduction
 
             for (int i = 0; i < count; i++)
             {
-                items.AddRange(result.Items);
+                finalItems.Add(result.Items);
             }
         }
 
-        return items;
+        return finalItems;
     }
 }
 
