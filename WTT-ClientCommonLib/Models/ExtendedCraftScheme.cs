@@ -32,7 +32,7 @@ public class ExtendedProductionScheme : ProductionBuildAbstractClass
             List<string> baseItemTemplateIds = [];
             foreach (var flatItem in EndProductItems)
             {
-                if (flatItem.slotId != string.Empty)
+                if (string.IsNullOrEmpty(flatItem.slotId))
                 {
                     baseItemTemplateIds.Add(flatItem._tpl);
                 }
