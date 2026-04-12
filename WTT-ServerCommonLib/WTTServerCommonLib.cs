@@ -78,7 +78,6 @@ public class WTTServerCommonLib(
     public WTTHideoutControllerExtended HideoutControllerExtended { get; } = hideoutControllerExtended;
 
     public Task OnLoad()
-    {
     { 
         var patchManager = new PatchManager
         {
