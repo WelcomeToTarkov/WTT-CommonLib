@@ -1199,7 +1199,7 @@ await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(assembly,
 **Example Recipe**:
 ```json
 {
-  "_id": "my_custom_recipe_001",
+  "_id": "RANDOM_MONGO_ID",
   "areaType": 10,
   "requirements": [
     {
@@ -1218,7 +1218,43 @@ await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(assembly,
   "productionTime": 3600,
   "needFuelForAllProductionTime": true,
   "locked": false,
-  "endProduct": "my_custom_item_001",
+  "endProduct": "57f3c6bd24597738e730fa2f",
+  "endProductItems": [
+    {
+      "count": 3,
+      "items": [
+        {
+          "_id": "69daf153ba7df4fce9b709e0",
+          "_tpl": "57f3c6bd24597738e730fa2f",
+          "upd": {}
+        },
+        {
+          "_id": "69daf180c9bc8f153eb709e2",
+          "_tpl": "57d152ec245977144076ccdf",
+          "parentId": "69daf153ba7df4fce9b709e0",
+          "slotId": "mod_pistol_grip"
+        },
+        {
+          "_id": "69daf190c66b921e14b709e3",
+          "_tpl": "57d1519e24597714373db79d",
+          "parentId": "69daf153ba7df4fce9b709e0",
+          "slotId": "mod_magazine"
+        },
+        {
+          "_id": "69daf2460704f20205b709e4",
+          "_tpl": "57f3c7e024597738ea4ba286",
+          "parentId": "69daf153ba7df4fce9b709e0",
+          "slotId": "mod_muzzle"
+        },
+        {
+          "_id": "69daf26e27ca3b1314b709e5",
+          "_tpl": "57f3c8cc2459773ec4480328",
+          "parentId": "69daf2460704f20205b709e4",
+          "slotId": "mod_muzzle"
+        }
+      ]
+    }
+  ],
   "continuous": false,
   "count": 1,
   "productionLimitCount": 0,
@@ -1232,6 +1268,15 @@ await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(assembly,
 - `areaType` determines which hideout module the recipe appears in (10 = Workbench, 2 = Lavatory, 7 = Medstation, etc.)
 - `productionTime` is in seconds
 - Invalid recipe structure will throw errors and prevent loading
+
+**Optional fields (`HideoutProductionExtended`)**:
+- `endProductItems: []`
+  - Specifies an array of `CustomCraftResult` to return from the recipe
+    - `count` determines the amount of items
+    - `items` array of items to return
+  - If present:
+    - `endProduct` is used solely for the crafting menu search. Has to be a valid item template id
+    - `count` is ignored, craft amounts come from `CustomCraftResult`
 
 ---
 

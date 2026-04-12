@@ -8,6 +8,8 @@ using SPTarkov.Server.Core.Models.Eft.Hideout;
 using SPTarkov.Server.Core.Models.Eft.ItemEvent;
 using System.Reflection;
 using WTTServerCommonLib.Controllers;
+using WTTServerCommonLib.Models;
+using WTTServerCommonLib.Services;
 
 namespace WTTServerCommonLib.Patches;
 
@@ -27,11 +29,17 @@ public class HandleRecipePatch : AbstractPatch
         ItemEventRouterResponse output)
     {
         var hideoutControllerExtended = ServiceLocator.ServiceProvider.GetService<WTTHideoutControllerExtended>();
-
-        if (hideoutControllerExtended != null)
+        var recipeService = ServiceLocator.ServiceProvider.GetService<WTTCustomHideoutRecipeService>();
+        
+        if (hideoutControllerExtended != null && recipeService != null)
         {
-            hideoutControllerExtended.HandleExtendedRecipe(sessionID, recipe, pmcData, request, output);
-            return false;
+            var extendedRecipe = recipeService.GetExtendedRecipe(recipe.Id);
+
+            if (extendedRecipe != null)
+            {
+                hideoutControllerExtended.HandleExtendedRecipe(sessionID, recipe, pmcData, request, output);
+                return false;
+            }
         }
         
         return true;
