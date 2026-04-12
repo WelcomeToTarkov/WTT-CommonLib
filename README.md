@@ -286,6 +286,9 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
     // Should it be added to all secure case filters?
     "addtoSecureFilters": true,
 
+    // Should this item be blacklisted from PMC loot/airdrops/daily quest rewards?
+    "addtoItemBlacklist": true,
+
     // Is this a random loot container? (MUST HAVE RANDOMLOOTCONTAINER "62f109593b54472778797866" AS THIS ITEMS PARENT ID)
     "isRandomLootContainer": true,
 
