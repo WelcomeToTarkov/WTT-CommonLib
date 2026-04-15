@@ -2,11 +2,11 @@
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
-using SPTarkov.Server.Core.Models.Eft.Hideout;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
 using WTTServerCommonLib.Helpers;
+using WTTServerCommonLib.Models;
 using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services;
@@ -20,6 +20,7 @@ public class WTTCustomHideoutRecipeService(
 )
 {
     private DatabaseTables? _database;
+    private Dictionary<MongoId, HideoutProductionExtended> _extendedRecipes = []; 
 
     public async Task CreateHideoutRecipes(Assembly assembly, string? relativePath = null)
     {
@@ -37,16 +38,17 @@ public class WTTCustomHideoutRecipeService(
                 logger.Error($"Directory not found at {finalDir}");
                 return;
             }
-
-            var allRecipes = new List<HideoutProduction>();
+            
             var jsonFiles = Directory.GetFiles(finalDir, "*.*", SearchOption.AllDirectories)
                 .Where(f => f.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
                             f.EndsWith(".jsonc", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
+            
+            var allRecipes = new List<HideoutProductionExtended>();
 
             foreach (var filePath in jsonFiles)
             {
-                var recipes = await configHelper.LoadJsonFileFlexible<HideoutProduction>(filePath);
+                var recipes = await configHelper.LoadJsonFileFlexible<HideoutProductionExtended>(filePath);
 
                 if (recipes.Count > 0)
                 {
@@ -82,16 +84,35 @@ public class WTTCustomHideoutRecipeService(
                         LogHelper.Debug(logger, $"Recipe {recipe.Id} already exists, skipping");
                     continue;
                 }
-
+                
                 _database.Hideout.Production.Recipes?.Add(recipe);
+                
+                logger.Info(recipe.ToString());
+
+                if (recipe.EndProductItems != null && recipe.EndProductItems.Count > 0)
+                {
+                    _extendedRecipes.Add(recipe.Id, recipe);
+                }
+                
                 LogHelper.Debug(logger, $"Added hideout recipe {recipe.Id} for item {recipe.EndProduct}");
             }
 
-            LogHelper.Debug(logger, $"Successfully registered {allRecipes.Count} hideout recipes");
+            LogHelper.Debug(logger, $"Successfully registered {allRecipes.Count} hideout recipes ({_extendedRecipes.Count} extended)");
         }
         catch (Exception ex)
         {
             logger.Error($"Error loading hideout recipes: {ex.Message}");
         }
+    }
+
+    public Dictionary<MongoId, HideoutProductionExtended> GetExtendedRecipes()
+    {
+        return _extendedRecipes;
+    }
+
+    public HideoutProductionExtended? GetExtendedRecipe(MongoId recipeId)
+    {
+        _extendedRecipes.TryGetValue(recipeId, out var recipe);
+        return recipe ?? null;
     }
 }

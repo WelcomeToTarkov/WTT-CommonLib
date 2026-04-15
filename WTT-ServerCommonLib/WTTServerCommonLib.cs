@@ -1,8 +1,10 @@
 ﻿using System.Reflection;
 using SPTarkov.DI.Annotations;
+using SPTarkov.Reflection.Patching;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Utils;
+using WTTServerCommonLib.Controllers;
 using WTTServerCommonLib.Services;
 using Range = SemanticVersioning.Range;
 using Version = SemanticVersioning.Version;
@@ -47,6 +49,7 @@ public class WTTServerCommonLib(
     WTTCustomAchievementService customAchievementService,
     WTTCustomCustomizationService customCustomizationService,
     WTTCustomDialogueService customDialogueService,
+    WTTHideoutControllerExtended hideoutControllerExtended,
     ISptLogger<WTTServerCommonLib> logger
 ) : IOnLoad
 {
@@ -72,8 +75,18 @@ public class WTTServerCommonLib(
     public WTTCustomCustomizationService CustomCustomizationService { get; } = customCustomizationService;
     public WTTCustomDialogueService CustomDialogueService { get; } = customDialogueService;
 
+    public WTTHideoutControllerExtended HideoutControllerExtended { get; } = hideoutControllerExtended;
+
     public Task OnLoad()
-    {
+    { 
+        var patchManager = new PatchManager
+        {
+            PatcherName = "com.wtt.commonlib",
+            AutoPatch = true
+        };
+        
+        patchManager.EnablePatches();
+
         CustomLocaleService.CreateCustomLocales(Assembly.GetExecutingAssembly());
         return Task.CompletedTask;
     }

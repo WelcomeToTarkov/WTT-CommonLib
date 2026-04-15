@@ -21,6 +21,7 @@ public class WTTResourcesRouter(
     WTTCustomVoiceService voiceService,
     WTTCustomAudioService audioService,
     WTTCustomCustomizationService customizationService,
+    WTTCustomHideoutRecipeService customHideoutRecipeService,
     ISptLogger<WTTResourcesRouter> logger) : StaticRouter(jsonUtil, [
     
     // Zones
@@ -140,6 +141,16 @@ public class WTTResourcesRouter(
         return ValueTask.FromResult(jsonUtil.Serialize(manifest) ??
                                     throw new NullReferenceException("Could not serialize audio manifest!"));
     }
+    ),
+    
+    // ExtendedRecipes
+    new RouteAction<EmptyRequestData>(
+        "/wttcommonlib/recipes/extended/get", (_, _, _, _) =>
+        {
+            var recipes = customHideoutRecipeService.GetExtendedRecipes();
+            return ValueTask.FromResult(jsonUtil.Serialize(recipes) ??
+                                        throw new NullReferenceException("Could not serialize extended recipes!"));
+        }
     ),
 ]);
 
