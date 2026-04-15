@@ -1199,66 +1199,70 @@ await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(assembly,
 **Example Recipe**:
 ```json
 {
-  "_id": "RANDOM_MONGO_ID",
-  "areaType": 10,
-  "requirements": [
-    {
-      "areaType": 10,
-      "requiredLevel": 2,
-      "type": "Area"
-    },
-    {
-      "templateId": "5c06779c86f77426e00dd782",
-      "count": 1,
-      "isFunctional": false,
-      "isEncoded": false,
-      "type": "Item"
-    }
-  ],
-  "productionTime": 3600,
-  "needFuelForAllProductionTime": true,
-  "locked": false,
-  "endProduct": "57f3c6bd24597738e730fa2f",
-  "endProductItems": [
-    {
-      "count": 3,
-      "items": [
+    "_id": "69dfa367da725f22873d04a3",
+    "areaType": 10,
+    "requirements": [
         {
-          "_id": "69daf153ba7df4fce9b709e0",
-          "_tpl": "57f3c6bd24597738e730fa2f",
-          "upd": {}
+            "areaType": 10,
+            "requiredLevel": 2,
+            "type": "Area"
         },
         {
-          "_id": "69daf180c9bc8f153eb709e2",
-          "_tpl": "57d152ec245977144076ccdf",
-          "parentId": "69daf153ba7df4fce9b709e0",
-          "slotId": "mod_pistol_grip"
-        },
-        {
-          "_id": "69daf190c66b921e14b709e3",
-          "_tpl": "57d1519e24597714373db79d",
-          "parentId": "69daf153ba7df4fce9b709e0",
-          "slotId": "mod_magazine"
-        },
-        {
-          "_id": "69daf2460704f20205b709e4",
-          "_tpl": "57f3c7e024597738ea4ba286",
-          "parentId": "69daf153ba7df4fce9b709e0",
-          "slotId": "mod_muzzle"
-        },
-        {
-          "_id": "69daf26e27ca3b1314b709e5",
-          "_tpl": "57f3c8cc2459773ec4480328",
-          "parentId": "69daf2460704f20205b709e4",
-          "slotId": "mod_muzzle"
+            "templateId": "5c06779c86f77426e00dd782",
+            "count": 1,
+            "isFunctional": false,
+            "isEncoded": false,
+            "type": "Item"
         }
-      ]
-    }
-  ],
-  "continuous": false,
-  "count": 1,
-  "productionLimitCount": 0,
-  "isEncoded": false
+    ],
+    "productionTime": 3600,
+    "needFuelForAllProductionTime": true,
+    "locked": false,
+    "endProduct": "57f3c6bd24597738e730fa2f",
+    "endProductItems": {
+        "69dfa332259cb3202c3d04a2": {
+            "count": 3,
+            "items": [
+                {
+                    "_id": "69daf153ba7df4fce9b709e0",
+                    "_tpl": "57f3c6bd24597738e730fa2f",
+                    "upd": {
+                        "Foldable": {
+
+                        }
+                    }
+                },
+                {
+                    "_id": "69daf180c9bc8f153eb709e2",
+                    "_tpl": "57d152ec245977144076ccdf",
+                    "parentId": "69daf153ba7df4fce9b709e0",
+                    "slotId": "mod_pistol_grip"
+                },
+                {
+                    "_id": "69daf190c66b921e14b709e3",
+                    "_tpl": "57d1519e24597714373db79d",
+                    "parentId": "69daf153ba7df4fce9b709e0",
+                    "slotId": "mod_magazine"
+                },
+                {
+                    "_id": "69daf2460704f20205b709e4",
+                    "_tpl": "57f3c7e024597738ea4ba286",
+                    "parentId": "69daf153ba7df4fce9b709e0",
+                    "slotId": "mod_muzzle"
+                },
+                {
+                    "_id": "69daf26e27ca3b1314b709e5",
+                    "_tpl": "57f3c8cc2459773ec4480328",
+                    "parentId": "69daf2460704f20205b709e4",
+                    "slotId": "mod_muzzle"
+                }
+            ]
+        }
+    },
+    "continuous": false,
+    "count": 1,
+    "productionLimitCount": 0,
+    "isEncoded": false
 }
 ```
 
