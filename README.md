@@ -1278,6 +1278,7 @@ await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(assembly,
   - Specifies an array of `CustomCraftResult` to return from the recipe
     - `count` determines the amount of items
     - `items` array of items to return
+    - You can specify multiple recipe results
   - If present:
     - `endProduct` is used solely for the crafting menu search. Has to be a valid item template id
     - `count` is ignored, craft amounts come from `CustomCraftResult`
