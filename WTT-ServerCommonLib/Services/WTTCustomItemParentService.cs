@@ -11,8 +11,8 @@ using Path = System.IO.Path;
 namespace WTTServerCommonLib.Services;
 
 [Injectable(InjectionType.Singleton)]
-public class WTTCustomParentService(
-    ISptLogger<WTTCustomParentService> logger,
+public class WTTCustomItemParentService(
+    ISptLogger<WTTCustomItemParentService> logger,
     DatabaseService dbService,
     ItemBaseClassService baseClassService,
     ModHelper modHelper,

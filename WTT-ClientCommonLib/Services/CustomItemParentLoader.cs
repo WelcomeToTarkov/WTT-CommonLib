@@ -9,14 +9,14 @@ using WTTClientCommonLib.Models;
 
 namespace WTTClientCommonLib.Services;
 
-public class CustomParentLoader
+public class CustomItemParentLoader
 {
-    public static CustomParentLoader Instance;
+    public static CustomItemParentLoader Instance;
     
     private Dictionary<string, ItemTemplate> _customParents = new Dictionary<string, ItemTemplate>();
     private bool _parentsRegistered = false;
 
-    public CustomParentLoader()
+    public CustomItemParentLoader()
     {
         if (Instance != null) return;
         

@@ -77,7 +77,7 @@ public class WTTClientCommonLib : BaseUnityPlugin
             var extendedRecipeLoader = new ExtendedRecipeLoader();
             extendedRecipeLoader.FetchExtendedRecipesFromServer();
         
-            var customParentLoader = new CustomParentLoader();
+            var customParentLoader = new CustomItemParentLoader();
             customParentLoader.FetchCustomParentsFromServer();
         }
         catch (Exception e)
@@ -159,7 +159,7 @@ public class WTTClientCommonLib : BaseUnityPlugin
                 DontDestroyOnLoad(_updaterObject);
             }
         
-            var customParentLoader = CustomParentLoader.Instance;
+            var customParentLoader = CustomItemParentLoader.Instance;
             if (customParentLoader != null)
             {
                 await customParentLoader.RegisterCustomParents();

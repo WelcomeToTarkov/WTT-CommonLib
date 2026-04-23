@@ -49,7 +49,7 @@ public class WTTServerCommonLib(
     WTTCustomAchievementService customAchievementService,
     WTTCustomCustomizationService customCustomizationService,
     WTTCustomDialogueService customDialogueService,
-    WTTCustomParentService customParentService,
+    WTTCustomItemParentService customItemParentService,
     WTTHideoutControllerExtended hideoutControllerExtended,
     ISptLogger<WTTServerCommonLib> logger
 ) : IOnLoad
@@ -75,7 +75,7 @@ public class WTTServerCommonLib(
     public WTTCustomAchievementService CustomAchievementService { get; } = customAchievementService;
     public WTTCustomCustomizationService CustomCustomizationService { get; } = customCustomizationService;
     public WTTCustomDialogueService CustomDialogueService { get; } = customDialogueService;
-    public WTTCustomParentService CustomParentService { get; } = customParentService;
+    public WTTCustomItemParentService CustomItemParentService { get; } = customItemParentService;
 
     public WTTHideoutControllerExtended HideoutControllerExtended { get; } = hideoutControllerExtended;
 
