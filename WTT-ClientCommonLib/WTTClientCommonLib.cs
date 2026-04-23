@@ -39,7 +39,7 @@ public class WTTClientCommonLib : BaseUnityPlugin
     public static bool FikaInstalled { get; private set; }
     public static WTTClientCommonLib Instance { get; private set; }
     
-    private async void Awake()
+    private void Awake()
     {
         try
         {
@@ -79,7 +79,6 @@ public class WTTClientCommonLib : BaseUnityPlugin
         
             var customParentLoader = new CustomParentLoader();
             customParentLoader.FetchCustomParentsFromServer();
-            await customParentLoader.RegisterCustomParents();
         }
         catch (Exception e)
         {
@@ -143,19 +142,32 @@ public class WTTClientCommonLib : BaseUnityPlugin
         }
     }
 
-    internal void Start()
+    internal async void Start()
     {
-        if (_commandProcessor == null)
+        try
         {
-            _commandProcessor = new CommandProcessor.CommandProcessor(_playerWorldStats, SpawnCommands);
-            _commandProcessor.RegisterCommandProcessor();
-        }
+            if (_commandProcessor == null)
+            {
+                _commandProcessor = new CommandProcessor.CommandProcessor(_playerWorldStats, SpawnCommands);
+                _commandProcessor.RegisterCommandProcessor();
+            }
 
-        if (_updaterObject == null)
+            if (_updaterObject == null)
+            {
+                _updaterObject = new GameObject("SpawnSystemUpdater");
+                _updaterObject.AddComponent<SpawnSystemUpdater>();
+                DontDestroyOnLoad(_updaterObject);
+            }
+        
+            var customParentLoader = CustomParentLoader.Instance;
+            if (customParentLoader != null)
+            {
+                await customParentLoader.RegisterCustomParents();
+            }
+        }
+        catch (Exception e)
         {
-            _updaterObject = new GameObject("SpawnSystemUpdater");
-            _updaterObject.AddComponent<SpawnSystemUpdater>();
-            DontDestroyOnLoad(_updaterObject);
+            LogHelper.LogError(e.ToString());
         }
     }
     

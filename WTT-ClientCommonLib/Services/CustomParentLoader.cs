@@ -48,9 +48,6 @@ public class CustomParentLoader
     public async Task RegisterCustomParents()
     {
         if (_parentsRegistered) return;
-
-        // wait for other plugins to load
-        await Task.Delay(5000);
         
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
         List<CustomParent> customParents = [];
