@@ -73,7 +73,7 @@ public class WTTCustomItemParentService(
         {
             var items = dbService.GetTables().Templates.Items;
 
-            items[id] = tpl;
+            items.Add(id, tpl);
             itemBaseClassService.AddItemToCache(id);
 
             if (tpl.AddToContainers)
