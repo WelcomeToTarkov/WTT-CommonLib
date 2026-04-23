@@ -28,10 +28,10 @@ A comprehensive modding library for SPT that simplifies adding custom content to
   - [CustomAchievementService](#customachievementservice)
   - [CustomCustomizationService](#customcustomizationservice)
   - [CustomDialogueService](#customdialogueservice)
+  - [CustomItemParentService](#customitemparentservice)
 - [Example Mod Structure](#example-mod-structure)
 - [Available Client Services](#available-client-services)
-  - [CustomTemplateIdToObjectService](#customtemplateidtoobjectservice)
-    - [Server Side Custom Item Template Registration](#server-side-custom-item-template-registration) 
+  - [Server Side Custom Item Template Registration](#server-side-custom-item-template-registration) 
 
 ## Features
 
@@ -141,7 +141,7 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
 <details>
 <summary> Example Item Configuration (Click to expand)</summary>
 
-```json
+```jsonc
 {
   // Unique ID for this custom item
   "THIS MUST BE A UNIQUE MONGOID": {
@@ -1008,22 +1008,24 @@ Create `.bundle` files containing your prefabs using Unity's AssetBundle build t
 
 Add entries to your mod's `bundles.json` manifest:
 ```json
-{
-  "key": "staticspawns/my_objects.bundle",
-  "dependencies": [
-    "assets/commonassets/physics/physicsmaterials.bundle",
-    "shaders",
-    "cubemaps"
-  ]
-},
-{
-  "key": "staticspawns/quest_decorations.bundle",
-  "dependencies": [
-    "assets/commonassets/physics/physicsmaterials.bundle",
-    "shaders",
-    "cubemaps"
-    ]
-}
+[
+    {
+        "key": "staticspawns/my_objects.bundle",
+        "dependencies": [
+            "assets/commonassets/physics/physicsmaterials.bundle",
+            "shaders",
+            "cubemaps"
+        ]
+    },
+    {
+        "key": "staticspawns/quest_decorations.bundle",
+        "dependencies": [
+            "assets/commonassets/physics/physicsmaterials.bundle",
+            "shaders",
+            "cubemaps"
+        ]
+    }
+]
 ```
 
 **3. Place bundle files in your mod**
@@ -1781,6 +1783,126 @@ await wttCommon.CustomDialogueService.CreateCustomDialogues(assembly,
 
 **IMPORTANT: Your dialogue structure MUST match BSG's dialogue model exactly.**
 - View `SPT/SPT_Data/database/templates/dialogue.json` and make sure your dialogue matches one of the "elements" objects 1:1.
+
+***
+
+### CustomItemParentService
+
+Purpose: Registers custom item template parent definitions on both the client and server so that custom behavior, structures and rules can be applied.
+
+#### Example usage
+
+db/CustomParents/example_parent.jsonc
+```jsonc
+{
+    // the id of our custom parent
+    "69ea063bddcf283e70c13532": {
+        "_id": "69ea063bddcf283e70c13532", // same as the key above
+        "_name": "CustomExampleItem", // parent name, should match your client class name
+        "_parent": "54009119af1c881c07000029", // base EFT item template this parent derives from
+        "_type": "Node",
+        
+        // any custom props you feel like adding to your parent
+        // these can also be defined in your derived items
+        "_props": {
+            "TestValue": "hi im a test value"
+        }
+    }
+}
+```
+
+db/CustomItems/item_using_custom_parent.json
+```jsonc
+"69ea071a4c8297cf01c13533": {
+    "itemTplToClone": "62a08f4c4f842e1bd12d9d62",
+    "parentId": "69e9f35c507ef0b8971fb742",
+    "handbookParentId": "5b47574386f77428ca22b345",
+    "overrideProperties": {
+        "ExaminedByDefault": true,
+        "Prefab": {
+            "path": "assets/content/items/barter/item_barter_other_teddyb/item_barter_other_teddyb.bundle",
+            "rcid": ""
+        },
+        "BackgroundColor": "blue",
+        "Slots": [],
+        "TestValue": "hi im a test value"
+    },
+    "locales": {
+        "en": {
+            "name": "Test item with custom parent",
+            "shortName": "test_item",
+            "description": "test item using our custom parent"
+        }
+    },
+    "clearClonedProps": false,
+    "ModdableItemWhitelist": [],
+    "ModdableItemBlacklist": [],
+    "fleaPriceRoubles": 1,
+    "handbookPriceRoubles": 1,
+    "addtoTraders": false,
+    "traders": {},
+    "addtoBots": false,
+    "addtostaticlootcontainer": false,
+    "StaticLootContainers": [],
+    "masteries": false,
+    "masterySections": [],
+    "addweaponpreset": false,
+    "weaponpresets": []
+}
+```
+
+#### Server
+```c#
+[Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 2)]
+public class CustomParentModExample(
+    WTTServerCommonLib.WTTServerCommonLib wttCommon,
+    DatabaseService databaseService) : IOnLoad
+{
+    public async Task OnLoad()
+    {
+        Assembly assembly = Assembly.GetExecutingAssembly();
+
+        // Register your custom parents
+        await wttCommon.CustomItemParentService.CreateCustomParents(assembly);
+        
+        // Register your new custom items using your new item or template types
+        await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly);
+        
+        await Task.CompletedTask;
+    }
+}
+```
+
+#### Client
+```c#
+// register our parent to a client-side runtime class
+[CustomParent("69ea063bddcf283e70c13532", typeof(CustomExampleItem), typeof(CustomExampleItemTemplate))]
+public class CustomExampleItem : Item 
+{
+    public CustomExampleItem(string id, CustomExampleItemTemplate template) : base(id, template) 
+    {
+        List<ItemAttributeClass> attributes = [
+            new ItemAttributeClass(EItemAttributeId.AmmoCaliber)
+            {
+                Name = "TestValue",
+                StringValue = () => template.TestValue,
+                DisplayType = () => EItemAttributeDisplayType.Compact
+            }
+        ];
+
+        Attributes = attributes;
+    }
+}
+
+// the base item template doesn't have a json property for TestValue, so it goes into the template's ExtensionData on the server
+// ExtensionData values are automatically injected into the template constructor
+// client template parameter names are case-insensitive
+public class CustomExampleItemTemplate(string testValue) : ItemTemplate 
+{
+    public readonly string TestValue = testValue;
+}
+
+```
 
 ***
 
