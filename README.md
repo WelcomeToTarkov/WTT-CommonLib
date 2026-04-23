@@ -1820,11 +1820,11 @@ db/CustomParents/example_parent.jsonc
 }
 ```
 
-db/CustomItems/item_using_custom_parent.json
+db/CustomItems/item_using_custom_parent.jsonc
 ```jsonc
 "69ea071a4c8297cf01c13533": {
     "itemTplToClone": "62a08f4c4f842e1bd12d9d62",
-    "parentId": "69e9f35c507ef0b8971fb742",
+    "parentId": "69ea063bddcf283e70c13532", // has to be same as our custom parent id
     "handbookParentId": "5b47574386f77428ca22b345",
     "overrideProperties": {
         "ExaminedByDefault": true,
