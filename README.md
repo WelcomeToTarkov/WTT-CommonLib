@@ -1806,7 +1806,16 @@ db/CustomParents/example_parent.jsonc
         // these can also be defined in your derived items
         "_props": {
             "TestValue": "hi im a test value"
-        }
+        },
+        
+        // should the parent be added to item container filters?
+        "addToContainerFilters": true,
+        
+        // list of containers to add the parent to
+        "containers": [
+            "59fb042886f7746c5005a7b2",
+            "59fb023c86f7746d0d4b423c"
+        ]
     }
 }
 ```
