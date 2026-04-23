@@ -22,6 +22,7 @@ public class WTTResourcesRouter(
     WTTCustomAudioService audioService,
     WTTCustomCustomizationService customizationService,
     WTTCustomHideoutRecipeService customHideoutRecipeService,
+    WTTCustomParentService customParentService,
     ISptLogger<WTTResourcesRouter> logger) : StaticRouter(jsonUtil, [
     
     // Zones
@@ -150,6 +151,16 @@ public class WTTResourcesRouter(
             var recipes = customHideoutRecipeService.GetExtendedRecipes();
             return ValueTask.FromResult(jsonUtil.Serialize(recipes) ??
                                         throw new NullReferenceException("Could not serialize extended recipes!"));
+        }
+    ),
+    
+    // CustomParents
+    new RouteAction<EmptyRequestData>(
+        "/wttcommonlib/parents/custom/get", (_, _, _, _) =>
+        {
+            var parents = customParentService.GetCustomParents();
+            return ValueTask.FromResult(jsonUtil.Serialize(parents) ??
+                                        throw new NullReferenceException("Could not serialize custom parents!"));
         }
     ),
 ]);
