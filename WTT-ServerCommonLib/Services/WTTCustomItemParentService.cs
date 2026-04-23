@@ -101,11 +101,14 @@ public class WTTCustomItemParentService(
         Dictionary<MongoId, TemplateItem> items = dbService.GetItems();
         items.TryGetValue(containerId, out TemplateItem? container);
 
-        if (container != null)
+        if (container == null)
         {
-            container.Properties?.Grids?.FirstOrDefault()?.Properties?.Filters?.FirstOrDefault()?.Filter?.Add(parentId);
-            LogHelper.Debug(logger, $"Added parent {parentId} to {containerId} filters");
+            logger.Warning($"Could not find container {containerId}");
+            return;
         }
+
+        container.Properties?.Grids?.FirstOrDefault()?.Properties?.Filters?.FirstOrDefault()?.Filter?.Add(parentId);
+        LogHelper.Debug(logger, $"Added parent {parentId} to {containerId} filters");
     }
 
     public Dictionary<MongoId, CustomItemParentConfig> GetCustomParents()
