@@ -6,6 +6,7 @@ using BepInEx.Bootstrap;
 using Comfort.Common;
 using EFT;
 using SPT.Reflection.Patching;
+using System.Threading.Tasks;
 using UnityEngine;
 using WTTClientCommonLib.CommandProcessor;
 using WTTClientCommonLib.Components;
@@ -38,51 +39,51 @@ public class WTTClientCommonLib : BaseUnityPlugin
     public static bool FikaInstalled { get; private set; }
     public static WTTClientCommonLib Instance { get; private set; }
     
-    private void Awake()
+    private async void Awake()
     {
-        Instance = this;
-        LogHelper.SetLogger(Logger);
-        
-        FikaInstalled = Chainloader.PluginInfos.ContainsKey("com.fika.core");
-        
-        if (FikaInstalled)
-        {
-            LogHelper.LogInfo("Fika detected - loading Fika support");
-            LoadFikaModule();
-        }
-        else
-        {
-            LogHelper.LogInfo("Fika not detected - single-player mode");
-        }
-
         try
         {
+            Instance = this;
+            LogHelper.SetLogger(Logger);
+        
+            FikaInstalled = Chainloader.PluginInfos.ContainsKey("com.fika.core");
+        
+            if (FikaInstalled)
+            {
+                LogHelper.LogInfo("Fika detected - loading Fika support");
+                LoadFikaModule();
+            }
+            else
+            {
+                LogHelper.LogInfo("Fika not detected - single-player mode");
+            }
+            
             AssetLoader = new AssetLoader(Logger);
             SpawnCommands = new SpawnCommands(Logger, AssetLoader);
             _playerWorldStats = new PlayerWorldStats(Logger);
-            
+        
             UniversalConfigManager.Initialize(Config);
             ZoneConfigManager.Initialize(Config);
             StaticSpawnSystemConfigManager.Initialize(Config);
-            
+        
             RadioSettings.Init(Config);
-            
+        
             var patchManager = new PatchManager(this, true);
             patchManager.EnablePatches();
-            
+        
             var resourceLoader = new ResourceLoader(Logger, AssetLoader);
             resourceLoader.LoadAllResourcesFromServer();
 
             var extendedRecipeLoader = new ExtendedRecipeLoader();
             extendedRecipeLoader.FetchExtendedRecipesFromServer();
-            
+        
             var customParentLoader = new CustomParentLoader();
             customParentLoader.FetchCustomParentsFromServer();
-            customParentLoader.RegisterCustomParents();
+            await customParentLoader.RegisterCustomParents();
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Logger.LogError($"Failed to initialize WTT-ClientCommonLib: {ex}");
+            Logger.LogError($"Failed to initialize WTT-ClientCommonLib: {e}");
         }
     }
 

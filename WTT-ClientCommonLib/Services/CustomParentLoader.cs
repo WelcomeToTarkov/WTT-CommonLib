@@ -45,12 +45,12 @@ public class CustomParentLoader
         }
     }
 
-    public void RegisterCustomParents()
+    public async Task RegisterCustomParents()
     {
         if (_parentsRegistered) return;
 
         // wait for other plugins to load
-        // await Task.Delay(5000);
+        await Task.Delay(5000);
         
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
         List<CustomParent> customParents = [];
@@ -73,6 +73,12 @@ public class CustomParentLoader
         foreach (var parent in customParents)
         {
             var ctor = parent.Item.GetConstructor([typeof(string), parent.Template]);
+
+            if (ctor == null)
+            {
+                LogHelper.LogError($"Could not find valid constructor for {parent.Item}");
+                continue;
+            }
             
             mappings.Add(new TemplateIdToObjectType(
                 parent.ParentId,
