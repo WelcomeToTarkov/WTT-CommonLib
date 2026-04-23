@@ -4,8 +4,10 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Services;
+using System.ComponentModel;
 using System.Reflection;
 using WTTServerCommonLib.Helpers;
+using WTTServerCommonLib.Models;
 using Path = System.IO.Path;
 
 namespace WTTServerCommonLib.Services;
@@ -14,13 +16,12 @@ namespace WTTServerCommonLib.Services;
 public class WTTCustomItemParentService(
     ISptLogger<WTTCustomItemParentService> logger,
     DatabaseService dbService,
-    ItemBaseClassService baseClassService,
     ModHelper modHelper,
     ConfigHelper configHelper,
     ItemBaseClassService itemBaseClassService
 )
 {
-    private readonly Dictionary<MongoId, TemplateItem> _loadedParents = [];
+    private readonly Dictionary<MongoId, CustomItemParentConfig> _loadedParents = [];
     
     /// <summary>
     /// Loads custom parent configs from json and jsonc files and saves them in the spt database.
@@ -43,7 +44,7 @@ public class WTTCustomItemParentService(
 
         foreach (string filePath in files)
         {
-            var allParents = await configHelper.LoadJsonFileFlexible<Dictionary<MongoId, TemplateItem>>(filePath);
+            var allParents = await configHelper.LoadJsonFileFlexible<Dictionary<MongoId, CustomItemParentConfig>>(filePath);
 
             if (allParents.Count == 0)
             {
@@ -51,9 +52,9 @@ public class WTTCustomItemParentService(
                 return;
             }
             
-            foreach (Dictionary<MongoId, TemplateItem> parents in allParents)
+            foreach (Dictionary<MongoId, CustomItemParentConfig> parents in allParents)
             {
-                foreach ((MongoId id, TemplateItem tpl) in parents)
+                foreach ((MongoId id, CustomItemParentConfig tpl) in parents)
                 {
                     bool added = AddParentToDatabase(id, tpl);
 
@@ -66,7 +67,7 @@ public class WTTCustomItemParentService(
         }
     }
 
-    protected bool AddParentToDatabase(MongoId id, TemplateItem tpl)
+    protected bool AddParentToDatabase(MongoId id, CustomItemParentConfig tpl)
     {
         try
         {
@@ -74,6 +75,14 @@ public class WTTCustomItemParentService(
 
             items[id] = tpl;
             itemBaseClassService.AddItemToCache(id);
+
+            if (tpl.AddToContainers)
+            {
+                foreach (MongoId containerId in tpl.Containers)
+                {
+                    AddParentToContainerFilter(id, containerId);
+                }
+            }
 
             LogHelper.Debug(logger, $"Added parent {tpl.Id} to database and cache");
             
@@ -87,7 +96,19 @@ public class WTTCustomItemParentService(
         }
     }
 
-    public Dictionary<MongoId, TemplateItem> GetCustomParents()
+    private void AddParentToContainerFilter(MongoId parentId, MongoId containerId)
+    {
+        Dictionary<MongoId, TemplateItem> items = dbService.GetItems();
+        items.TryGetValue(containerId, out TemplateItem? container);
+
+        if (container != null)
+        {
+            container.Properties?.Grids?.FirstOrDefault()?.Properties?.Filters?.FirstOrDefault()?.Filter?.Add(parentId);
+            LogHelper.Debug(logger, $"Added parent {parentId} to {containerId} filters");
+        }
+    }
+
+    public Dictionary<MongoId, CustomItemParentConfig> GetCustomParents()
     {
         return _loadedParents;
     }
