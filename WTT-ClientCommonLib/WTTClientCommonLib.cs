@@ -75,6 +75,10 @@ public class WTTClientCommonLib : BaseUnityPlugin
 
             var extendedRecipeLoader = new ExtendedRecipeLoader();
             extendedRecipeLoader.FetchExtendedRecipesFromServer();
+            
+            var customParentLoader = new CustomParentLoader();
+            customParentLoader.FetchCustomParentsFromServer();
+            customParentLoader.RegisterCustomParents();
         }
         catch (Exception ex)
         {
