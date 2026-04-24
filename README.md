@@ -1885,7 +1885,8 @@ public class CustomParentModExample(
 #### Client
 ```c#
 // register our parent to a client-side runtime class
-[CustomParent("69ea063bddcf283e70c13532", typeof(CustomExampleItem), typeof(CustomExampleItemTemplate))]
+// first parameter ID has to match the parent id we defined earlier
+[CustomParent("RANDOM_PARENT_MONGOID_HERE", typeof(CustomExampleItem), typeof(CustomExampleItemTemplate))]
 public class CustomExampleItem : Item 
 {
     public CustomExampleItem(string id, CustomExampleItemTemplate template) : base(id, template) 
