@@ -1788,7 +1788,7 @@ await wttCommon.CustomDialogueService.CreateCustomDialogues(assembly,
 
 ### CustomItemParentService
 
-Purpose: Registers custom item template parent definitions on both the client and server so that custom behavior, structures and rules can be applied.
+Purpose: Registers custom item parent definitions on both the client and server so that items with custom behaviors can be created
 
 #### Example usage
 
@@ -1796,8 +1796,8 @@ db/CustomParents/example_parent.jsonc
 ```jsonc
 {
     // the id of our custom parent
-    "69ea063bddcf283e70c13532": {
-        "_id": "69ea063bddcf283e70c13532", // same as the key above
+    "RANDOM_PARENT_MONGOID_HERE": {
+        "_id": "RANDOM_PARENT_MONGOID_HERE", // same as the key above
         "_name": "CustomExampleItem", // parent name, should match your client class name
         "_parent": "54009119af1c881c07000029", // base EFT item template this parent derives from
         "_type": "Node",
@@ -1813,8 +1813,8 @@ db/CustomParents/example_parent.jsonc
         
         // list of containers to add the parent to
         "containers": [
-            "59fb042886f7746c5005a7b2",
-            "59fb023c86f7746d0d4b423c"
+            "59fb042886f7746c5005a7b2", // item case
+            "59fb023c86f7746d0d4b423c" // weapon case
         ]
     }
 }
@@ -1822,9 +1822,9 @@ db/CustomParents/example_parent.jsonc
 
 db/CustomItems/item_using_custom_parent.jsonc
 ```jsonc
-"69ea071a4c8297cf01c13533": {
+"RANDOM_ITEM_MONGOID_HERE": {
     "itemTplToClone": "62a08f4c4f842e1bd12d9d62",
-    "parentId": "69ea063bddcf283e70c13532", // has to be same as our custom parent id
+    "parentId": "RANDOM_PARENT_MONGOID_HERE", // has to be same as our custom parent id
     "handbookParentId": "5b47574386f77428ca22b345",
     "overrideProperties": {
         "ExaminedByDefault": true,
