@@ -32,38 +32,78 @@ public class SlotHelper
 
         throw new IndexOutOfRangeException($"Index on item slot property `{item.Name}` is out of range");
     }
-    public void AddIdsToNamedSlot(TemplateItem item, string slotName, params string[] ids)
+    
+    public Slot EnsureSlot(
+        TemplateItem item,
+        string slotName,
+        string prototype,
+        bool required = false,
+        bool mergeSlotWithChildren = false,
+        int shift = 0)
     {
         item.Properties ??= new TemplateItemProperties();
 
         var slots = item.Properties.Slots?.ToList() ?? new List<Slot>();
-
         var slot = slots.FirstOrDefault(s => s.Name == slotName);
-        if (slot == null)
-        {
-            slot = new Slot { Name = slotName };
-            slots.Add(slot);
-            item.Properties.Slots = slots;
-        }
 
+        if (slot != null)
+            return slot;
+
+        slot = new Slot
+        {
+            Id = new MongoId(),
+            Name = slotName,
+            Parent = item.Id,
+            Required = required,
+            MergeSlotWithChildren = mergeSlotWithChildren,
+            Prototype = prototype,
+            Properties = new SlotProperties
+            {
+                Filters = new List<SlotFilter>
+                {
+                    new()
+                    {
+                        Filter = new HashSet<MongoId>(),
+                        Shift = shift
+                    }
+                }
+            }
+        };
+
+        slots.Add(slot);
+        item.Properties.Slots = slots;
+        return slot;
+    }
+    public void AddIdsToSlot(Slot slot, params string[] ids)
+    {
         slot.Properties ??= new SlotProperties();
 
         var filters = slot.Properties.Filters?.ToList() ?? new List<SlotFilter>();
-
         var filterContainer = filters.FirstOrDefault();
+
         if (filterContainer == null)
         {
-            filterContainer = new SlotFilter();
+            filterContainer = new SlotFilter
+            {
+                Filter = new HashSet<MongoId>(),
+                Shift = 0
+            };
             filters.Add(filterContainer);
             slot.Properties.Filters = filters;
         }
 
         filterContainer.Filter ??= new HashSet<MongoId>();
+        filterContainer.Filter.UnionWith(ids.Select(id => (MongoId)id));
+    }
+    public void AddIdsToNamedSlot(
+        TemplateItem item,
+        string slotName,
+        params string[] ids)
+    {
+        var slot = item.Properties?.Slots?.FirstOrDefault(s => s.Name == slotName)
+                   ?? throw new InvalidOperationException($"Slot '{slotName}' not found on '{item.Name}'");
 
-        foreach (var id in ids)
-        {
-            filterContainer.Filter.Add(id);
-        }
+        AddIdsToSlot(slot, ids);
     }
     private SlotFilter GetSlotFilterAtIndex(Slot slot, int index)
     {
