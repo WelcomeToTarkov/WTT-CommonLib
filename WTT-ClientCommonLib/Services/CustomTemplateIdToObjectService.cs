@@ -59,7 +59,5 @@ public abstract class CustomTemplateIdToObjectService
             }
         }
     }
-
-
 }
 #endif

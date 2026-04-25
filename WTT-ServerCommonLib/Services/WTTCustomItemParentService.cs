@@ -22,7 +22,11 @@ public class WTTCustomItemParentService(
 )
 {
     private readonly Dictionary<MongoId, CustomItemParentConfig> _loadedParents = [];
-    
+    private Dictionary<MongoId, TemplateItem> ItemsDb => dbService.GetItems();
+    private Dictionary<MongoId, Trader> TraderDb => dbService.GetTables().Traders;
+
+    private static readonly MongoId DefaultInventoryId = "55d7217a4bdc2d86028b456d";
+
     /// <summary>
     /// Loads custom parent configs from json and jsonc files and saves them in the spt database.
     /// Parents are loaded from "db/CustomParents" directory by default (or a custom path if specified).
@@ -78,37 +82,146 @@ public class WTTCustomItemParentService(
 
             if (tpl.AddToContainers)
             {
-                foreach (MongoId containerId in tpl.Containers)
+                foreach (string containerNameOrId in tpl.Containers)
                 {
-                    AddParentToContainerFilter(id, containerId);
+                    AddParentToContainerFilter(id, containerNameOrId);
                 }
             }
 
-            LogHelper.Debug(logger, $"Added parent {tpl.Id} to database and cache");
-            
+            if (tpl.AddToInventorySlots)
+            {
+                AddParentToInventorySlots(id, tpl.InventorySlots);
+            }
+
+            if (tpl.AddToTraderBuyLists)
+            {
+                AddParentToTraderBuyLists(id, tpl.Traders);
+            }
+
+            LogHelper.Debug(logger, $"Added parent {tpl.Id} to database, cache, and extra filters/buy lists");
+
             return true;
         }
         catch (Exception e)
         {
             logger.Error(e.Message);
-            
             return false;
         }
     }
 
-    private void AddParentToContainerFilter(MongoId parentId, MongoId containerId)
+    private void AddParentToContainerFilter(MongoId parentId, string containerNameOrId)
     {
-        Dictionary<MongoId, TemplateItem> items = dbService.GetItems();
-        items.TryGetValue(containerId, out TemplateItem? container);
-
-        if (container == null)
+        try
         {
-            logger.Warning($"Could not find container {containerId}");
+            var actualContainerId = ItemTplResolver.ResolveId(containerNameOrId);
+
+            Dictionary<MongoId, TemplateItem> items = dbService.GetItems();
+            items.TryGetValue(actualContainerId, out TemplateItem? container);
+
+            if (container == null)
+            {
+                logger.Warning($"Could not find container '{containerNameOrId}' (resolved to {actualContainerId})");
+                return;
+            }
+
+            var firstGrid = container.Properties?.Grids?.FirstOrDefault();
+            var firstFilter = firstGrid?.Properties?.Filters?.FirstOrDefault();
+
+            if (firstFilter == null)
+            {
+                logger.Warning($"Container {actualContainerId} has no filters to modify");
+                return;
+            }
+
+            firstFilter.Filter ??= [];
+            if (!firstFilter.Filter.Contains(parentId))
+            {
+                firstFilter.Filter.Add(parentId);
+                LogHelper.Debug(logger, $"Added parent {parentId} to container '{containerNameOrId}' ({actualContainerId}) filters");
+            }
+        }
+        catch (ArgumentException ex)
+        {
+            logger.Warning($"Failed to resolve container '{containerNameOrId}': {ex.Message}");
+        }
+    }
+
+    private void AddParentToInventorySlots(MongoId parentId, IEnumerable<string> slotNames)
+    {
+        if (!ItemsDb.TryGetValue(DefaultInventoryId, out var defaultInventory) || defaultInventory.Properties?.Slots == null)
+        {
+            logger.Warning($"Could not find default inventory {DefaultInventoryId}");
             return;
         }
 
-        container.Properties?.Grids?.FirstOrDefault()?.Properties?.Filters?.FirstOrDefault()?.Filter?.Add(parentId);
-        LogHelper.Debug(logger, $"Added parent {parentId} to {containerId} filters");
+        var targetNames = slotNames?.ToHashSet(StringComparer.OrdinalIgnoreCase)
+                          ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (targetNames.Count == 0)
+        {
+            logger.Warning($"No inventory slots specified for parent {parentId}, skipping inventory slot injection");
+            return;
+        }
+
+        foreach (var slot in defaultInventory.Properties.Slots)
+        {
+            if (slot?.Name == null || !targetNames.Contains(slot.Name))
+                continue;
+
+            var firstFilter = slot.Properties?.Filters?.FirstOrDefault();
+            if (firstFilter == null)
+            {
+                logger.Warning($"Slot {slot.Name} has no filters, cannot add parent {parentId}");
+                continue;
+            }
+
+            firstFilter.Filter ??= [];
+            if (!firstFilter.Filter.Contains(parentId))
+            {
+                firstFilter.Filter.Add(parentId);
+                LogHelper.Debug(logger, $"Added parent {parentId} to inventory slot {slot.Name} filters");
+            }
+        }
+    }
+
+    private void AddParentToTraderBuyLists(MongoId parentId, IEnumerable<string> traderNames)
+    {
+        if (traderNames == null)
+        {
+            logger.Warning($"No traders specified for parent {parentId}, skipping trader buy list injection");
+            return;
+        }
+
+        foreach (var traderName in traderNames)
+        {
+            if (string.IsNullOrWhiteSpace(traderName))
+                continue;
+
+            if (!TraderIds.TraderMap.TryGetValue(traderName, out var traderId))
+            {
+                logger.Warning($"Unknown trader name '{traderName}' for parent {parentId}");
+                continue;
+            }
+
+            if (!TraderDb.TryGetValue(traderId, out var trader))
+            {
+                logger.Warning($"Trader id {traderId} not found in database for name '{traderName}'");
+                continue;
+            }
+
+            var itemsBuy = trader.Base.ItemsBuy;
+            if (itemsBuy?.Category == null)
+            {
+                logger.Warning($"Trader '{traderName}' ({traderId}) has no ItemsBuy.Category list");
+                continue;
+            }
+
+            if (!itemsBuy.Category.Contains(parentId))
+            {
+                itemsBuy.Category.Add(parentId);
+                LogHelper.Debug(logger, $"Added parent {parentId} to trader '{traderName}' ({traderId}) buy categories");
+            }
+        }
     }
 
     public Dictionary<MongoId, CustomItemParentConfig> GetCustomParents()

@@ -66,25 +66,40 @@ public class CustomItemParentLoader
                 }
             }
         }
-        
+
         foreach (var parent in customParents)
         {
-            var ctor = parent.Item.GetConstructor([typeof(string), parent.Template]);
+            if (parent.Item == null)
+            {
+                mappings.Add(new TemplateIdToObjectType(
+                    parent.ParentId,
+                    null,
+                    parent.Template,
+                    null
+                ));
+                continue;
+            }
+
+            var ctor = parent.Template == null
+                ? parent.Item.GetConstructor(new[] { typeof(string) })
+                : parent.Item.GetConstructor(new[] { typeof(string), parent.Template });
 
             if (ctor == null)
             {
                 LogHelper.LogError($"Could not find valid constructor for {parent.Item}");
                 continue;
             }
-            
+
             mappings.Add(new TemplateIdToObjectType(
                 parent.ParentId,
                 parent.Item,
                 parent.Template,
-                (id, tpl) => (Item)ctor.Invoke([id, tpl])
+                (id, tpl) => (Item)(parent.Template == null
+                    ? ctor.Invoke(new object[] { id })
+                    : ctor.Invoke(new object[] { id, tpl }))
             ));
         }
-        
+
         CustomTemplateIdToObjectService.AddNewTemplateIdToObjectMapping(mappings);
         
         _parentsRegistered = true;

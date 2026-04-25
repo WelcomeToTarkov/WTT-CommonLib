@@ -76,7 +76,6 @@ public class WTTServerCommonLib(
     public WTTCustomCustomizationService CustomCustomizationService { get; } = customCustomizationService;
     public WTTCustomDialogueService CustomDialogueService { get; } = customDialogueService;
     public WTTCustomItemParentService CustomItemParentService { get; } = customItemParentService;
-
     public WTTHideoutControllerExtended HideoutControllerExtended { get; } = hideoutControllerExtended;
 
     public Task OnLoad()

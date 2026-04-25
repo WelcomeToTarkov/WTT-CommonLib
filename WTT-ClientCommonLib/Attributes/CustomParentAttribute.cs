@@ -7,10 +7,10 @@ namespace WTTClientCommonLib.Attributes;
 public class CustomParent : Attribute
 {
     public string ParentId { get; }
-    public Type Item { get; }
-    public Type Template { get; }
+    public Type? Item { get; }
+    public Type? Template { get; }
 
-    public CustomParent(string id, Type item, Type template)
+    public CustomParent(string id, Type? item, Type? template)
     {
         ParentId = id;
         Item = item;

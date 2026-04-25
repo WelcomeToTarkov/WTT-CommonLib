@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <OutputType>Library</OutputType>
         <PackageId>WTT-ServerCommonLib</PackageId>
-        <Version>2.0.19</Version>
+        <Version>2.0.20</Version>
         <Authors>GrooveypenguinX</Authors>
         <IsPackable>true</IsPackable>
         <Description>WTT Common Library - Server components</Description>
@@ -20,9 +20,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="NuGetMeta\WTT-ServerCommonLib.props"
-              Pack="true"
-              PackagePath="build\WTT-ServerCommonLib.props" />
+        <None Include="NuGetMeta\WTT-ServerCommonLib.props" Pack="true" PackagePath="build\WTT-ServerCommonLib.props" />
     </ItemGroup>
     
     <PropertyGroup Condition="'$(Configuration)' == ''">
@@ -47,16 +45,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="../README.md" Pack="true" PackagePath=""/>
+        <None Include="../README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="SPTarkov.Reflection" Version="4.0.13" />
         <PackageReference Include="SPTarkov.Server.Core" Version="4.0.13" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Loaders\" />
     </ItemGroup>
 
     <!-- Post-Build: Copy DLLs and Resources to SPT and Build folders -->

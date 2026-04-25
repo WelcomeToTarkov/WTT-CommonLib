@@ -87,7 +87,7 @@ public class WTTCustomHideoutRecipeService(
                 
                 _database.Hideout.Production.Recipes?.Add(recipe);
                 
-                logger.Info(recipe.ToString());
+                LogHelper.Debug(logger, recipe.ToString());
 
                 if (recipe.EndProductItems != null && recipe.EndProductItems.Count > 0)
                 {
