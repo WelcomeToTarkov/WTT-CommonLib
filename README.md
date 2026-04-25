@@ -30,8 +30,6 @@ A comprehensive modding library for SPT that simplifies adding custom content to
   - [CustomDialogueService](#customdialogueservice)
   - [CustomItemParentService](#customitemparentservice)
 - [Example Mod Structure](#example-mod-structure)
-- [Available Client Services](#available-client-services)
-  - [Server Side Custom Item Template Registration](#server-side-custom-item-template-registration) 
 
 ## Features
 
@@ -1788,7 +1786,7 @@ await wttCommon.CustomDialogueService.CreateCustomDialogues(assembly,
 
 ### CustomItemParentService
 
-Purpose: Registers custom item parent definitions on both the client and server so that items with custom behaviors can be created
+Purpose: Registers custom item parent definitions on the server and binds them to client runtime types so custom items can inherit custom behavior
 
 #### Example usage
 
@@ -1807,13 +1805,25 @@ db/CustomParents/example_parent.jsonc
         "_props": {
             "TestValue": "hi im a test value"
         },
+
+        // should the parent be added to trader(s) buy list?
+        "addToTraderBuyLists": true,
+
+        // trader name or id
+        "traders": [ "ragman" ],
+
+        // should the parent be added to a default inventory slot (armband, backpack, etc) 
+        "addToInventorySlots": true,
+
+        // default inventory slot name
+        "inventorySlots": [ "ArmBand" ],
         
         // should the parent be added to item container filters?
         "addToContainerFilters": true,
         
-        // list of containers to add the parent to
+        // containers whose filters should accept this parent; values can be raw tpl IDs or mapped container names.
         "containers": [
-            "59fb042886f7746c5005a7b2", // item case
+            "CONTAINER_ITEM_CASE", // item case
             "59fb023c86f7746d0d4b423c" // weapon case
         ]
     }
@@ -1874,7 +1884,7 @@ public class CustomParentModExample(
         // Register your custom parents
         await wttCommon.CustomItemParentService.CreateCustomParents(assembly);
         
-        // Register your new custom items using your new item or template types
+        // Register custom items after custom parents so their parent IDs resolve correctly.
         await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly);
         
         await Task.CompletedTask;
@@ -1886,6 +1896,8 @@ public class CustomParentModExample(
 ```c#
 // register our parent to a client-side runtime class
 // first parameter ID has to match the parent id we defined earlier
+// second parameter is the item (CAN BE NULL FOR TEMPLATES)
+// third parameter is the template
 [CustomParent("RANDOM_PARENT_MONGOID_HERE", typeof(CustomExampleItem), typeof(CustomExampleItemTemplate))]
 public class CustomExampleItem : Item 
 {
@@ -1935,215 +1947,3 @@ MyWeaponMod/
 
 ***
 
-## Available Client Services
-
-### CustomTemplateIdToObjectService
-
-**Purpose**: Allows other mods to register custom items and template, enabling the game to properly instantiate custom item types
-
-**Usage**:
-
-```csharp
-using System.Collections.Generic;
-using BepInEx;
-using EFT.InventoryLogic;
-
-// Reference to the Client Common Lib - USE THE NUGET PACKAGE!
-using WTTClientCommonLib.Services;
-
-namespace YOURMOD
-{
-    [BepInDependency("com.wtt.commonlib")]
-    [BepInPlugin("com.YOURMOD.Core", "YOURMOD", "1.0")]
-    internal class YOURMOD : BaseUnityPlugin
-    {
-        internal void Awake()
-        {
-            CustomTemplateIdToObjectService.AddNewTemplateIdToObjectMapping(MyCustomItems.CustomMappings);
-        }
-
-        public class MyCustomItems
-        {
-            // TEMPLATE TYPE
-            public class MyCustomTemplateType(string myCustomProp1, string myCustomProp2)
-                : CompoundItemTemplateClass
-            {
-                public readonly string MyCustomProp1 = myCustomProp1;
-                public readonly string MyCustomProp2 = myCustomProp2;
-            }
-
-            // ITEM TYPE
-            public class MyCustomItemType(string id, MyCustomTemplateType template) : CompoundItem(id, template)
-            {
-            }
-
-            // ITEM
-            public class MyNewItem : MyCustomItemType
-            {
-                [GAttribute23] private readonly TagComponent _tag;
-                public string MyCustomProp1 { get; }
-                public string MyCustomProp2 { get; }
-
-                public MyNewItem(string id, MyCustomTemplateType template) : base(id, template)
-                {
-                    MyCustomProp1 = template.MyCustomProp1;
-                    MyCustomProp2 = template.MyCustomProp2;
-                    Components.Add(_tag = new TagComponent(this));
-                }
-
-                public override IEnumerable<EItemInfoButton> ItemInteractionButtons
-                {
-                    get
-                    {
-                        foreach (var itemInfoButton in GetBaseInteractions())
-                        {
-                            yield return itemInfoButton;
-                        }
-
-                        yield return EItemInfoButton.Install;
-                        yield return EItemInfoButton.Uninstall;
-                        if (!string.IsNullOrEmpty(_tag?.Name))
-                        {
-                            yield return EItemInfoButton.ResetTag;
-                        }
-                    }
-                }
-
-                private IEnumerable<EItemInfoButton> GetBaseInteractions()
-                {
-                    return base.ItemInteractionButtons;
-                }
-            }
-
-            // Define your items and templates that need to be added to the TemplateIdToObjectMappingClass dictionaries
-            // NOTE: Template IDs must match your server-side item definitions in db/templates/items
-            public static readonly List<TemplateIdToObjectType> CustomMappings =
-            [
-                // Register the template type (no item instantiation needed)
-                new(
-                    "66f16b85ed966fb78f5563d8", // Template ID
-                    null, // Item type (null for template-only registration)
-                    typeof(MyCustomTemplateType), // Template type
-                    null // Constructor (null for template-only registration)
-                ),
-                // Register the item type with its constructor
-                new(
-                    "66f17b4cb59dbccbf12990e6", // Template ID
-                    typeof(MyNewItem), // Item type
-                    typeof(MyCustomTemplateType), // Template type
-                    (id, template) => new MyNewItem(id, (MyCustomTemplateType)template) // Constructor
-                ),
-            ];
-        }
-    }
-}
-```
-
-**Mapping Properties**:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `TemplateId` | string | Custom item template ID that matches your item template ID in the server database |
-| `ItemType` | Type | C# class that inherits from `Item` or one of it's derivative classes (null for template-only registration) |
-| `TemplateType` | Type | C# class that represents the template data structure |
-| `Constructor` | Delegate | Function that instantiates your custom item: `(id, template) => new YourItem(id, template)` (null for template-only registration) |
-
-**What Gets Registered**:
-
-The service registers your mappings into three internal dictionaries within `TemplateIdToObjectMappingsClass`:
-
-- **TypeTable**: Maps template IDs to their `ItemType` classes for inventory object instantiation
-- **TemplateTypeTable**: Maps template IDs to their `TemplateType` classes for data representation
-- **ItemConstructors**: Maps template IDs to constructor functions for creating item instances
-
-**Example Use Cases**:
-
-- Creating custom containers or cases with unique inventory layouts (see Pack N Strap)
-- Creating custom usable items with accessories and special interactions (see Komrade Kid)
-
-**Important Notes**:
-
-- Both `ItemType` and `TemplateType` must be properly defined C# classes
-- Only register custom items — this service will not override vanilla Escape from Tarkov items
-- Template IDs in your mappings must match the item template IDs defined on your server database
-- You must still add your new templates and items to the server database via `db/templates/items` — this service only handles client-side object instantiation
-
-***
-
-### Server Side Custom Item Template Registration
-
-When using `CustomTemplateIdToObjectService` on the client, you must also register your custom item templates on the server. Here's how to set up custom items in your mod's database initialization:
-
-**Implementation Example**:
-
-```csharp
-using System.Reflection;
-using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.DI;
-using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Spt.Mod;
-using SPTarkov.Server.Core.Services;
-using Range = SemanticVersioning.Range;
-using Path = System.IO.Path;
-
-namespace YOURMOD.Server;
-
-public record ModMetadata : AbstractModMetadata
-{
-    public override string ModGuid { get; init; } = "com.YOURNAME.YOURMOD-Server";
-    public override string Name { get; init; } = "YOURMOD-Server";
-    public override string Author { get; init; } = "YourName";
-    public override List<string>? Contributors { get; init; } = null;
-    public override SemanticVersioning.Version Version { get; init; } = new("1.0.0");
-    public override Range SptVersion { get; init; } = new("~4.0.2");
-    public override List<string>? Incompatibilities { get; init; }
-    public override Dictionary<string, Range>? ModDependencies { get; init; }
-    public override string? Url { get; init; }
-    public override bool? IsBundleMod { get; init; } = true;
-    public override string License { get; init; } = "MIT";
-}
-
-[Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 2)]
-public class YOURMODServer(
-    WTTServerCommonLib.WTTServerCommonLib wttCommon,
-    DatabaseService databaseService) : IOnLoad
-{
-    public async Task OnLoad()
-    {
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        var itemsDb = databaseService.GetTables().Templates.Items;
-
-        // Base template for your custom item type
-        itemsDb["6906a3c931abc0ab8b62d0d2"] = new TemplateItem()
-        {
-            Id = "6906a3c931abc0ab8b62d0d2",
-            Name = "MyCustomItemTemplate",
-            Parent = "566162e44bdc2d3f298b4573", // Parent template ID (in this case CompoundItem)
-            Type = "Node",
-            Properties = new TemplateItemProperties()
-        };
-
-        // Your custom item
-        itemsDb["6906a400270c1fac09608296"] = new TemplateItem()
-        {
-            Id = "6906a400270c1fac09608296",
-            Name = "MyCustomItemType",
-            Parent = "6906a3c931abc0ab8b62d0d2", // Point to your base template
-            Type = "Node",
-            Properties = new TemplateItemProperties()
-        };
-
-        // Register your new custom items using your new item or template types
-        await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly);
-        
-        await Task.CompletedTask;
-    }
-}
-```
-
-**Key Points**:
-
-- **Template IDs**: Must match the IDs used in your client-side `CustomTemplateIdToObjectService` mappings
-- **Parent Template**: Point to an existing item template that matches your item's functionality
-
-***
