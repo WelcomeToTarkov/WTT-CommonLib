@@ -10,22 +10,16 @@ namespace WTTClientCommonLib.Attributes;
 /// <param name="item">The item class that should be associated with this parent (CAN BE NULL FOR TEMPLATE REGISTRATION)</param>
 /// <param name="template">The data template class that should be associated with this item</param>
 [AttributeUsage(AttributeTargets.Class)]
-public class CustomParent(string id, Type item, Type template) : Attribute
+public class CustomParent : Attribute
 {
     public string ParentId { get; }
-    public Type Item { get; }
-    public Type Template { get; }
+    public Type? Item { get; }
+    public Type? Template { get; }
 
-    public class CustomParent : Attribute
+    public CustomParent(string id, Type? item, Type? template)
     {
-        public string ParentId { get; }
-        public Type? Item { get; }
-        public Type? Template { get; }
-
-        public CustomParent(string id, Type? item, Type? template)
-        {
-            ParentId = id;
-            Item = item;
-            Template = template;
-        }
+        ParentId = id;
+        Item = item;
+        Template = template;
     }
+}
