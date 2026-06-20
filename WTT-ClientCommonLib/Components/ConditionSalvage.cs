@@ -14,3 +14,4 @@ public class ConditionSalvage : ConditionZone
         }
     }
 }
+

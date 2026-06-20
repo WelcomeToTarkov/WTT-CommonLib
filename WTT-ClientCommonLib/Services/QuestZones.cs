@@ -1,23 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Comfort.Common;
+﻿using Comfort.Common;
 using EFT;
 using EFT.Interactive;
 using EFT.InventoryLogic;
 using EFT.UI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using WTTClientCommonLib.Components;
 using WTTClientCommonLib.Helpers;
 using WTTClientCommonLib.Models;
+using static SalvageItemTrigger;
 
 namespace WTTClientCommonLib.Services;
 
 internal class QuestZones
 {
     private static readonly HashSet<string> _usedGroupPositions = new();
-
+    private static readonly List<SalvageReward> _salvageRewards = new();
     private static string PosKey(ZoneTransform p) => $"{p.X}|{p.Y}|{p.Z}";
 
     public static List<CustomQuestZone> GetZones()
@@ -167,7 +170,7 @@ internal class QuestZones
         var salvage = customQuestZone.Salvage;
         if (salvage == null)
         {
-            LogHelper.LogWarn($"[QuestZones] Salvage zone '{customQuestZone.ZoneId}' missing Salvage config");
+            LogHelper.LogWarn($"Salvage zone '{customQuestZone.ZoneId}' missing Salvage config");
             return;
         }
 
@@ -206,6 +209,8 @@ internal class QuestZones
             Count = r.Count,
             ToQuestInventory = r.ToQuestInventory
         }) ?? Array.Empty<SalvageItemTrigger.SalvageReward>();
+
+        _salvageRewards.AddRange(rewards);
 
         trigger.Configure(
             salvage.RequiredItemTpl,
@@ -271,12 +276,12 @@ internal class QuestZones
     public static void CreateZones(List<CustomQuestZone> zones)
     {
         _usedGroupPositions.Clear();
+        _salvageRewards.Clear();
 
         foreach (var zone in zones)
         {
             ApplyGroupPositionIfAny(zone);
 
-            // Now create as normal
             var type = zone.ZoneType.ToLowerInvariant();
             if (type == "placeitem") ZoneCreateItem(zone);
             if (type == "visit") ZoneCreateVisit(zone);
@@ -284,6 +289,43 @@ internal class QuestZones
             if (type == "botkillzone") ZoneCreateBotKillZone(zone);
             if (type == "salvage") ZoneCreateSalvage(zone);
         }
+
+        _ = PreloadSalvageRewards();
+    }
+
+
+    private static async Task PreloadSalvageRewards()
+    {
+        var poolManager = Singleton<PoolManagerClass>.Instance;
+        if (poolManager == null)
+            return;
+
+        var itemFactory = Singleton<ItemFactoryClass>.Instance;
+        if (itemFactory == null)
+            return;
+
+        var keys = new List<ResourceKey>();
+
+        foreach (var reward in _salvageRewards)
+        {
+            if (!itemFactory.ItemTemplates.TryGetValue(reward.ItemTpl, out var template))
+                continue;
+
+            if (template.Prefab != null) keys.Add(template.Prefab);
+            if (template.UsePrefab != null) keys.Add(template.UsePrefab);
+        }
+
+        if (keys.Count == 0)
+            return;
+
+        await poolManager.LoadBundlesAndCreatePools(
+            0,
+            PoolManagerClass.AssemblyType.Local,
+            keys.ToArray(),
+            JobPriorityClass.Immediate,
+            null,
+            CancellationToken.None
+        );
     }
 
     private static void ApplyGroupPositionIfAny(CustomQuestZone zone)
@@ -310,7 +352,7 @@ internal class QuestZones
         else
         {
             LogHelper.LogWarn(
-                $"[QuestZones] All GroupPosition positions for {zone.ZoneId} are already used; allowing reuse.");
+                $"All GroupPosition positions for {zone.ZoneId} are already used; allowing reuse.");
             index = UnityEngine.Random.Range(0, zone.GroupPosition.Count);
         }
 
@@ -325,7 +367,7 @@ internal class QuestZones
 
 #if DEBUG
         LogHelper.LogDebug(
-            $"[QuestZones] GroupPosition[{index}] selected for {zone.ZoneId} " +
+            $"GroupPosition[{index}] selected for {zone.ZoneId} " +
             $"pos=({selectedPose.Position.X},{selectedPose.Position.Y},{selectedPose.Position.Z})");
 #endif
     }

@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using Comfort.Common;
+﻿using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.Quests;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using WTTClientCommonLib.Components;
 using WTTClientCommonLib.Helpers;
@@ -137,7 +138,7 @@ namespace WTTClientCommonLib.Patches
             }
             state.Plant(isSilent, isMultitool, time, OnPlantComplete);
         }
-        
+
         private static async Task ApplySalvageAsync(
             SalvageItemTrigger trigger,
             Item requiredItem,
@@ -233,6 +234,10 @@ namespace WTTClientCommonLib.Patches
                             flatArray,
                             false,
                             new Dictionary<string, Item> { { fakeStash.Id, fakeStash } });
+
+
+
+
                         foreach (var item in fakeGrid.Items.ToArray())
                         {
                             item.SpawnedInSession = true;
@@ -275,6 +280,7 @@ namespace WTTClientCommonLib.Patches
                                     $"Network transaction failed for salvage reward {reward.ItemTpl}");
                             }
 
+
                         }
                     }
                     catch (Exception ex)
@@ -303,3 +309,4 @@ namespace WTTClientCommonLib.Patches
 
     }
 }
+

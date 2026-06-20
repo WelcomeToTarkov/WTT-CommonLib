@@ -1,8 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using Comfort.Common;
+using EFT;
+using EFT.Quests;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -11,23 +14,15 @@ namespace WTTClientCommonLib.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Constructor(typeof(GClass1871), Type.EmptyTypes);
+            return typeof(GClass1871).GetConstructor([])!;
         }
 
         [PatchPostfix]
-        public static void PatchPostfix(GClass1871 __instance)
+        public static void Postfix(GClass1871 __instance)
         {
-            var listField = AccessTools.Field(typeof(GClass1871), "List_0");
-            if (listField == null)
-                return;
-
-            var list = listField.GetValue(__instance) as List<Type>;
-            if (list == null)
-                return;
-
-            var salvageType = typeof(ConditionSalvage);
-            if (!list.Contains(salvageType))
-                list.Add(salvageType);
+            __instance.List_0.Add(typeof(ConditionSalvage));
         }
     }
+
+
 }
