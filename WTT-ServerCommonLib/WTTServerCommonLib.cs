@@ -51,6 +51,7 @@ public class WTTServerCommonLib(
     WTTCustomDialogueService customDialogueService,
     WTTCustomItemParentService customItemParentService,
     WTTHideoutControllerExtended hideoutControllerExtended,
+    WTTCustomQuestItemService customQuestItemService,
     ISptLogger<WTTServerCommonLib> logger
 ) : IOnLoad
 {
@@ -77,6 +78,8 @@ public class WTTServerCommonLib(
     public WTTCustomDialogueService CustomDialogueService { get; } = customDialogueService;
     public WTTCustomItemParentService CustomItemParentService { get; } = customItemParentService;
     public WTTHideoutControllerExtended HideoutControllerExtended { get; } = hideoutControllerExtended;
+
+    public WTTCustomQuestItemService CustomQuestItemService { get; } = customQuestItemService;
 
     public Task OnLoad()
     { 

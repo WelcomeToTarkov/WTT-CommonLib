@@ -1,11 +1,10 @@
-﻿using System.Reflection;
-using SPTarkov.DI.Annotations;
+﻿using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
-using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
-using SPTarkov.Server.Core.Services.Mod;
+using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Utils.Cloners;
+using System.Reflection;
 using WTTServerCommonLib.Constants;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
@@ -18,8 +17,7 @@ namespace WTTServerCommonLib.Services;
 [Injectable(InjectionType.Singleton)]
 public class WTTCustomItemServiceExtended(
     ISptLogger<WTTCustomItemServiceExtended> logger,
-    CustomItemService customItemService,
-    DatabaseServer databaseServer,
+    DatabaseService databaseService,
     ModHelper modHelper,
     WeaponPresetHelper weaponPresetHelper,
     TraderItemHelper traderItemHelper,
@@ -40,6 +38,9 @@ public class WTTCustomItemServiceExtended(
     EmptyPropSlotHelper emptyPropSlotHelper,
     SecureFiltersHelper secureFiltersHelper,
     RandomLootContainerHelper randomLootContainerHelper,
+    ICloner cloner,
+    ItemHelper itemHelper,
+    ItemRegistrationHelper itemRegistrationHelper,
     ItemBlacklistHelper rewardItemBlacklistHelper
 )
 {
@@ -61,7 +62,7 @@ public class WTTCustomItemServiceExtended(
     public async Task CreateCustomItems(Assembly assembly, string? relativePath = null)
 
     {
-        if (_database == null) _database = databaseServer.GetTables();
+        if (_database == null) _database = databaseService.GetTables();
 
         try
         {
@@ -90,7 +91,7 @@ public class WTTCustomItemServiceExtended(
             foreach (var (itemId, configData) in configDict)
             {
                 configData.Validate(itemId);
-                if (CreateItemFromConfig(itemId, configData))
+                if (CreateItemFromConfig(assembly, itemId, configData))
                     totalItemsCreated++;
             }
 
@@ -101,34 +102,69 @@ public class WTTCustomItemServiceExtended(
             logger.Error($"Error loading configs: {ex.Message}");
         }
     }
-
-    private bool CreateItemFromConfig(string newItemId, CustomItemConfig config)
+    private bool CreateItemFromConfig(Assembly assembly,string newItemId, CustomItemConfig config)
     {
         try
         {
-            var itemDetails = new NewItemFromCloneDetails
-            {
-                ItemTplToClone = ItemTplResolver.ResolveId(config.ItemTplToClone),
-                ParentId = NameHelper.ResolveId(config.ParentId, ItemMaps.ItemBaseClassMap),
-                NewId = newItemId,
-                FleaPriceRoubles = config.FleaPriceRoubles,
-                HandbookPriceRoubles = config.HandbookPriceRoubles,
-                HandbookParentId = NameHelper.ResolveId(config.HandbookParentId, ItemMaps.ItemHandbookCategoryMap),
-                Locales = config.Locales,
-                OverrideProperties = config.OverrideProperties
-            };
+            var registerInHandbook = config.RegisterInHandbook ?? true;
+            var registerInFleaPrices = config.RegisterInFleaPrices ?? true;
 
-            customItemService.CreateItemFromClone(itemDetails);
+            CreateItemFromClone(assembly, newItemId, config, registerInHandbook, registerInFleaPrices);
             LogHelper.Debug(logger, $"Created item {newItemId}");
 
             ProcessAdditionalProperties(newItemId, config);
-
             return true;
         }
         catch (Exception ex)
         {
             logger.Error($"Failed to create item {newItemId}: {ex.Message}");
             return false;
+        }
+    }
+    private void CreateItemFromClone(
+        Assembly assembly,
+        string newItemId,
+        CustomItemConfig config,
+        bool registerInHandbook,
+        bool registerInFleaPrices)
+    {
+        var tables = databaseService.GetTables();
+
+        if (tables.Templates.Items.TryGetValue(newItemId, out var existingItem))
+            throw new InvalidOperationException($"ItemId already exists. {existingItem.Name}");
+
+        var cloneTplId = ItemTplResolver.ResolveId(config.ItemTplToClone);
+        if (!tables.Templates.Items.TryGetValue(cloneTplId, out var itemToClone) || itemToClone == null)
+            throw new InvalidOperationException($"Unable to find item to clone: {config.ItemTplToClone}");
+
+        var itemClone = cloner.Clone(itemToClone);
+        itemClone.Id = newItemId;
+        itemClone.Parent = NameHelper.ResolveId(config.ParentId, ItemMaps.ItemBaseClassMap);
+
+        itemRegistrationHelper.UpdateBaseItemPropertiesWithOverrides(config.OverrideProperties, itemClone);
+
+        itemRegistrationHelper.AddToItemsDb(newItemId, itemClone);
+
+        if (registerInHandbook)
+        {
+            itemRegistrationHelper.AddToHandbookDb(
+                newItemId,
+                NameHelper.ResolveId(config.HandbookParentId!, ItemMaps.ItemHandbookCategoryMap),
+                config.HandbookPriceRoubles!.Value);
+        }
+
+        itemRegistrationHelper.AddToLocaleDbs(config.Locales, newItemId);
+
+        if (registerInFleaPrices)
+        {
+            itemRegistrationHelper.AddToFleaPriceDb(newItemId, config.FleaPriceRoubles!.Value);
+        }
+
+        itemRegistrationHelper.AddItemToBaseClassCache(assembly, newItemId);
+
+        if (itemHelper.IsOfBaseclass(itemClone.Id, BaseClasses.WEAPON))
+        {
+            itemRegistrationHelper.AddToWeaponShelf(newItemId);
         }
     }
 

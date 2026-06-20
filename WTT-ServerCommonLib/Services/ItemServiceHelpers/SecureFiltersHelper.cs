@@ -2,7 +2,6 @@
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Helpers;
-using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
@@ -13,7 +12,7 @@ public class SecureFiltersHelper(ISptLogger<SecureFiltersHelper> logger, Databas
     private const string WTTSecureContainerParentId = "68154651f849fb4e7d816738";
     private const string BossContainerId = "5c0a794586f77461c458f892";
 
-    public void AddToSecureFilters(CustomItemConfig itemConfig, string newItemId)
+    public void AddToSecureFilters(CustomItemConfigBase itemConfig, string newItemId)
     {
         if (itemConfig.AddToSecureFilters != true)
             return;

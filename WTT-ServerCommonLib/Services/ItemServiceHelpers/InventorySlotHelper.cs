@@ -9,7 +9,7 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 [Injectable]
 public class InventorySlotHelper(ISptLogger<InventorySlotHelper> logger, DatabaseService databaseService)
 {
-    public void ProcessInventorySlots(CustomItemConfig itemConfig, string itemId)
+    public void ProcessInventorySlots(CustomItemConfigBase itemConfig, string itemId)
     {
         if (itemConfig.AddToInventorySlots == null)
             return;

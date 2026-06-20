@@ -2,14 +2,13 @@
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Helpers;
-using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
 public class ModSlotHelper(ISptLogger<ModSlotHelper> logger, DatabaseService databaseService)
 {
-    public void ProcessModSlots(CustomItemConfig itemConfig, string newItemId)
+    public void ProcessModSlots(CustomItemConfigBase itemConfig, string newItemId)
     {
         var itemTplToClone = itemConfig.ItemTplToClone;
         var finalTplToClone = ItemTplResolver.ResolveId(itemTplToClone);
