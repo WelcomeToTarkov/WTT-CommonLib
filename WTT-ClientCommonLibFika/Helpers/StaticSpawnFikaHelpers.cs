@@ -18,7 +18,6 @@ public class StaticSpawnFikaHelpers
         try
         {
             FikaEventDispatcher.SubscribeEvent<FikaNetworkManagerCreatedEvent>(OnFikaNetworkCreated);
-            LogHelper.LogInfo("[WTT-ClientCommonLibFika] Subscribed to Fika network events");
         }
         catch (Exception ex)
         {
@@ -31,7 +30,6 @@ public class StaticSpawnFikaHelpers
         try
         {
             fikaEvent.Manager.RegisterPacket<StaticSpawnPacket>(OnStaticSpawnPacketReceived);
-            LogHelper.LogInfo("[WTT-ClientCommonLibFika] Registered StaticSpawnPacket handler");
         }
         catch (Exception ex)
         {

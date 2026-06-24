@@ -21,7 +21,6 @@ public class ExtendedRecipeLoader
 
     public ExtendedProductionScheme GetExtendedScheme(string schemeId)
     {
-        LogHelper.LogInfo($"looking extended scheme with id {schemeId}");
         _extendedSchemes.TryGetValue(schemeId, out var extendedProductionScheme);
         return extendedProductionScheme;
     }

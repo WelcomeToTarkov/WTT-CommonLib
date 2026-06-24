@@ -48,8 +48,6 @@ public class ProduceViewShowPatch : ModulePatch
                 recipeResultStacks.Add(resultStack);
             }
             
-            LogHelper.LogInfo($"found extended scheme for craft scheme: {schemeId}");
-            
             // update initial end product
             RecipeResultStack firstStack = extendedScheme.FirstResult;
             viewFactory.Show(firstStack.Item, __instance.InventoryController, __instance.ItemUiContext);

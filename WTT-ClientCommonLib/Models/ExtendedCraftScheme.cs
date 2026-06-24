@@ -43,8 +43,6 @@ public class ExtendedProductionScheme : ProductionBuildAbstractClass
                     }
                 }
                 
-                LogHelper.LogInfo($"extended recipe result {resultId} has base item {recipeStackBaseItems[resultId]}");
-                
                 var items = Singleton<ItemFactoryClass>.Instance.FlatItemsToTree(craftResult.Items).Items;
                 foreach ((string id, Item item) in items)
                 {
