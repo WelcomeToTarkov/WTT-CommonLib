@@ -13,6 +13,9 @@ public record HideoutProductionExtended : HideoutProduction
 {
     [JsonPropertyName("endProductItems")]
     public Dictionary<MongoId, CustomCraftResult>? EndProductItems { get; set; }
+    
+    [JsonPropertyName("ignoreVanillaItemUnpack")]
+    public bool? IgnoreVanillaItemUnpack { get; set; }
 
     private readonly Random _rand = new();
 
@@ -31,18 +34,22 @@ public record HideoutProductionExtended : HideoutProduction
         foreach (var result in craftResults)
         {
             var count = result.Count;
+            var randomItems = result is { MinStackCount: not null, MaxStackCount: not null };
+            var randomItemCount = 1;
             
-            if (result is { MinCount: not null, MaxCount: not null })
+            if (randomItems)
             {
-                count = _rand.Next((int)result.MinCount, (int)result.MaxCount);
+                randomItemCount = _rand.Next((int)result.MinStackCount!, (int)result.MaxStackCount!);
             }
             
             for (var i = 0; i < count; i++)
             {
+                result.Items[0].Upd ??= new Upd();
+                result.Items[0].Upd!.StackObjectsCount = randomItemCount;
                 finalItems.Add(result.Items);
             }
         }
-
+        
         return finalItems;
     }
 }
@@ -53,11 +60,11 @@ public class CustomCraftResult
     [JsonPropertyName("count")]
     public int Count { get; set; }
     
-    [JsonPropertyName("minCount")]
-    public int? MinCount { get; set; }
+    [JsonPropertyName("minStackCount")]
+    public int? MinStackCount { get; set; }
     
-    [JsonPropertyName("maxCount")]
-    public int? MaxCount { get; set; }
+    [JsonPropertyName("maxStackCount")]
+    public int? MaxStackCount { get; set; }
     
     [JsonPropertyName("items")]
     public List<Item> Items { get; set; }
