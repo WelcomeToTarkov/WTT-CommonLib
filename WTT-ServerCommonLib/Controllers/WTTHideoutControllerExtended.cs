@@ -110,14 +110,14 @@ public class WTTHideoutControllerExtended(
         // Reward is a list of multiple items, handle differently compared to regular end product
         var extendedRecipe = recipeService.GetExtendedRecipe(recipe.Id);
         var recipeIsExtended = false;
-        var ignoreVanillaItemUnpack = false;
+        var ignoreVanillaItemUnstack = false;
         if (extendedRecipe is { EndProductItems.Count: > 0 })
         {
             itemAndChildrenToSendToPlayer = HandleExtendedReward(extendedRecipe);
             recipeIsExtended = true;
-            if (extendedRecipe.IgnoreVanillaItemUnpack is not null)
+            if (extendedRecipe.IgnoreVanillaItemUnstack is not null)
             {
-                ignoreVanillaItemUnpack = extendedRecipe.IgnoreVanillaItemUnpack.Value;
+                ignoreVanillaItemUnstack = extendedRecipe.IgnoreVanillaItemUnstack.Value;
             }
         }
         
@@ -128,7 +128,7 @@ public class WTTHideoutControllerExtended(
             itemAndChildrenToSendToPlayer = HandlePresetReward(recipe);
         }
 
-        if (!ignoreVanillaItemUnpack)
+        if (!ignoreVanillaItemUnstack)
         {
             UnstackRewardIntoValidSize(recipe, itemAndChildrenToSendToPlayer, rewardIsPreset || recipeIsExtended);
         }

@@ -14,8 +14,8 @@ public record HideoutProductionExtended : HideoutProduction
     [JsonPropertyName("endProductItems")]
     public Dictionary<MongoId, CustomCraftResult>? EndProductItems { get; set; }
     
-    [JsonPropertyName("ignoreVanillaItemUnpack")]
-    public bool? IgnoreVanillaItemUnpack { get; set; }
+    [JsonPropertyName("ignoreVanillaItemUnstack")]
+    public bool? IgnoreVanillaItemUnstack { get; set; }
 
     private readonly Random _rand = new();
 
