@@ -1,8 +1,9 @@
+using System.Reflection;
 using EFT;
 using EFT.UI;
+using EFT.UI.Matchmaker;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 using WTTClientCommonLib.Services;
 
 namespace WTTClientCommonLib.Patches;
@@ -10,14 +11,14 @@ namespace WTTClientCommonLib.Patches;
 public class MenuLoadedPatch : ModulePatch
 {
     private static bool _menuShown = false;
-    
+
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(MenuScreen), nameof(MenuScreen.Show), [
-            typeof(Profile),
-            typeof(MatchmakerPlayerControllerClass),
-            typeof(ESessionMode)
-        ]);
+        return AccessTools.Method(
+            typeof(MenuScreen),
+            nameof(MenuScreen.Show),
+            [typeof(Profile), typeof(MatchmakerPlayersController), typeof(ESessionMode)]
+        );
     }
 
     [PatchPostfix]
@@ -26,7 +27,7 @@ public class MenuLoadedPatch : ModulePatch
         if (!_menuShown)
         {
             ExtendedRecipeLoader.Instance.LoadExtendedRecipeResults();
-            
+
             _menuShown = true;
         }
     }

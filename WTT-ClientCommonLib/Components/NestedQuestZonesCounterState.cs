@@ -1,8 +1,6 @@
-﻿using EFT.Quests;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using EFT.Quests;
 
 namespace WTTClientCommonLib.Components
 {
@@ -16,7 +14,7 @@ namespace WTTClientCommonLib.Components
 
         private static readonly Dictionary<(string questId, string ccId), State> _states = new();
 
-        public static State GetOrCreate(QuestClass quest, ConditionCounterCreator cc)
+        public static State GetOrCreate(Quest quest, ConditionCounterCreator cc)
         {
             var key = (quest.Id, cc.id);
             if (!_states.TryGetValue(key, out var state))
@@ -27,7 +25,7 @@ namespace WTTClientCommonLib.Components
             return state;
         }
 
-        public static void ResetForQuest(QuestClass quest)
+        public static void ResetForQuest(Quest quest)
         {
             var keys = _states.Keys.Where(k => k.questId == quest.Id).ToList();
             foreach (var key in keys)

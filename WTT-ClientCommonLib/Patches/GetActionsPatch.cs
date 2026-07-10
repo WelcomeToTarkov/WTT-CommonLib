@@ -1,17 +1,18 @@
-﻿using Comfort.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Comfort.Common;
+using Diz.Utils;
 using EFT;
+using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.Quests;
 using EFT.UI;
 using HarmonyLib;
+using JsonType;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using UnityEngine;
 using WTTClientCommonLib.Components;
 using WTTClientCommonLib.Helpers;
 
@@ -23,12 +24,16 @@ namespace WTTClientCommonLib.Patches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.FirstMethod(typeof(GetActionsClass),
-                x => x.Name == nameof(GetActionsClass.GetAvailableActions) && x.GetParameters()[0].Name == "owner");
+            return AccessTools.FirstMethod(
+                typeof(InteractionContextHelper),
+                x =>
+                    x.Name == nameof(InteractionContextHelper.GetAvailableActions)
+                    && x.GetParameters()[0].Name == "owner"
+            );
         }
 
         [PatchPrefix]
-        public static bool PatchPrefix(object[] __args, ref ActionsReturnClass __result)
+        public static bool PatchPrefix(object[] __args, ref AvailableInteractionState __result)
         {
             var owner = (GamePlayerOwner)__args[0];
             var interactive = __args[1];
@@ -44,21 +49,20 @@ namespace WTTClientCommonLib.Patches
                 return true;
             }
 
-
-            var questBook = player.AbstractQuestControllerClass?.Quests;
+            var questBook = player.QuestController?.Quests;
             if (questBook == null)
             {
                 __result = null;
                 return true;
             }
 
-
             _activeSalvageChecker = null;
             ConditionProgressChecker activeChecker = null;
 
-            foreach (var cpc in questBook.GetConditionHandlersByZone<ConditionZone>(salvageTrigger.Id))
+            foreach (
+                var cpc in questBook.GetConditionHandlersByZone<ConditionZone>(salvageTrigger.Id)
+            )
             {
-
                 if (cpc.Condition is not ConditionSalvage)
                     continue;
 
@@ -77,22 +81,24 @@ namespace WTTClientCommonLib.Patches
 
             _activeSalvageChecker = activeChecker;
 
-            var actions = new List<ActionsTypesClass>
+            var actions = new List<InteractionAction>
             {
                 new()
                 {
                     Name = "SALVAGE_ZONE".Localized(null),
-                    Action = () => StartSalvage(owner, salvageTrigger, inventoryController)
-                }
+                    Action = () => StartSalvage(owner, salvageTrigger, inventoryController),
+                },
             };
 
-            __result = new ActionsReturnClass { Actions = actions };
+            __result = new AvailableInteractionState { Actions = actions };
             return false;
         }
 
-        private static void StartSalvage(GamePlayerOwner owner,
+        private static void StartSalvage(
+            GamePlayerOwner owner,
             SalvageItemTrigger trigger,
-            InventoryController inventoryController)
+            InventoryController inventoryController
+        )
         {
             var player = owner.Player;
             var items = player.Inventory.GetPlayerItems(EPlayerItems.InRaidItems).ToArray();
@@ -105,14 +111,15 @@ namespace WTTClientCommonLib.Patches
                 var itemName = requiredTpl.LocalizedName();
                 var message = string.Format("YOU_NEED_ITEM_TO_SALVAGE".Localized(null), itemName);
 
-                NotificationManagerClass.DisplaySingletonWarningNotification(message);
+                NotificationManager.DisplaySingletonWarningNotification(message);
                 return;
             }
-            
-            if (player.CurrentState is not IdleStateClass)
+
+            if (player.CurrentState is not IdlePlayerState)
             {
-                NotificationManagerClass.DisplaySingletonWarningNotification(
-                    "CANT_SALVAGE_WHILE_MOVING".Localized(null));
+                NotificationManager.DisplaySingletonWarningNotification(
+                    "CANT_SALVAGE_WHILE_MOVING".Localized(null)
+                );
                 return;
             }
 
@@ -124,7 +131,7 @@ namespace WTTClientCommonLib.Patches
             float time = trigger.SalvageTime;
             async void OnPlantComplete(bool success)
             {
-                player.vmethod_6(requiredItem.TemplateId, trigger.Id, success);
+                player.PlantItem(requiredItem.TemplateId, trigger.Id, success);
                 owner.CloseObjectivesPanel();
 
                 if (!success)
@@ -143,7 +150,8 @@ namespace WTTClientCommonLib.Patches
             SalvageItemTrigger trigger,
             Item requiredItem,
             InventoryController inventoryController,
-            GamePlayerOwner owner)
+            GamePlayerOwner owner
+        )
         {
             _activeSalvageChecker = null;
             var player = owner.Player;
@@ -159,10 +167,11 @@ namespace WTTClientCommonLib.Patches
             {
                 try
                 {
-                    var removeResult = InteractionsHandlerClass.Remove(
+                    var removeResult = ItemManipulator.Remove(
                         requiredItem,
                         inventoryController,
-                        simulate: true);
+                        simulate: true
+                    );
 
                     if (removeResult.Failed)
                     {
@@ -170,7 +179,10 @@ namespace WTTClientCommonLib.Patches
                         return;
                     }
 
-                    var netResult = await inventoryController.TryRunNetworkTransaction(removeResult, null);
+                    var netResult = await inventoryController.TryRunNetworkTransaction(
+                        removeResult,
+                        null
+                    );
                     if (!netResult.Succeed)
                     {
                         LogHelper.LogError("Network transaction for removing required item failed");
@@ -190,7 +202,7 @@ namespace WTTClientCommonLib.Patches
                 {
                     try
                     {
-                        var itemFactory = Singleton<ItemFactoryClass>.Instance;
+                        var itemFactory = Singleton<ItemFactory>.Instance;
                         if (itemFactory == null)
                         {
                             LogHelper.LogError("ItemFactoryClass.Instance is null");
@@ -198,78 +210,76 @@ namespace WTTClientCommonLib.Patches
                         }
 
                         var fakeStash = itemFactory.CreateFakeStash(null);
-                        var fakeGrid = new StashGridClass(
+                        var fakeGrid = new Grid(
                             "salvage fake stash",
-                            5, 5,
+                            5,
+                            5,
                             false,
                             Array.Empty<ItemFilter>(),
-                            fakeStash);
+                            fakeStash
+                        );
 
                         fakeStash.Grids[0] = fakeGrid;
 
-                        var fakeController = new TraderControllerClass(
-                            fakeStash,
-                            inventoryController.ID,
-                            "salvage fake stash",
-                            false,
-                            EOwnerType.Profile);
-
-                        var idGen = (IIdGenerator)inventoryController;
+                        IDatabaseIdGenerator idGen = inventoryController;
                         var newId = new MongoID(idGen.NextId);
                         var rootMongo = new MongoID(fakeStash.Id);
 
-                        var flat = new FlatItemsDataClass
+                        var flat = new FlatItem
                         {
                             _id = newId,
                             _tpl = new MongoID(reward.ItemTpl),
-                            parentId = new MongoID?(rootMongo),
+                            parentId = rootMongo,
                             slotId = fakeGrid.ID,
                             location = null,
-                            upd = null
+                            upd = null,
                         };
 
                         var flatArray = new[] { flat };
 
-                        Singleton<ItemFactoryClass>.Instance.FlatItemsToTree(
+                        Singleton<ItemFactory>.Instance.FlatItemsToTree(
                             flatArray,
                             false,
-                            new Dictionary<string, Item> { { fakeStash.Id, fakeStash } });
-
-
-
+                            new Dictionary<string, Item> { { fakeStash.Id, fakeStash } }
+                        );
 
                         foreach (var item in fakeGrid.Items.ToArray())
                         {
                             item.SpawnedInSession = true;
 
                             IEnumerable<CompoundItem> targets = reward.ToQuestInventory
-                                ? new[] { inventoryController.Inventory.QuestRaidItems }
-                                    .Where(c => c != null)
-                                : inventoryController.Inventory.Equipment
-                                    .ToEnumerable()
+                                ? new[] { inventoryController.Inventory.QuestRaidItems }.Where(c =>
+                                    c != null
+                                )
+                                : inventoryController
+                                    .Inventory.Equipment.ToEnumerable()
                                     .OfType<CompoundItem>();
 
                             if (!targets.Any())
                             {
-                                LogHelper.LogError($"No in-raid targets for salvage reward {reward.ItemTpl}");
+                                LogHelper.LogError(
+                                    $"No in-raid targets for salvage reward {reward.ItemTpl}"
+                                );
                                 continue;
                             }
 
-                            var flags =
-                                InteractionsHandlerClass.EMoveItemOrder.PickUp |
-                                InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent;
+                            const ItemManipulator.EMoveItemOrder flags =
+                                ItemManipulator.EMoveItemOrder.PickUp
+                                | ItemManipulator.EMoveItemOrder.IgnoreItemParent;
 
-                            var op = InteractionsHandlerClass.QuickFindAppropriatePlace(
+                            var op = ItemManipulator.QuickFindAppropriatePlace(
                                 item,
                                 inventoryController,
                                 targets,
                                 flags,
-                                simulate: true);
+                                simulate: true
+                            );
 
                             if (op.Failed)
                             {
                                 LogHelper.LogError(
-                                    $"QuickFind failed for salvage reward {reward.ItemTpl}: {op.Error}");
+                                    $"QuickFind failed for salvage reward {reward.ItemTpl}: {op.Error}"
+                                );
                                 continue;
                             }
 
@@ -277,16 +287,16 @@ namespace WTTClientCommonLib.Patches
                             if (!tx.Succeed)
                             {
                                 LogHelper.LogError(
-                                    $"Network transaction failed for salvage reward {reward.ItemTpl}");
+                                    $"Network transaction failed for salvage reward {reward.ItemTpl}"
+                                );
                             }
-
-
                         }
                     }
                     catch (Exception ex)
                     {
                         LogHelper.LogError(
-                            $"Error preparing salvage reward {reward.ItemTpl}: {ex}");
+                            $"Error preparing salvage reward {reward.ItemTpl}: {ex}"
+                        );
                     }
                 }
             }
@@ -304,9 +314,6 @@ namespace WTTClientCommonLib.Patches
             {
                 _activeSalvageChecker = null;
             }
-
         }
-
     }
 }
-

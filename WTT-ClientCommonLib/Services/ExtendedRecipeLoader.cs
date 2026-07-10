@@ -1,6 +1,6 @@
-using BepInEx.Logging;
 using System;
 using System.Collections.Generic;
+using BepInEx.Logging;
 using WTTClientCommonLib.Helpers;
 using WTTClientCommonLib.Models;
 
@@ -11,11 +11,12 @@ public class ExtendedRecipeLoader
     public static ExtendedRecipeLoader Instance;
 
     private Dictionary<string, ExtendedProductionScheme> _extendedSchemes = [];
-    
+
     public ExtendedRecipeLoader()
     {
-        if (Instance != null) return;
-        
+        if (Instance != null)
+            return;
+
         Instance = this;
     }
 
@@ -30,7 +31,9 @@ public class ExtendedRecipeLoader
     {
         try
         {
-            var recipeData = Utils.Get<Dictionary<string, ExtendedProductionScheme>>("/wttcommonlib/recipes/extended/get");
+            var recipeData = Helpers.Utils.Get<Dictionary<string, ExtendedProductionScheme>>(
+                "/wttcommonlib/recipes/extended/get"
+            );
 
             if (recipeData != null)
             {

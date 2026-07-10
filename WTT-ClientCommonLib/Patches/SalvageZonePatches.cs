@@ -1,11 +1,8 @@
-﻿using EFT;
+﻿using System.Reflection;
+using EFT;
 using EFT.Interactive;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -52,7 +49,10 @@ namespace WTTClientCommonLib.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GamePlayerOwner), nameof(GamePlayerOwner.InteractionsChangedHandler));
+            return AccessTools.Method(
+                typeof(GamePlayerOwner),
+                nameof(GamePlayerOwner.InteractionsChangedHandler)
+            );
         }
 
         [PatchPrefix]
@@ -62,12 +62,14 @@ namespace WTTClientCommonLib.Patches
             if (player == null)
                 return true;
 
-            if (player.InteractableObject != null ||
-                player.PlaceItemZone != null ||
-                player.BtrInteractionSide != null ||
-                player.TripwireInteractionTrigger != null ||
-                player.EventObjectInteractive != null ||
-                player.ExfiltrationPoint != null)
+            if (
+                player.InteractableObject != null
+                || player.PlaceItemZone != null
+                || player.BtrInteractionSide != null
+                || player.TripwireInteractionTrigger != null
+                || player.EventObjectInteractive != null
+                || player.ExfiltrationPoint != null
+            )
             {
                 return true;
             }
@@ -76,14 +78,13 @@ namespace WTTClientCommonLib.Patches
             if (salvage == null)
                 return true;
 
-            GInterface177 interactive = salvage;
+            IInteractive interactive = salvage;
 
-            var actions = GetActionsClass.GetAvailableActions(__instance, interactive);
-            TransitInteractionControllerAbstractClass transit;
-            if (actions == null &&
-                TransitControllerAbstractClass.Exist(out transit))
+            var actions = InteractionContextHelper.GetAvailableActions(__instance, interactive);
+            ClientTransitController transit;
+            if (actions == null && TransitController.Exist(out transit))
             {
-                actions = transit.AvailableInteractionState;
+                actions = transit.availableInteractionState;
             }
 
             if (actions != null)

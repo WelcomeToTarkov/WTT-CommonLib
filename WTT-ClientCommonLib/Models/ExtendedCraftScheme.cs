@@ -1,28 +1,29 @@
+using System.Collections.Generic;
 using Comfort.Common;
+using EFT;
 using EFT.Hideout;
 using EFT.InventoryLogic;
+using JsonType;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Security;
 using WTTClientCommonLib.Converters;
 using WTTClientCommonLib.Helpers;
 
 namespace WTTClientCommonLib.Models;
 
-public class ExtendedProductionScheme : ProductionBuildAbstractClass
+public class ExtendedProductionScheme : BaseHideoutScheme
 {
     private bool _itemsLoaded = false;
-    
+
     [JsonProperty("_id")]
     public string _id { get; set; }
-    
+
     [JsonProperty("endProductItems")]
     public Dictionary<string, CustomCraftResult> EndProductItems { get; set; }
 
     [JsonProperty("requirements")]
     [JsonConverter(typeof(RequirementArrayConverter))]
     public new Requirement[] requirements { get; set; }
-    
+
     public Dictionary<string, RecipeResultStack> ResultItemStacks = [];
     public RecipeResultStack FirstResult;
 
@@ -31,7 +32,7 @@ public class ExtendedProductionScheme : ProductionBuildAbstractClass
         if (!_itemsLoaded)
         {
             Dictionary<string, string> recipeStackBaseItems = [];
-            
+
             foreach ((string resultId, CustomCraftResult craftResult) in EndProductItems)
             {
                 foreach (var item in craftResult.Items)
@@ -42,10 +43,14 @@ public class ExtendedProductionScheme : ProductionBuildAbstractClass
                         break;
                     }
                 }
-                
-                LogHelper.LogInfo($"extended recipe result {resultId} has base item {recipeStackBaseItems[resultId]}");
-                
-                var items = Singleton<ItemFactoryClass>.Instance.FlatItemsToTree(craftResult.Items).Items;
+
+                LogHelper.LogInfo(
+                    $"extended recipe result {resultId} has base item {recipeStackBaseItems[resultId]}"
+                );
+
+                var items = Singleton<ItemFactory>
+                    .Instance.FlatItemsToTree(craftResult.Items)
+                    .Items;
                 foreach ((string id, Item item) in items)
                 {
                     if (recipeStackBaseItems.TryGetValue(resultId, out string baseItemTpl))
@@ -57,9 +62,9 @@ public class ExtendedProductionScheme : ProductionBuildAbstractClass
                             RecipeResultStack resultStack = new RecipeResultStack
                             {
                                 Item = item,
-                                Count = craftResult.Count
+                                Count = craftResult.Count,
                             };
-                            
+
                             ResultItemStacks.Add(resultId, resultStack);
 
                             if (FirstResult == null)
@@ -72,7 +77,7 @@ public class ExtendedProductionScheme : ProductionBuildAbstractClass
                     }
                 }
             }
-            
+
             _itemsLoaded = true;
         }
     }
@@ -88,7 +93,7 @@ public class CustomCraftResult
 {
     [JsonProperty("count")]
     public int Count { get; set; }
-    
+
     [JsonProperty("items")]
-    public FlatItemsDataClass[] Items { get; set; }
+    public FlatItem[] Items { get; set; }
 }

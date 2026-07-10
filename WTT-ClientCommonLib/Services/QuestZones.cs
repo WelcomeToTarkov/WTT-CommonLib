@@ -1,14 +1,15 @@
-﻿using Comfort.Common;
-using EFT;
-using EFT.Interactive;
-using EFT.InventoryLogic;
-using EFT.UI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Comfort.Common;
+using Diz.Jobs;
+using EFT;
+using EFT.Interactive;
+using EFT.InventoryLogic;
+using EFT.UI;
 using UnityEngine;
 using WTTClientCommonLib.Components;
 using WTTClientCommonLib.Helpers;
@@ -21,11 +22,12 @@ internal class QuestZones
 {
     private static readonly HashSet<string> _usedGroupPositions = new();
     private static readonly List<SalvageReward> _salvageRewards = new();
+
     private static string PosKey(ZoneTransform p) => $"{p.X}|{p.Y}|{p.Z}";
 
     public static List<CustomQuestZone> GetZones()
     {
-        var request = Utils.Get<List<CustomQuestZone>>("/wttcommonlib/zones/get");
+        var request = Helpers.Utils.Get<List<CustomQuestZone>>("/wttcommonlib/zones/get");
         if (request == null || request.Count == 0)
         {
             LogHelper.LogDebug("[QuestZones.GetZones] No zones data loaded.");
@@ -57,7 +59,10 @@ internal class QuestZones
         var loadedZoneCount = 0;
         if (request != null)
             foreach (var zone in request)
-                if (zone.ZoneLocation.ToLower() == Singleton<GameWorld>.Instance.MainPlayer.Location.ToLower())
+                if (
+                    zone.ZoneLocation.ToLower()
+                    == Singleton<GameWorld>.Instance.MainPlayer.Location.ToLower()
+                )
                 {
                     LogHelper.LogDebug("-------------------------------------");
                     LogHelper.LogDebug("ZoneScale:");
@@ -74,8 +79,10 @@ internal class QuestZones
                     LogHelper.LogDebug($"Rotation X: {zone.Rotation.X}");
                     LogHelper.LogDebug($"Rotation W: {zone.Rotation.W}");
                     LogHelper.LogDebug($"ZoneType: {zone.ZoneType}");
-                    if (!string.IsNullOrEmpty(zone.FlareType)) LogHelper.LogDebug($"FlareType: {zone.FlareType}");
-                    else LogHelper.LogDebug("FlareType: N/A");
+                    if (!string.IsNullOrEmpty(zone.FlareType))
+                        LogHelper.LogDebug($"FlareType: {zone.FlareType}");
+                    else
+                        LogHelper.LogDebug("FlareType: N/A");
                     LogHelper.LogDebug($"ZoneLocation: {zone.ZoneLocation}");
                     LogHelper.LogDebug($"ZoneId: {zone.ZoneId}");
                     LogHelper.LogDebug($"ZoneName: {zone.ZoneName}");
@@ -85,7 +92,9 @@ internal class QuestZones
 
         LogHelper.LogDebug("-------------------------------------");
         LogHelper.LogDebug($"Loaded CustomQuestZone Count: {loadedZoneCount}");
-        LogHelper.LogDebug($"Player Map Location: {Singleton<GameWorld>.Instance.MainPlayer.Location}");
+        LogHelper.LogDebug(
+            $"Player Map Location: {Singleton<GameWorld>.Instance.MainPlayer.Location}"
+        );
 #endif
         return request;
     }
@@ -97,12 +106,22 @@ internal class QuestZones
         var boxCollider = newZone.AddComponent<BoxCollider>();
         boxCollider.isTrigger = true;
 
-        var position = new Vector3(float.Parse(customQuestZone.Position.X), float.Parse(customQuestZone.Position.Y),
-            float.Parse(customQuestZone.Position.Z));
-        var scale = new Vector3(float.Parse(customQuestZone.Scale.X), float.Parse(customQuestZone.Scale.Y),
-            float.Parse(customQuestZone.Scale.Z));
-        var rotation = new Quaternion(float.Parse(customQuestZone.Rotation.X), float.Parse(customQuestZone.Rotation.Y),
-            float.Parse(customQuestZone.Rotation.Z), float.Parse(customQuestZone.Rotation.W));
+        var position = new Vector3(
+            float.Parse(customQuestZone.Position.X),
+            float.Parse(customQuestZone.Position.Y),
+            float.Parse(customQuestZone.Position.Z)
+        );
+        var scale = new Vector3(
+            float.Parse(customQuestZone.Scale.X),
+            float.Parse(customQuestZone.Scale.Y),
+            float.Parse(customQuestZone.Scale.Z)
+        );
+        var rotation = new Quaternion(
+            float.Parse(customQuestZone.Rotation.X),
+            float.Parse(customQuestZone.Rotation.Y),
+            float.Parse(customQuestZone.Rotation.Z),
+            float.Parse(customQuestZone.Rotation.W)
+        );
 
         newZone.transform.position = position;
         newZone.transform.localScale = scale;
@@ -122,12 +141,22 @@ internal class QuestZones
         var boxCollider = newZone.AddComponent<BoxCollider>();
         boxCollider.isTrigger = true;
 
-        var position = new Vector3(float.Parse(customQuestZone.Position.X), float.Parse(customQuestZone.Position.Y),
-            float.Parse(customQuestZone.Position.Z));
-        var scale = new Vector3(float.Parse(customQuestZone.Scale.X), float.Parse(customQuestZone.Scale.Y),
-            float.Parse(customQuestZone.Scale.Z));
-        var rotation = new Quaternion(float.Parse(customQuestZone.Rotation.X), float.Parse(customQuestZone.Rotation.Y),
-            float.Parse(customQuestZone.Rotation.Z), float.Parse(customQuestZone.Rotation.W));
+        var position = new Vector3(
+            float.Parse(customQuestZone.Position.X),
+            float.Parse(customQuestZone.Position.Y),
+            float.Parse(customQuestZone.Position.Z)
+        );
+        var scale = new Vector3(
+            float.Parse(customQuestZone.Scale.X),
+            float.Parse(customQuestZone.Scale.Y),
+            float.Parse(customQuestZone.Scale.Z)
+        );
+        var rotation = new Quaternion(
+            float.Parse(customQuestZone.Rotation.X),
+            float.Parse(customQuestZone.Rotation.Y),
+            float.Parse(customQuestZone.Rotation.Z),
+            float.Parse(customQuestZone.Rotation.W)
+        );
 
         newZone.transform.position = position;
         newZone.transform.localScale = scale;
@@ -147,12 +176,22 @@ internal class QuestZones
         var boxCollider = newZone.AddComponent<BoxCollider>();
         boxCollider.isTrigger = true;
 
-        var position = new Vector3(float.Parse(customQuestZone.Position.X), float.Parse(customQuestZone.Position.Y),
-            float.Parse(customQuestZone.Position.Z));
-        var scale = new Vector3(float.Parse(customQuestZone.Scale.X), float.Parse(customQuestZone.Scale.Y),
-            float.Parse(customQuestZone.Scale.Z));
-        var rotation = new Quaternion(float.Parse(customQuestZone.Rotation.X), float.Parse(customQuestZone.Rotation.Y),
-            float.Parse(customQuestZone.Rotation.Z), float.Parse(customQuestZone.Rotation.W));
+        var position = new Vector3(
+            float.Parse(customQuestZone.Position.X),
+            float.Parse(customQuestZone.Position.Y),
+            float.Parse(customQuestZone.Position.Z)
+        );
+        var scale = new Vector3(
+            float.Parse(customQuestZone.Scale.X),
+            float.Parse(customQuestZone.Scale.Y),
+            float.Parse(customQuestZone.Scale.Z)
+        );
+        var rotation = new Quaternion(
+            float.Parse(customQuestZone.Rotation.X),
+            float.Parse(customQuestZone.Rotation.Y),
+            float.Parse(customQuestZone.Rotation.Z),
+            float.Parse(customQuestZone.Rotation.W)
+        );
 
         newZone.transform.position = position;
         newZone.transform.localScale = scale;
@@ -182,18 +221,21 @@ internal class QuestZones
         var position = new Vector3(
             float.Parse(customQuestZone.Position.X),
             float.Parse(customQuestZone.Position.Y),
-            float.Parse(customQuestZone.Position.Z));
+            float.Parse(customQuestZone.Position.Z)
+        );
 
         var scale = new Vector3(
             float.Parse(customQuestZone.Scale.X),
             float.Parse(customQuestZone.Scale.Y),
-            float.Parse(customQuestZone.Scale.Z));
+            float.Parse(customQuestZone.Scale.Z)
+        );
 
         var rotation = new Quaternion(
             float.Parse(customQuestZone.Rotation.X),
             float.Parse(customQuestZone.Rotation.Y),
             float.Parse(customQuestZone.Rotation.Z),
-            float.Parse(customQuestZone.Rotation.W));
+            float.Parse(customQuestZone.Rotation.W)
+        );
 
         newZone.transform.position = position;
         newZone.transform.localScale = scale;
@@ -202,13 +244,13 @@ internal class QuestZones
         var trigger = newZone.AddComponent<SalvageItemTrigger>();
         trigger.SetId(customQuestZone.ZoneId);
 
-
-        var rewards = salvage.Rewards?.Select(r => new SalvageItemTrigger.SalvageReward
-        {
-            ItemTpl = r.ItemTpl,
-            Count = r.Count,
-            ToQuestInventory = r.ToQuestInventory
-        }) ?? Array.Empty<SalvageItemTrigger.SalvageReward>();
+        var rewards =
+            salvage.Rewards?.Select(r => new SalvageItemTrigger.SalvageReward
+            {
+                ItemTpl = r.ItemTpl,
+                Count = r.Count,
+                ToQuestInventory = r.ToQuestInventory,
+            }) ?? Array.Empty<SalvageItemTrigger.SalvageReward>();
 
         _salvageRewards.AddRange(rewards);
 
@@ -216,7 +258,7 @@ internal class QuestZones
             salvage.RequiredItemTpl,
             salvage.SalvageTime,
             rewards,
-            salvage.ConsumeRequiredItem 
+            salvage.ConsumeRequiredItem
         );
 
         newZone.layer = LayerMask.NameToLayer("Triggers");
@@ -231,13 +273,22 @@ internal class QuestZones
         var boxCollider = newZone.AddComponent<BoxCollider>();
         boxCollider.isTrigger = true;
 
-
-        var position = new Vector3(float.Parse(customQuestZone.Position.X), float.Parse(customQuestZone.Position.Y),
-            float.Parse(customQuestZone.Position.Z));
-        var scale = new Vector3(float.Parse(customQuestZone.Scale.X), float.Parse(customQuestZone.Scale.Y),
-            float.Parse(customQuestZone.Scale.Z));
-        var rotation = new Quaternion(float.Parse(customQuestZone.Rotation.X), float.Parse(customQuestZone.Rotation.Y),
-            float.Parse(customQuestZone.Rotation.Z), float.Parse(customQuestZone.Rotation.W));
+        var position = new Vector3(
+            float.Parse(customQuestZone.Position.X),
+            float.Parse(customQuestZone.Position.Y),
+            float.Parse(customQuestZone.Position.Z)
+        );
+        var scale = new Vector3(
+            float.Parse(customQuestZone.Scale.X),
+            float.Parse(customQuestZone.Scale.Y),
+            float.Parse(customQuestZone.Scale.Z)
+        );
+        var rotation = new Quaternion(
+            float.Parse(customQuestZone.Rotation.X),
+            float.Parse(customQuestZone.Rotation.Y),
+            float.Parse(customQuestZone.Rotation.Z),
+            float.Parse(customQuestZone.Rotation.W)
+        );
 
         newZone.transform.position = position;
         newZone.transform.localScale = scale;
@@ -253,11 +304,17 @@ internal class QuestZones
         var flareDetectorType = typeof(FlareShootDetectorZone);
         var bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
         var zoneIDField = flareDetectorType.GetField("zoneID", bindingFlags);
-        if (zoneIDField != null) zoneIDField.SetValue(flareDetector, customQuestZone.ZoneId);
+        if (zoneIDField != null)
+            zoneIDField.SetValue(flareDetector, customQuestZone.ZoneId);
 
-        var flareType = (FlareEventType)Enum.Parse(typeof(FlareEventType), customQuestZone.FlareType);
-        var flareTypeForHandleField = flareDetectorType.GetField("flareTypeForHandle", bindingFlags);
-        if (flareTypeForHandleField != null) flareTypeForHandleField.SetValue(flareDetector, flareType);
+        var flareType = (FlareEventType)
+            Enum.Parse(typeof(FlareEventType), customQuestZone.FlareType);
+        var flareTypeForHandleField = flareDetectorType.GetField(
+            "flareTypeForHandle",
+            bindingFlags
+        );
+        if (flareTypeForHandleField != null)
+            flareTypeForHandleField.SetValue(flareDetector, flareType);
 
         var triggerHandler = newZone.AddComponent<PhysicsTriggerHandler>();
         triggerHandler.trigger = boxCollider;
@@ -265,7 +322,8 @@ internal class QuestZones
         var triggerHandlersField = flareDetectorType.GetField("_triggerHandlers", bindingFlags);
         if (triggerHandlersField != null)
         {
-            var triggerHandlers = (List<PhysicsTriggerHandler>)triggerHandlersField.GetValue(flareDetector);
+            var triggerHandlers =
+                (List<PhysicsTriggerHandler>)triggerHandlersField.GetValue(flareDetector);
             triggerHandlers.Add(triggerHandler);
         }
 
@@ -283,24 +341,28 @@ internal class QuestZones
             ApplyGroupPositionIfAny(zone);
 
             var type = zone.ZoneType.ToLowerInvariant();
-            if (type == "placeitem") ZoneCreateItem(zone);
-            if (type == "visit") ZoneCreateVisit(zone);
-            if (type == "flarezone") ZoneCreateFlareZone(zone);
-            if (type == "botkillzone") ZoneCreateBotKillZone(zone);
-            if (type == "salvage") ZoneCreateSalvage(zone);
+            if (type == "placeitem")
+                ZoneCreateItem(zone);
+            if (type == "visit")
+                ZoneCreateVisit(zone);
+            if (type == "flarezone")
+                ZoneCreateFlareZone(zone);
+            if (type == "botkillzone")
+                ZoneCreateBotKillZone(zone);
+            if (type == "salvage")
+                ZoneCreateSalvage(zone);
         }
 
         _ = PreloadSalvageRewards();
     }
 
-
     private static async Task PreloadSalvageRewards()
     {
-        var poolManager = Singleton<PoolManagerClass>.Instance;
+        var poolManager = Singleton<ObjectsFactory>.Instance;
         if (poolManager == null)
             return;
 
-        var itemFactory = Singleton<ItemFactoryClass>.Instance;
+        var itemFactory = Singleton<ItemFactory>.Instance;
         if (itemFactory == null)
             return;
 
@@ -311,8 +373,10 @@ internal class QuestZones
             if (!itemFactory.ItemTemplates.TryGetValue(reward.ItemTpl, out var template))
                 continue;
 
-            if (template.Prefab != null) keys.Add(template.Prefab);
-            if (template.UsePrefab != null) keys.Add(template.UsePrefab);
+            if (template.Prefab != null)
+                keys.Add(template.Prefab);
+            if (template.UsePrefab != null)
+                keys.Add(template.UsePrefab);
         }
 
         if (keys.Count == 0)
@@ -320,9 +384,9 @@ internal class QuestZones
 
         await poolManager.LoadBundlesAndCreatePools(
             0,
-            PoolManagerClass.AssemblyType.Local,
+            ObjectsFactory.AssemblyType.Local,
             keys.ToArray(),
-            JobPriorityClass.Immediate,
+            JobYieldPriority.Immediate,
             null,
             CancellationToken.None
         );
@@ -352,7 +416,8 @@ internal class QuestZones
         else
         {
             LogHelper.LogWarn(
-                $"All GroupPosition positions for {zone.ZoneId} are already used; allowing reuse.");
+                $"All GroupPosition positions for {zone.ZoneId} are already used; allowing reuse."
+            );
             index = UnityEngine.Random.Range(0, zone.GroupPosition.Count);
         }
 
@@ -367,8 +432,9 @@ internal class QuestZones
 
 #if DEBUG
         LogHelper.LogDebug(
-            $"GroupPosition[{index}] selected for {zone.ZoneId} " +
-            $"pos=({selectedPose.Position.X},{selectedPose.Position.Y},{selectedPose.Position.Z})");
+            $"GroupPosition[{index}] selected for {zone.ZoneId} "
+                + $"pos=({selectedPose.Position.X},{selectedPose.Position.Y},{selectedPose.Position.Z})"
+        );
 #endif
     }
 }

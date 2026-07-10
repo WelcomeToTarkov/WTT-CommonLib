@@ -1,8 +1,8 @@
+using System;
+using System.Reflection;
 using EFT.InventoryLogic;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Reflection;
 
 namespace WTTClientCommonLib.Patches
 {
@@ -10,15 +10,18 @@ namespace WTTClientCommonLib.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass3380), nameof(GClass3380.GetIndexOfItemType));
+            return AccessTools.Method(
+                typeof(ItemExtensions),
+                nameof(ItemExtensions.GetIndexOfItemType)
+            );
         }
 
         [PatchPrefix]
-        public static bool PatchPrefix(GClass3380 __instance, ref int __result, Item i)
+        public static bool PatchPrefix(ItemExtensions __instance, ref int __result, Item i)
         {
             Type type = i.GetType();
-            
-            int index = GClass3381.IndexOf(type);
+
+            int index = ItemSorter.IndexOf(type);
             if (index >= 0)
             {
                 __result = index;
@@ -27,7 +30,7 @@ namespace WTTClientCommonLib.Patches
 
             for (Type type2 = type; type2 != null; type2 = type2.BaseType)
             {
-                index = GClass3381.IndexOf(type2);
+                index = ItemSorter.IndexOf(type2);
                 if (index >= 0)
                 {
                     __result = index;

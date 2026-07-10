@@ -1,11 +1,6 @@
-﻿using Comfort.Common;
-using EFT;
+﻿using System.Reflection;
 using EFT.Quests;
-using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -14,15 +9,13 @@ namespace WTTClientCommonLib.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return typeof(GClass1871).GetConstructor([])!;
+            return typeof(ConditionSerializer).GetConstructor([])!;
         }
 
         [PatchPostfix]
-        public static void Postfix(GClass1871 __instance)
+        public static void Postfix(ConditionSerializer __instance)
         {
-            __instance.List_0.Add(typeof(ConditionSalvage));
+            __instance.list_0.Add(typeof(ConditionSalvage));
         }
     }
-
-
 }

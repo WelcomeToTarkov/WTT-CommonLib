@@ -1,11 +1,10 @@
-﻿using EFT.Quests;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using EFT.Quests;
+using HarmonyLib;
+using SPT.Reflection.Patching;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -16,21 +15,29 @@ namespace WTTClientCommonLib.Patches
         {
             Type[] parameters = [typeof(string)];
             Type[] generics = [typeof(ConditionZone)];
-            return AccessTools.Method(typeof(QuestBookClass), nameof(QuestBookClass.GetConditionHandlersByZone), parameters, generics);
+            return AccessTools.Method(
+                typeof(QuestBook),
+                nameof(QuestBook.GetConditionHandlersByZone),
+                parameters,
+                generics
+            );
         }
 
         [PatchPostfix]
         public static void Postfix(
-            QuestBookClass __instance,
+            QuestBook __instance,
             string zoneId,
-            ref IEnumerable<ConditionProgressChecker> __result)
+            ref IEnumerable<ConditionProgressChecker> __result
+        )
         {
             var list = __result?.ToList() ?? new List<ConditionProgressChecker>();
 
             foreach (var quest in __instance)
             {
-                if (quest.QuestStatus != EQuestStatus.Started &&
-                    quest.QuestStatus != EQuestStatus.AvailableForFinish)
+                if (
+                    quest.QuestStatus != EQuestStatus.Started
+                    && quest.QuestStatus != EQuestStatus.AvailableForFinish
+                )
                     continue;
 
                 if (quest.Conditions == null)
@@ -41,8 +48,10 @@ namespace WTTClientCommonLib.Patches
                     var status = kvp.Key;
                     var conditions = kvp.Value;
 
-                    if (!quest.CurrentStatusTransitions.Contains(status) &&
-                        status != quest.QuestStatus)
+                    if (
+                        !quest.CurrentStatusTransitions.Contains(status)
+                        && status != quest.QuestStatus
+                    )
                         continue;
 
                     foreach (var cond in conditions)
@@ -58,11 +67,16 @@ namespace WTTClientCommonLib.Patches
                             if (zoneChild.zoneId != zoneId)
                                 continue;
 
-                            if (zoneChild is not ConditionLeaveItemAtLocation &&
-                                zoneChild is not ConditionSalvage)
+                            if (
+                                zoneChild is not ConditionLeaveItemAtLocation
+                                && zoneChild is not ConditionSalvage
+                            )
                                 continue;
 
-                            if (!quest.ProgressCheckers.TryGetValue(child, out var cpc) || cpc == null)
+                            if (
+                                !quest.ProgressCheckers.TryGetValue(child, out var cpc)
+                                || cpc == null
+                            )
                                 continue;
 
                             if (!list.Contains(cpc))

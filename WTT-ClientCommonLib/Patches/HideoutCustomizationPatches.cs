@@ -11,12 +11,14 @@ using WTTClientCommonLib.Helpers;
 
 namespace WTTClientCommonLib.Patches;
 
-
 internal class HideoutCustomizationIconPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(HideoutCustomizationIcons), nameof(HideoutCustomizationIcons.GetSprite));
+        return AccessTools.Method(
+            typeof(HideoutCustomizationIcons),
+            nameof(HideoutCustomizationIcons.GetSprite)
+        );
     }
 
     [PatchPrefix]
@@ -37,22 +39,32 @@ internal class HideoutCustomizationTexturesPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(GClass2421), nameof(GClass2421.method_2));
+        return AccessTools.Method(
+            typeof(HideoutCustomizationController),
+            nameof(HideoutCustomizationController.InstallCustomization)
+        );
     }
 
     [PatchPrefix]
-    static void Prefix(ResourceKey resourceKey, EHideoutCustomizationType customizationType, GClass2421 __instance)
+    static void Prefix(
+        ResourceKey resourceKey,
+        EHideoutCustomizationType customizationType,
+        HideoutCustomizationController __instance
+    )
     {
         if (customizationType != EHideoutCustomizationType.ShootingRangeMark)
             return;
 
         string assetName = resourceKey.ToAssetName();
-        if (assetName == null || !ResourceLoader._customMarkTextures.TryGetValue(assetName, out var customTexture))
+        if (
+            assetName == null
+            || !ResourceLoader._customMarkTextures.TryGetValue(assetName, out var customTexture)
+        )
             return;
 
         try
         {
-            var icons = __instance.HideoutCustomizationIcons_0;
+            var icons = __instance.hideoutCustomizationIcons_0;
             if (icons != null)
             {
                 icons.ShootingRangeMarkTextures.TryAdd(assetName, customTexture);

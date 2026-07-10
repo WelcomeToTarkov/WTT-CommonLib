@@ -16,26 +16,40 @@ public static class ZoneService
     private static int _currentSelectIndex = -1;
     private static string _selectedZoneName = "No CustomQuestZone Selected";
 
-
     public static void AddExistingZones()
     {
         ZoneConfigManager.ExistingQuestZones.ForEach(questZone =>
         {
-            var cube = Utils.CreateNewZoneCube(questZone.ZoneName);
-            if (cube == null) return;
+            var cube = Helpers.Utils.CreateNewZoneCube(questZone.ZoneName);
+            if (cube == null)
+                return;
 
-            var position = new Vector3(float.Parse(questZone.Position.X), float.Parse(questZone.Position.Y),
-                float.Parse(questZone.Position.Z));
-            var scale = new Vector3(float.Parse(questZone.Scale.X), float.Parse(questZone.Scale.Y),
-                float.Parse(questZone.Scale.Z));
-            var rotation = new Quaternion(float.Parse(questZone.Rotation.X), float.Parse(questZone.Rotation.Y),
-                float.Parse(questZone.Rotation.Z), float.Parse(questZone.Rotation.W));
+            var position = new Vector3(
+                float.Parse(questZone.Position.X),
+                float.Parse(questZone.Position.Y),
+                float.Parse(questZone.Position.Z)
+            );
+            var scale = new Vector3(
+                float.Parse(questZone.Scale.X),
+                float.Parse(questZone.Scale.Y),
+                float.Parse(questZone.Scale.Z)
+            );
+            var rotation = new Quaternion(
+                float.Parse(questZone.Rotation.X),
+                float.Parse(questZone.Rotation.Y),
+                float.Parse(questZone.Rotation.Z),
+                float.Parse(questZone.Rotation.W)
+            );
 
             cube.transform.position = position;
             cube.transform.rotation = rotation;
             cube.transform.localScale = scale;
 
-            var customZoneContainer = new CustomZoneContainer(cube, questZone.ZoneType, questZone.FlareType);
+            var customZoneContainer = new CustomZoneContainer(
+                cube,
+                questZone.ZoneType,
+                questZone.FlareType
+            );
             Zones.Add(customZoneContainer);
         });
         ZoneConfigManager.ExistingQuestZones.Clear();
@@ -51,8 +65,9 @@ public static class ZoneService
         var flare = string.IsNullOrEmpty(ZoneConfigManager.FlareZoneType.Value)
             ? ""
             : ZoneConfigManager.FlareZoneType.Value;
-        var obj = Utils.CreateNewZoneCube(name);
-        if (obj == null) return;
+        var obj = Helpers.Utils.CreateNewZoneCube(name);
+        if (obj == null)
+            return;
 
         Zones.Add(new CustomZoneContainer(obj, type, flare));
         LogHelper.LogDebug($"Created new zone: {name}, total zones: {Zones.Count}");
@@ -60,7 +75,8 @@ public static class ZoneService
 
     public static void NextZone()
     {
-        if (Zones.Count < 1) return;
+        if (Zones.Count < 1)
+            return;
 
         if (_currentSelectIndex >= 0)
             Zones[_currentSelectIndex].GameObject.GetComponent<Renderer>().material.color =
@@ -79,7 +95,8 @@ public static class ZoneService
 
     public static void PrevZone()
     {
-        if (Zones.Count < 1) return;
+        if (Zones.Count < 1)
+            return;
 
         if (_currentSelectIndex >= 0)
             Zones[_currentSelectIndex].GameObject.GetComponent<Renderer>().material.color =
@@ -103,49 +120,66 @@ public static class ZoneService
 
     public static void AdjustPosition()
     {
-        if (Zones.Count < 1 || _currentSelectIndex < 0) return;
+        if (Zones.Count < 1 || _currentSelectIndex < 0)
+            return;
 
         var currentZone = Zones[_currentSelectIndex].GameObject;
-        var newPosition = new Vector3(ZoneConfigManager.PositionConfigX.Value, ZoneConfigManager.PositionConfigY.Value,
-            ZoneConfigManager.PositionConfigZ.Value);
+        var newPosition = new Vector3(
+            ZoneConfigManager.PositionConfigX.Value,
+            ZoneConfigManager.PositionConfigY.Value,
+            ZoneConfigManager.PositionConfigZ.Value
+        );
         currentZone.transform.position = newPosition;
     }
 
     public static void AdjustScale()
     {
-        if (Zones.Count < 1 || _currentSelectIndex < 0) return;
+        if (Zones.Count < 1 || _currentSelectIndex < 0)
+            return;
 
         var currentZone = Zones[_currentSelectIndex].GameObject;
-        var newScale = new Vector3(ZoneConfigManager.ScaleConfigX.Value, ZoneConfigManager.ScaleConfigY.Value,
-            ZoneConfigManager.ScaleConfigZ.Value);
+        var newScale = new Vector3(
+            ZoneConfigManager.ScaleConfigX.Value,
+            ZoneConfigManager.ScaleConfigY.Value,
+            ZoneConfigManager.ScaleConfigZ.Value
+        );
         currentZone.transform.localScale = newScale;
     }
 
     public static void AdjustRotation()
     {
-        if (Zones.Count < 1 || _currentSelectIndex < 0) return;
+        if (Zones.Count < 1 || _currentSelectIndex < 0)
+            return;
 
         var currentZone = Zones[_currentSelectIndex].GameObject;
-        var newRotation = Quaternion.Euler(ZoneConfigManager.RotationConfigX.Value,
-            ZoneConfigManager.RotationConfigY.Value, ZoneConfigManager.RotationConfigZ.Value);
+        var newRotation = Quaternion.Euler(
+            ZoneConfigManager.RotationConfigX.Value,
+            ZoneConfigManager.RotationConfigY.Value,
+            ZoneConfigManager.RotationConfigZ.Value
+        );
         currentZone.transform.rotation = newRotation;
     }
 
     public static void OutputZones()
     {
-        if (Zones.Count < 1) return;
+        if (Zones.Count < 1)
+            return;
 
-        var outputDir = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, @"..\..\..\..\"));
-        var path = Path.Combine(outputDir,
-            $"WTT-ClientCommonLib-CustomQuestZone-Output-{DateTime.Now:yyyyMMddHHmmssffff}.json");
+        var outputDir = Path.GetFullPath(
+            Path.Combine(Assembly.GetExecutingAssembly().Location, @"..\..\..\..\")
+        );
+        var path = Path.Combine(
+            outputDir,
+            $"WTT-ClientCommonLib-CustomQuestZone-Output-{DateTime.Now:yyyyMMddHHmmssffff}.json"
+        );
 
         using (var streamWriter = File.CreateText(path))
         {
-            var convertedZones = Utils.ConvertZoneFormat(Zones, Utils.GetLocationId());
-            var serializer = new JsonSerializer
-            {
-                Formatting = Formatting.Indented
-            };
+            var convertedZones = Helpers.Utils.ConvertZoneFormat(
+                Zones,
+                Helpers.Utils.GetLocationId()
+            );
+            var serializer = new JsonSerializer { Formatting = Formatting.Indented };
             serializer.Serialize(streamWriter, convertedZones);
         }
 
@@ -154,7 +188,8 @@ public static class ZoneService
 
     private static void AdjustConfigValues()
     {
-        if (Zones.Count < 1 || _currentSelectIndex < 0) return;
+        if (Zones.Count < 1 || _currentSelectIndex < 0)
+            return;
 
         var currentZone = Zones[_currentSelectIndex].GameObject;
 
