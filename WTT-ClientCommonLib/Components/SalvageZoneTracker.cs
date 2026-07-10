@@ -1,7 +1,5 @@
-﻿using EFT;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using EFT;
 
 namespace WTTClientCommonLib.Components
 {
@@ -11,13 +9,15 @@ namespace WTTClientCommonLib.Components
 
         public static void Set(Player player, SalvageItemTrigger zone)
         {
-            if (player == null) return;
+            if (player == null)
+                return;
             _active[player] = zone;
         }
 
         public static void Clear(Player player, SalvageItemTrigger zone)
         {
-            if (player == null) return;
+            if (player == null)
+                return;
 
             if (_active.TryGetValue(player, out var current) && current == zone)
                 _active.Remove(player);
@@ -25,7 +25,8 @@ namespace WTTClientCommonLib.Components
 
         public static SalvageItemTrigger Get(Player player)
         {
-            if (player == null) return null;
+            if (player == null)
+                return null;
             return _active.TryGetValue(player, out var zone) ? zone : null;
         }
     }

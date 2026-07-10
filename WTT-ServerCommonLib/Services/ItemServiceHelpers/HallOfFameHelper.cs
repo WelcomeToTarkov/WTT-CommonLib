@@ -1,16 +1,16 @@
-﻿using SPTarkov.DI.Annotations;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
+using LogLevel = SPTarkov.Common.Models.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger, DatabaseService databaseService)
+public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger, TemplateTable templateTable)
 {
     private static readonly string?[] ValidTypes = ["dogtag", "smallTrophies", "bigTrophies"];
 
@@ -18,7 +18,7 @@ public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger, DatabaseServi
     [
         "63dbd45917fff4dee40fe16e", // Level 1
         "65424185a57eea37ed6562e9", // Level 2
-        "6542435ea57eea37ed6562f0" // Level 3
+        "6542435ea57eea37ed6562f0", // Level 3
     ];
 
     public void AddToHallOfFame(CustomItemConfig itemConfig, string itemId)
@@ -30,7 +30,7 @@ public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger, DatabaseServi
             return;
         }
 
-        var items = databaseService.GetItems();
+        var items = templateTable.Items;
         foreach (var hallId in HallItemIds)
         {
             if (!items.TryGetValue(hallId, out var hallItem) || hallItem.Properties?.Slots == null)
@@ -59,7 +59,11 @@ public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger, DatabaseServi
         return types;
     }
 
-    private void AddItemToHallSlots(string itemId, TemplateItem hallItem, HashSet<string?> filterTypes)
+    private void AddItemToHallSlots(
+        string itemId,
+        TemplateItem hallItem,
+        HashSet<string?> filterTypes
+    )
     {
         foreach (var slot in hallItem.Properties?.Slots!)
         {
@@ -89,7 +93,10 @@ public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger, DatabaseServi
             filter.Filter ??= new HashSet<MongoId>();
 
             if (filter.Filter.Add(itemId))
-                LogHelper.Debug(logger, $"[HallOfFame] Added {itemId} to slot '{slot.Name}' in {hallName}");
+                LogHelper.Debug(
+                    logger,
+                    $"[HallOfFame] Added {itemId} to slot '{slot.Name}' in {hallName}"
+                );
             else if (logger.IsLogEnabled(LogLevel.Debug))
                 LogHelper.Debug(logger, $"[HallOfFame] {itemId} already in slot '{slot.Name}'");
         }

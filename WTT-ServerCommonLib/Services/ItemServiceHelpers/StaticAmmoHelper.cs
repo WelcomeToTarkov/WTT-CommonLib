@@ -1,28 +1,34 @@
-﻿using SPTarkov.DI.Annotations;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class StaticAmmoHelper(ISptLogger<StaticAmmoHelper> logger, DatabaseService databaseService)
+public class StaticAmmoHelper(
+    ISptLogger<StaticAmmoHelper> logger,
+    LocationTable locationTable,
+    TemplateTable templateTable
+)
 {
     public void AddAmmoToLocationStaticAmmo(CustomItemConfig itemConfig, string newItemId)
     {
         try
         {
-            var tables = databaseService.GetTables();
-            var locations = tables.Locations.GetDictionary();
+            var locations = locationTable.GetDictionary();
 
             // Extract caliber from override properties
-            var caliber = itemConfig.OverrideProperties.Caliber ??
-                          tables.Templates.Items[newItemId].Properties?.Caliber;
+            var caliber =
+                itemConfig.OverrideProperties.Caliber
+                ?? templateTable.Items[newItemId].Properties?.Caliber;
             if (string.IsNullOrEmpty(caliber))
             {
-                logger.Warning($"Item {newItemId} has no Caliber property, cannot add to static ammo");
+                logger.Warning(
+                    $"Item {newItemId} has no Caliber property, cannot add to static ammo"
+                );
                 return;
             }
 
@@ -47,16 +53,16 @@ public class StaticAmmoHelper(ISptLogger<StaticAmmoHelper> logger, DatabaseServi
 
                     if (ammoList.Any(a => a.Tpl == newItemId))
                     {
-                        LogHelper.Debug(logger,
-                            $"Ammo {newItemId} already exists in {caliber} for {locationId}, skipping");
+                        LogHelper.Debug(
+                            logger,
+                            $"Ammo {newItemId} already exists in {caliber} for {locationId}, skipping"
+                        );
                         continue;
                     }
 
-                    ammoList.Add(new StaticAmmoDetails
-                    {
-                        Tpl = newItemId,
-                        RelativeProbability = probability
-                    });
+                    ammoList.Add(
+                        new StaticAmmoDetails { Tpl = newItemId, RelativeProbability = probability }
+                    );
 
                     location.StaticAmmo[caliber] = ammoList;
 

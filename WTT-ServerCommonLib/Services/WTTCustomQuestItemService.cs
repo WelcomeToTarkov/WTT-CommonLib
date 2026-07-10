@@ -1,18 +1,14 @@
-﻿using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
-using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Spt.Mod;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
-using SPTarkov.Server.Core.Services;
+﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Helpers.Server;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils.Cloners;
-using System.Reflection;
 using WTTServerCommonLib.Constants;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using WTTServerCommonLib.Services.ItemServiceHelpers;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using Path = System.IO.Path;
 
 namespace WTTServerCommonLib.Services;
@@ -20,8 +16,7 @@ namespace WTTServerCommonLib.Services;
 [Injectable(InjectionType.Singleton)]
 public class WTTCustomQuestItemService(
     ISptLogger<WTTCustomQuestItemService> logger,
-    DatabaseServer databaseServer,
-    DatabaseService databaseService,
+    TemplateTable templateTable,
     ModHelper modHelper,
     ConfigHelper configHelper,
     ICloner cloner,
@@ -33,16 +28,17 @@ public class WTTCustomQuestItemService(
     ItemBlacklistHelper rewardItemBlacklistHelper
 )
 {
-    private readonly List<(string newItemId, CustomQuestItemConfig config)> _deferredModSlotConfigs = new();
-    private readonly List<(string newItemId, CustomQuestItemConfig config)> _deferredSecureFilterConfigs = new();
-
-    private DatabaseTables? _database;
+    private readonly List<(
+        string newItemId,
+        CustomQuestItemConfig config
+    )> _deferredModSlotConfigs = new();
+    private readonly List<(
+        string newItemId,
+        CustomQuestItemConfig config
+    )> _deferredSecureFilterConfigs = new();
 
     public async Task CreateCustomQuestItems(Assembly assembly, string? relativePath = null)
     {
-        if (_database == null)
-            _database = databaseServer.GetTables();
-
         try
         {
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
@@ -55,8 +51,9 @@ public class WTTCustomQuestItemService(
                 return;
             }
 
-            var itemConfigDicts =
-                await configHelper.LoadAllJsonFiles<Dictionary<string, CustomQuestItemConfig>>(finalDir);
+            var itemConfigDicts = await configHelper.LoadAllJsonFiles<
+                Dictionary<string, CustomQuestItemConfig>
+            >(finalDir);
 
             if (itemConfigDicts.Count == 0)
             {
@@ -77,8 +74,10 @@ public class WTTCustomQuestItemService(
                 }
             }
 
-            LogHelper.Debug(logger,
-                $"Created {totalItemsCreated} custom quest items from {itemConfigDicts.Count} files");
+            LogHelper.Debug(
+                logger,
+                $"Created {totalItemsCreated} custom quest items from {itemConfigDicts.Count} files"
+            );
         }
         catch (Exception ex)
         {
@@ -86,7 +85,11 @@ public class WTTCustomQuestItemService(
         }
     }
 
-    private bool CreateQuestItemFromConfig(Assembly assembly, string newItemId, CustomQuestItemConfig config)
+    private bool CreateQuestItemFromConfig(
+        Assembly assembly,
+        string newItemId,
+        CustomQuestItemConfig config
+    )
     {
         try
         {
@@ -103,16 +106,23 @@ public class WTTCustomQuestItemService(
         }
     }
 
-    private void CreateQuestItemFromClone(Assembly assembly, string newItemId, CustomQuestItemConfig config)
+    private void CreateQuestItemFromClone(
+        Assembly assembly,
+        string newItemId,
+        CustomQuestItemConfig config
+    )
     {
-        var tables = databaseService.GetTables();
-
-        if (tables.Templates.Items.TryGetValue(newItemId, out var existingItem))
+        if (templateTable.Items.TryGetValue(newItemId, out var existingItem))
             throw new InvalidOperationException($"ItemId already exists. {existingItem.Name}");
 
         var cloneTplId = ItemTplResolver.ResolveId(config.ItemTplToClone);
-        if (!tables.Templates.Items.TryGetValue(cloneTplId, out var itemToClone) || itemToClone == null)
-            throw new InvalidOperationException($"Unable to find item to clone: {config.ItemTplToClone}");
+        if (
+            !templateTable.Items.TryGetValue(cloneTplId, out var itemToClone)
+            || itemToClone == null
+        )
+            throw new InvalidOperationException(
+                $"Unable to find item to clone: {config.ItemTplToClone}"
+            );
 
         var itemClone = cloner.Clone(itemToClone);
         itemClone.Id = newItemId;
@@ -123,7 +133,10 @@ public class WTTCustomQuestItemService(
         var registerInHandbook = config.RegisterInHandbook ?? false;
         var registerInFleaPrices = config.RegisterInFleaPrices ?? false;
 
-        itemRegistrationHelper.UpdateBaseItemPropertiesWithOverrides(config.OverrideProperties, itemClone);
+        itemRegistrationHelper.UpdateBaseItemPropertiesWithOverrides(
+            config.OverrideProperties,
+            itemClone
+        );
         itemRegistrationHelper.AddToItemsDb(newItemId, itemClone);
 
         if (registerInHandbook)
@@ -131,7 +144,8 @@ public class WTTCustomQuestItemService(
             itemRegistrationHelper.AddToHandbookDb(
                 newItemId,
                 NameHelper.ResolveId(config.HandbookParentId!, ItemMaps.ItemHandbookCategoryMap),
-                config.HandbookPriceRoubles!.Value);
+                config.HandbookPriceRoubles!.Value
+            );
         }
 
         itemRegistrationHelper.AddToLocaleDbs(config.Locales, newItemId);
@@ -146,9 +160,6 @@ public class WTTCustomQuestItemService(
 
     private void ProcessAdditionalProperties(string newItemId, CustomQuestItemConfig config)
     {
-        if (_database == null)
-            return;
-
         if (config.AddToModSlots == true)
             AddDeferredModSlot(newItemId, config);
 
@@ -189,13 +200,9 @@ public class WTTCustomQuestItemService(
         {
             try
             {
-                if (_database == null)
-                    return;
-
                 modSlotHelper.ProcessModSlots(config, newItemId);
 
-                if (logger.IsLogEnabled(LogLevel.Debug))
-                    LogHelper.Debug(logger, $"Processed modslots for {newItemId}");
+                LogHelper.Debug(logger, $"Processed modslots for {newItemId}");
             }
             catch (Exception ex)
             {
@@ -226,19 +233,18 @@ public class WTTCustomQuestItemService(
             return;
         }
 
-        LogHelper.Debug(logger, $"Processing {_deferredSecureFilterConfigs.Count} deferred secure filters...");
+        LogHelper.Debug(
+            logger,
+            $"Processing {_deferredSecureFilterConfigs.Count} deferred secure filters..."
+        );
 
         foreach (var (newItemId, config) in _deferredSecureFilterConfigs)
         {
             try
             {
-                if (_database == null)
-                    return;
-
                 secureFiltersHelper.AddToSecureFilters(config, newItemId);
 
-                if (logger.IsLogEnabled(LogLevel.Debug))
-                    LogHelper.Debug(logger, $"Processed secure filters for {newItemId}");
+                LogHelper.Debug(logger, $"Processed secure filters for {newItemId}");
             }
             catch (Exception ex)
             {

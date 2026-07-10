@@ -1,12 +1,15 @@
-﻿using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class SecureFiltersHelper(ISptLogger<SecureFiltersHelper> logger, DatabaseService databaseService)
+public class SecureFiltersHelper(
+    ISptLogger<SecureFiltersHelper> logger,
+    TemplateTable templateTable
+)
 {
     private const string SecureContainerParentId = "5448bf274bdc2dfc2f8b456a";
     private const string WTTSecureContainerParentId = "68154651f849fb4e7d816738";
@@ -17,11 +20,14 @@ public class SecureFiltersHelper(ISptLogger<SecureFiltersHelper> logger, Databas
         if (itemConfig.AddToSecureFilters != true)
             return;
 
-        var items = databaseService.GetItems();
+        var items = templateTable.Items;
 
         foreach (var (_, itemTemplate) in items)
         {
-            if (itemTemplate.Parent != SecureContainerParentId && itemTemplate.Parent != WTTSecureContainerParentId)
+            if (
+                itemTemplate.Parent != SecureContainerParentId
+                && itemTemplate.Parent != WTTSecureContainerParentId
+            )
                 continue;
 
             if (itemTemplate.Id == BossContainerId)
@@ -35,16 +41,19 @@ public class SecureFiltersHelper(ISptLogger<SecureFiltersHelper> logger, Databas
             if (gridFilters?.Filter == null)
             {
                 logger.Warning(
-                    $"[SecureFilters] Failed to add {newItemId} to secure container {itemTemplate.Id} filters (filters don't exist). " +
-                    $"Check your SVM settings or load this mod before conflicting mods.");
+                    $"[SecureFilters] Failed to add {newItemId} to secure container {itemTemplate.Id} filters (filters don't exist). "
+                        + $"Check your SVM settings or load this mod before conflicting mods."
+                );
                 continue;
             }
 
             if (!gridFilters.Filter.Contains(newItemId))
             {
                 gridFilters.Filter.Add(newItemId);
-                LogHelper.Debug(logger,
-                    $"[SecureFilters] Added {newItemId} to secure container {itemTemplate.Id}");
+                LogHelper.Debug(
+                    logger,
+                    $"[SecureFilters] Added {newItemId} to secure container {itemTemplate.Id}"
+                );
             }
         }
     }

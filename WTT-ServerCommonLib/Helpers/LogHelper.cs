@@ -1,14 +1,13 @@
-﻿using SPTarkov.Server.Core.Models.Utils;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
+﻿using System.Diagnostics;
+using SPTarkov.Common.Models.Logging;
 
 namespace WTTServerCommonLib.Helpers;
 
 public static class LogHelper
 {
+    [Conditional("DEBUG")]
     public static void Debug<T>(ISptLogger<T> logger, string message)
     {
-#if DEBUG
         logger.Info(message);
-#endif
     }
 }

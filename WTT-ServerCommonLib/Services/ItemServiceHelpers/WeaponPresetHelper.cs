@@ -1,16 +1,16 @@
-﻿using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class WeaponPresetHelper(ISptLogger<WeaponPresetHelper> logger, DatabaseService databaseService)
+public class WeaponPresetHelper(ISptLogger<WeaponPresetHelper> logger, GlobalTable globalTable)
 {
     public void ProcessWeaponPresets(CustomItemConfig itemConfig, string itemId)
     {
-        var itemPresets = databaseService.GetGlobals().ItemPresets;
+        var itemPresets = globalTable.ItemPresets;
 
         if (itemConfig.WeaponPresets == null || itemConfig.WeaponPresets.Count == 0)
         {

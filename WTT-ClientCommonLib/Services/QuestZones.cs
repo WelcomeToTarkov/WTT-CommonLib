@@ -9,7 +9,6 @@ using Diz.Jobs;
 using EFT;
 using EFT.Interactive;
 using EFT.InventoryLogic;
-using EFT.UI;
 using UnityEngine;
 using WTTClientCommonLib.Components;
 using WTTClientCommonLib.Helpers;

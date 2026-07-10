@@ -1,16 +1,16 @@
-﻿using SPTarkov.DI.Annotations;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseService databaseService)
+public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, TradersTable tradersTable)
 {
     public void AddItem(CustomItemConfig config, string itemId)
     {
@@ -22,7 +22,6 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseServi
                 return;
             }
 
-            var traders = databaseService.GetTraders();
             foreach (var (traderKey, schemes) in config.Traders)
             {
                 MongoId actualTraderId;
@@ -40,8 +39,8 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseServi
                     logger.Error($"Invalid trader key: {traderKey}");
                     continue;
                 }
-                
-                if (!traders.TryGetValue(actualTraderId, out var trader))
+
+                if (!tradersTable.TryGetValue(actualTraderId, out var trader))
                 {
                     logger.Warning($"Trader not found in DB: ({actualTraderId})");
                     continue;
@@ -59,12 +58,14 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseServi
                         {
                             UnlimitedCount = scheme.ConfigBarterSettings.UnlimitedCount,
                             StackObjectsCount = scheme.ConfigBarterSettings.StackObjectsCount,
-                        }
+                        },
                     };
 
                     if (scheme.ConfigBarterSettings.BuyRestrictionMax != null)
                     {
-                        newItem.Upd.BuyRestrictionMax = scheme.ConfigBarterSettings.BuyRestrictionMax;
+                        newItem.Upd.BuyRestrictionMax = scheme
+                            .ConfigBarterSettings
+                            .BuyRestrictionMax;
                     }
 
                     trader.Assort.Items.Add(newItem);
@@ -80,25 +81,33 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseServi
 
                     foreach (var b in barters)
                     {
-                        if (string.IsNullOrWhiteSpace(b.Template)) continue;
+                        if (string.IsNullOrWhiteSpace(b.Template))
+                            continue;
 
                         var barter = new BarterScheme
                         {
                             Count = b.Count,
-                            Template = ItemTplResolver.ResolveId(b.Template)
+                            Template = ItemTplResolver.ResolveId(b.Template),
                         };
 
-                        if (b.Level != null) barter.Level = b.Level;
-                        if (b.OnlyFunctional != null) barter.OnlyFunctional = b.OnlyFunctional;
-                        if (b.Side != null) barter.Side = b.Side;
-                        if (b.SptQuestLocked != null) barter.SptQuestLocked = b.SptQuestLocked;
+                        if (b.Level != null)
+                            barter.Level = b.Level;
+                        if (b.OnlyFunctional != null)
+                            barter.OnlyFunctional = b.OnlyFunctional;
+                        if (b.Side != null)
+                            barter.Side = b.Side;
+                        if (b.SptQuestLocked != null)
+                            barter.SptQuestLocked = b.SptQuestLocked;
 
                         barterSchemeItems.Add(barter);
                     }
 
-                    if (barterSchemeItems.Count > 0) barterOptions.Add(barterSchemeItems);
+                    if (barterSchemeItems.Count > 0)
+                        barterOptions.Add(barterSchemeItems);
 
-                    trader.Assort.LoyalLevelItems[schemeKey] = scheme.ConfigBarterSettings.LoyalLevel;
+                    trader.Assort.LoyalLevelItems[schemeKey] = scheme
+                        .ConfigBarterSettings
+                        .LoyalLevel;
                 }
             }
         }

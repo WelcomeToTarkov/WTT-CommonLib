@@ -3,7 +3,6 @@ using System.Collections;
 using UnityEngine;
 using WTTClientCommonLib.Configuration;
 using WTTClientCommonLib.Helpers;
-using WTTClientCommonLib.Services;
 
 namespace WTTClientCommonLib.Components;
 
@@ -34,8 +33,10 @@ public class CharacterAudioHandler : MonoBehaviour
         }
 
         LogHelper.LogDebug($"Found audio clip in cache: {audioKey}");
-        LogHelper.LogDebug($"Clip details - duration: {audioClip.length}s, samples: {audioClip.samples}, channels: {audioClip.channels}");
-    
+        LogHelper.LogDebug(
+            $"Clip details - duration: {audioClip.length}s, samples: {audioClip.samples}, channels: {audioClip.channels}"
+        );
+
         AssignAudioToSource(audioClip, faceName);
         RadioSettings.FaceCardVolume.SettingChanged += OnFaceCardVolumeChanged;
     }
@@ -45,11 +46,12 @@ public class CharacterAudioHandler : MonoBehaviour
         // Unsubscribe to prevent memory leaks
         RadioSettings.FaceCardVolume.SettingChanged -= OnFaceCardVolumeChanged;
     }
-    
+
     private void OnFaceCardVolumeChanged(object sender, EventArgs e)
     {
-        if (!_isInitialized || _audioSource == null) return;
-            
+        if (!_isInitialized || _audioSource == null)
+            return;
+
         if (_audioSource.isPlaying && !_isFadingOut)
         {
             _audioSource.volume = RadioSettings.FaceCardVolume.Value;
@@ -60,7 +62,7 @@ public class CharacterAudioHandler : MonoBehaviour
     public void AssignAudioToSource(AudioClip audioClip, string originalName)
     {
         LogHelper.LogDebug($"AssignAudioToSource: clip={audioClip?.name}, name={originalName}");
-    
+
         _audioSource = gameObject.GetComponent<AudioSource>();
         if (_audioSource == null)
         {
@@ -71,15 +73,17 @@ public class CharacterAudioHandler : MonoBehaviour
         {
             LogHelper.LogDebug($"Reusing existing AudioSource");
         }
-    
+
         _audioSource.clip = audioClip;
         _audioSource.loop = true;
-        _audioSource.volume = 0f; 
+        _audioSource.volume = 0f;
         _audioSource.playOnAwake = false;
         _audioSource.spatialBlend = 0f;
         _isInitialized = true;
-    
-        LogHelper.LogDebug($"Audio source configured: spatialBlend={_audioSource.spatialBlend}, volume={_audioSource.volume}");
+
+        LogHelper.LogDebug(
+            $"Audio source configured: spatialBlend={_audioSource.spatialBlend}, volume={_audioSource.volume}"
+        );
     }
 
     public void FadeIn()
@@ -89,15 +93,15 @@ public class CharacterAudioHandler : MonoBehaviour
             LogHelper.LogWarn("FadeIn called but handler not initialized");
             return;
         }
-            
+
         LogHelper.LogDebug($"FadeIn: Starting fade-in, current volume: {_audioSource?.volume}");
-        
+
         if (_fadeCoroutine != null)
         {
             StopCoroutine(_fadeCoroutine);
             LogHelper.LogDebug("Stopped previous fade coroutine");
         }
-            
+
         _fadeCoroutine = StartCoroutine(FadeAudio(RadioSettings.FaceCardVolume.Value, 5f));
     }
 
@@ -108,17 +112,18 @@ public class CharacterAudioHandler : MonoBehaviour
             LogHelper.LogWarn("FadeOut called but handler not initialized");
             return;
         }
-        
+
         LogHelper.LogDebug($"FadeOut: Starting fade-out, current volume: {_audioSource?.volume}");
-            
+
         if (_fadeCoroutine != null)
         {
             StopCoroutine(_fadeCoroutine);
             LogHelper.LogDebug("Stopped previous fade coroutine");
         }
-            
+
         _fadeCoroutine = StartCoroutine(FadeAudio(0f, 5f));
     }
+
     private IEnumerator FadeAudio(float targetVolume, float duration)
     {
         if (_audioSource == null || _audioSource.clip == null)
@@ -129,9 +134,11 @@ public class CharacterAudioHandler : MonoBehaviour
 
         _isFadingIn = targetVolume > 0;
         _isFadingOut = targetVolume == 0;
-        
-        LogHelper.LogDebug($"FadeAudio started: targetVolume={targetVolume}, duration={duration}, isFadingIn={_isFadingIn}");
-            
+
+        LogHelper.LogDebug(
+            $"FadeAudio started: targetVolume={targetVolume}, duration={duration}, isFadingIn={_isFadingIn}"
+        );
+
         float startVolume = _audioSource.volume;
         float time = 0f;
 
@@ -144,23 +151,21 @@ public class CharacterAudioHandler : MonoBehaviour
         while (time < duration && _audioSource != null)
         {
             time += Time.deltaTime;
-                
-            float currentTarget = _isFadingIn ? 
-                RadioSettings.FaceCardVolume.Value : 
-                targetVolume;
-                
+
+            float currentTarget = _isFadingIn ? RadioSettings.FaceCardVolume.Value : targetVolume;
+
             _audioSource.volume = Mathf.Lerp(startVolume, currentTarget, time / duration);
             yield return null;
         }
 
         if (_audioSource != null)
         {
-            _audioSource.volume = _isFadingIn ? 
-                RadioSettings.FaceCardVolume.Value : 
-                targetVolume;
-            
-            LogHelper.LogDebug($"FadeAudio completed: final volume={_audioSource.volume}, isFadingOut={_isFadingOut}");
-                
+            _audioSource.volume = _isFadingIn ? RadioSettings.FaceCardVolume.Value : targetVolume;
+
+            LogHelper.LogDebug(
+                $"FadeAudio completed: final volume={_audioSource.volume}, isFadingOut={_isFadingOut}"
+            );
+
             if (_isFadingOut)
             {
                 _audioSource.Stop();

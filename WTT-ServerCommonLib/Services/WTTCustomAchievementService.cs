@@ -1,14 +1,11 @@
 ﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Extensions;
-using SPTarkov.Server.Core.Helpers;
-using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Routers;
-using SPTarkov.Server.Core.Servers;
-using SPTarkov.Server.Core.Utils;
 using WTTServerCommonLib.Helpers;
 using Path = System.IO.Path;
 
@@ -17,19 +14,18 @@ namespace WTTServerCommonLib.Services;
 [Injectable(InjectionType.Singleton)]
 public class WTTCustomAchievementService(
     ISptLogger<WTTCustomAchievementService> logger,
-    DatabaseServer databaseServer,
-    ConfigServer cfgServer,
     ImageRouter imageRouter,
     ModHelper modHelper,
     ConfigHelper configHelper,
-    JsonUtil jsonUtil)
+    TemplateTable templateTable,
+    LocaleTable localeTable
+)
 {
     private readonly string[] _validImageExtensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif"];
-    private DatabaseTables? _database;
 
     /// <summary>
     /// Loads custom achievements, locales, and images.
-    /// 
+    ///
     /// Achievements are loaded from the mod's "db/CustomAchievements/Achievements" directory.
     /// Locales are loaded from the mod's "db/CustomAchievements/Locales" directory.
     /// Images are loaded from the mod's "db/CustomAchievements/Images" directory.
@@ -38,8 +34,6 @@ public class WTTCustomAchievementService(
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public async Task CreateCustomAchievements(Assembly assembly, string? relativePath = null)
     {
-        _database = databaseServer.GetTables();
-
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomAchievements");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
@@ -77,20 +71,27 @@ public class WTTCustomAchievementService(
 
         try
         {
-            var achievementLists = await configHelper.LoadAllJsonFiles<List<Achievement>>(achievementsDir);
+            var achievementLists = await configHelper.LoadAllJsonFiles<List<Achievement>>(
+                achievementsDir
+            );
 
             foreach (var achievementData in achievementLists)
             {
                 if (achievementData.Count != 0)
                 {
                     result.Add(achievementData);
-                    LogHelper.Debug(logger, $"Loaded achievement data with {achievementData.Count} achievements");
+                    LogHelper.Debug(
+                        logger,
+                        $"Loaded achievement data with {achievementData.Count} achievements"
+                    );
                 }
             }
         }
         catch (Exception ex)
         {
-            logger.Error($"Error scanning for achievement files in {achievementsDir}: {ex.Message}");
+            logger.Error(
+                $"Error scanning for achievement files in {achievementsDir}: {ex.Message}"
+            );
         }
 
         return result;
@@ -106,7 +107,8 @@ public class WTTCustomAchievementService(
 
         try
         {
-            var images = Directory.GetFiles(directoryPath)
+            var images = Directory
+                .GetFiles(directoryPath)
                 .Where(f => _validImageExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
                 .ToList();
 
@@ -140,7 +142,7 @@ public class WTTCustomAchievementService(
                     continue;
                 }
 
-                _database.Templates.Achievements.Add(achievement);
+                templateTable.Achievements.Add(achievement);
                 achievementCount++;
                 LogHelper.Debug(logger, $"Added achievement {achievement.Id}");
             }
@@ -167,13 +169,15 @@ public class WTTCustomAchievementService(
                 ? englishLocales
                 : locales.Values.FirstOrDefault();
 
-            if (fallback == null) return;
+            if (fallback == null)
+                return;
 
-            foreach (var (localeCode, lazyLocale) in _database.Locales.Global)
+            foreach (var (localeCode, lazyLocale) in localeTable.Global)
             {
                 lazyLocale.AddTransformer(localeData =>
                 {
-                    if (localeData is null) return localeData;
+                    if (localeData is null)
+                        return localeData;
 
                     var customLocale = locales.GetValueOrDefault(localeCode, fallback);
 
@@ -186,7 +190,10 @@ public class WTTCustomAchievementService(
                 });
             }
 
-            LogHelper.Debug(logger, $"Registered transformers for {locales.Count} achievement locale files");
+            LogHelper.Debug(
+                logger,
+                $"Registered transformers for {locales.Count} achievement locale files"
+            );
         }
         catch (Exception ex)
         {
@@ -207,7 +214,7 @@ public class WTTCustomAchievementService(
             try
             {
                 var imageName = Path.GetFileNameWithoutExtension(imagePath);
-                
+
                 imageRouter.AddRoute($"/files/achievement/{imageName}", imagePath);
                 LogHelper.Debug(logger, $"Registered image route for {imageName}");
             }

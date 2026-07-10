@@ -1,13 +1,12 @@
-﻿using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Models.Eft.Common;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class MasteryHelper(ISptLogger<MasteryHelper> logger, DatabaseService databaseService)
+public class MasteryHelper(ISptLogger<MasteryHelper> logger, GlobalTable globalTable)
 {
     public void AddOrUpdateMasteries(IEnumerable<Mastering> masterySections, string itemId)
     {
@@ -18,7 +17,6 @@ public class MasteryHelper(ISptLogger<MasteryHelper> logger, DatabaseService dat
             return;
         }
 
-        var globals = databaseService.GetGlobals();
         foreach (var mastery in masteries)
         {
             if (string.IsNullOrEmpty(mastery.Name))
@@ -27,8 +25,9 @@ public class MasteryHelper(ISptLogger<MasteryHelper> logger, DatabaseService dat
                 continue;
             }
 
-            var existing = globals.Configuration.Mastering
-                .FirstOrDefault(m => m.Name.Equals(mastery.Name, StringComparison.OrdinalIgnoreCase));
+            var existing = globalTable.Configuration.Mastering.FirstOrDefault(m =>
+                m.Name.Equals(mastery.Name, StringComparison.OrdinalIgnoreCase)
+            );
 
             if (existing != null)
             {
@@ -45,12 +44,18 @@ public class MasteryHelper(ISptLogger<MasteryHelper> logger, DatabaseService dat
                     if (!templates.Contains(template))
                     {
                         templates.Add(template);
-                        LogHelper.Debug(logger, $"Added template {template} to mastery '{mastery.Name}'");
+                        LogHelper.Debug(
+                            logger,
+                            $"Added template {template} to mastery '{mastery.Name}'"
+                        );
                     }
                 }
 
                 existing.Templates = templates.ToArray();
-                LogHelper.Debug(logger, $"[Mastery] Updated existing mastery '{mastery.Name}' for {itemId}");
+                LogHelper.Debug(
+                    logger,
+                    $"[Mastery] Updated existing mastery '{mastery.Name}' for {itemId}"
+                );
             }
             else
             {
@@ -59,14 +64,17 @@ public class MasteryHelper(ISptLogger<MasteryHelper> logger, DatabaseService dat
                     Name = mastery.Name,
                     Level2 = mastery.Level2,
                     Level3 = mastery.Level3,
-                    Templates = mastery.Templates.ToArray()
+                    Templates = mastery.Templates.ToArray(),
                 };
 
-                var newMastering = globals.Configuration.Mastering.ToList();
+                var newMastering = globalTable.Configuration.Mastering.ToList();
                 newMastering.Add(newMastery);
-                globals.Configuration.Mastering = newMastering.ToArray();
+                globalTable.Configuration.Mastering = newMastering.ToArray();
 
-                LogHelper.Debug(logger, $"[Mastery] Created new mastery '{mastery.Name}' for {itemId}");
+                LogHelper.Debug(
+                    logger,
+                    $"[Mastery] Created new mastery '{mastery.Name}' for {itemId}"
+                );
             }
         }
     }

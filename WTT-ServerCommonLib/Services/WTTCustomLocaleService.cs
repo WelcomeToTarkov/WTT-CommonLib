@@ -1,9 +1,8 @@
 ﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Helpers.Server;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 
 namespace WTTServerCommonLib.Services;
@@ -11,26 +10,21 @@ namespace WTTServerCommonLib.Services;
 [Injectable(InjectionType.Singleton)]
 public class WTTCustomLocaleService(
     ISptLogger<WTTCustomLocaleService> logger,
-    DatabaseServer databaseServer,
+    LocaleTable localeTable,
     ModHelper modHelper,
     ConfigHelper configHelper
 )
 {
-    private DatabaseTables? _database;
-
     /// <summary>
     /// Loads custom locale translations from JSON/JSONC files and registers them globally.
-    /// 
+    ///
     /// Locales are loaded from the mod's "db/CustomLocales" directory (or a custom path if specified).
     /// Translations are merged into all available game locales using English as fallback.
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public async Task CreateCustomLocales(Assembly assembly, string? relativePath = null)
-
     {
-        _database = databaseServer.GetTables();
-        
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomLocales");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
@@ -49,7 +43,9 @@ public class WTTCustomLocaleService(
             return;
         }
 
-        var fallback = customLocales.TryGetValue("en", out var locale) ? locale : customLocales.Values.FirstOrDefault();
+        var fallback = customLocales.TryGetValue("en", out var locale)
+            ? locale
+            : customLocales.Values.FirstOrDefault();
 
         if (fallback == null)
         {
@@ -57,19 +53,23 @@ public class WTTCustomLocaleService(
             return;
         }
 
-        foreach (var (localeCode, lazyLocale) in _database.Locales.Global)
+        foreach (var (localeCode, lazyLocale) in localeTable.Global)
             lazyLocale.AddTransformer(localeData =>
             {
-                if (localeData is null) return localeData;
+                if (localeData is null)
+                    return localeData;
 
                 var customLocale = customLocales.GetValueOrDefault(localeCode, fallback);
 
-                foreach (var (key, value) in customLocale) localeData[key] = value;
+                foreach (var (key, value) in customLocale)
+                    localeData[key] = value;
 
                 return localeData;
             });
 
-        LogHelper.Debug(logger,
-            $"WTTCustomLocaleService: Registered transformers for {customLocales.Count} locale files");
+        LogHelper.Debug(
+            logger,
+            $"WTTCustomLocaleService: Registered transformers for {customLocales.Count} locale files"
+        );
     }
 }

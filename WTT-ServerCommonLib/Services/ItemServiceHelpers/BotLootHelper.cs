@@ -1,24 +1,24 @@
-﻿using SPTarkov.DI.Annotations;
+﻿using SPTarkov.Common.Logger;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
-using SPTarkov.Server.Core.Services;
-using SPTarkov.Server.Core.Utils.Logger;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class BotLootHelper(DatabaseService databaseService, SptLogger<BotLootHelper> logger)
+public class BotLootHelper(BotTable botTable, SptLogger<BotLootHelper> logger)
 {
     public void AddToBotLoot(CustomItemConfig itemConfig, string newItemId)
     {
         var cloneItemId = itemConfig.ItemTplToClone;
-        var bots = databaseService.GetBots();
 
-        foreach (var (_, bot) in bots.Types)
+        foreach (var (_, bot) in botTable.Types)
         {
             var items = bot?.BotInventory.Items;
-            if (items == null) continue;
+            if (items == null)
+                continue;
 
             var containers = new[]
             {
@@ -26,7 +26,7 @@ public class BotLootHelper(DatabaseService databaseService, SptLogger<BotLootHel
                 items.Pockets,
                 items.SecuredContainer,
                 items.SpecialLoot,
-                items.TacticalVest
+                items.TacticalVest,
             };
 
             foreach (var container in containers)
@@ -34,7 +34,10 @@ public class BotLootHelper(DatabaseService databaseService, SptLogger<BotLootHel
                 if (existingItem.ToString() == cloneItemId)
                 {
                     container[new MongoId(newItemId)] = chance;
-                    LogHelper.Debug(logger, $"Added {newItemId} to {container[new MongoId(newItemId)]}");
+                    LogHelper.Debug(
+                        logger,
+                        $"Added {newItemId} to {container[new MongoId(newItemId)]}"
+                    );
                     break;
                 }
         }

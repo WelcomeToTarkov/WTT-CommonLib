@@ -1,27 +1,28 @@
 ﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
-using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Helpers.Server;
 using WTTServerCommonLib.Helpers;
 
 namespace WTTServerCommonLib.Services;
 
 [Injectable(InjectionType.Singleton)]
-public class WTTCustomRigLayoutService(ModHelper modHelper, ISptLogger<WTTCustomRigLayoutService> logger)
+public class WTTCustomRigLayoutService(
+    ModHelper modHelper,
+    ISptLogger<WTTCustomRigLayoutService> logger
+)
 {
     private readonly Dictionary<string, Dictionary<string, string>> _modBundles = [];
 
     /// <summary>
     /// Loads custom rig layout asset bundles and registers them for client access.
-    /// 
+    ///
     /// Bundles are loaded from the mod's "db/CustomRigLayouts" directory (or a custom path if specified).
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public void CreateRigLayouts(Assembly assembly, string? relativePath = null)
-
     {
-        
         var modKey = assembly.GetName().Name ?? string.Empty;
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomRigLayouts");
@@ -29,7 +30,10 @@ public class WTTCustomRigLayoutService(ModHelper modHelper, ISptLogger<WTTCustom
 
         if (!Directory.Exists(finalDir))
         {
-            LogHelper.Debug(logger, $"No CustomRigLayouts directory at {finalDir} for mod {modKey}");
+            LogHelper.Debug(
+                logger,
+                $"No CustomRigLayouts directory at {finalDir} for mod {modKey}"
+            );
             return;
         }
 
@@ -47,7 +51,8 @@ public class WTTCustomRigLayoutService(ModHelper modHelper, ISptLogger<WTTCustom
     public List<string> GetLayoutManifest()
     {
         var allBundles = new List<string>();
-        foreach (var modBundles in _modBundles.Values) allBundles.AddRange(modBundles.Keys);
+        foreach (var modBundles in _modBundles.Values)
+            allBundles.AddRange(modBundles.Keys);
         return allBundles;
     }
 

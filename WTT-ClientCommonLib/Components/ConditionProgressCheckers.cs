@@ -1,11 +1,7 @@
 ﻿using EFT.Quests;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace WTTClientCommonLib.Components
 {
-
     public class SalvageConditionChecker : ConditionProgressChecker
     {
         private bool _done;
@@ -39,9 +35,7 @@ namespace WTTClientCommonLib.Components
     public class LeaveItemAtLocationChecker : ConditionProgressChecker
     {
         public LeaveItemAtLocationChecker(ConditionLeaveItemAtLocation condition)
-            : base(condition)
-        {
-        }
+            : base(condition) { }
 
         public override bool Test(object testValue)
         {

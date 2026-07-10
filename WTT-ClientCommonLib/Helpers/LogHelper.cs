@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace WTTClientCommonLib.Helpers;
+﻿namespace WTTClientCommonLib.Helpers;
 
 public static class LogHelper
 {

@@ -1,4 +1,3 @@
-using EFT.InventoryLogic;
 using System;
 
 namespace WTTClientCommonLib.Attributes;

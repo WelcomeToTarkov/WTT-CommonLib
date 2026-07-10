@@ -1,15 +1,19 @@
-﻿using SPTarkov.DI.Annotations;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
 
 namespace WTTServerCommonLib.Helpers;
 
 [Injectable]
 public class QuestHelper(ISptLogger<QuestHelper> logger)
 {
-    public void AddDogtagsToQuests(Dictionary<MongoId, Quest> quests, string questId, List<MongoId> dogtagIds, string faction)
+    public void AddDogtagsToQuests(
+        Dictionary<MongoId, Quest> quests,
+        string questId,
+        List<MongoId> dogtagIds,
+        string faction
+    )
     {
         if (!quests.TryGetValue(questId, out var quest))
         {
@@ -27,16 +31,18 @@ public class QuestHelper(ISptLogger<QuestHelper> logger)
         {
             "USEC" => "59f32c3b86f77472a31742f0",
             "BEAR" => "59f32bb586f774757e1e8442",
-            _ => throw new ArgumentException($"Invalid faction: {faction}. Use 'USEC' or 'BEAR'")
+            _ => throw new ArgumentException($"Invalid faction: {faction}. Use 'USEC' or 'BEAR'"),
         };
 
         var modified = false;
 
         foreach (var condition in quest.Conditions.AvailableForFinish)
         {
-            if (condition is { ConditionType: "HandoverItem" } &&
-                condition.Target?.List != null &&
-                condition.Target.List.Contains(factionId))
+            if (
+                condition is { ConditionType: "HandoverItem" }
+                && condition.Target?.List != null
+                && condition.Target.List.Contains(factionId)
+            )
             {
                 foreach (var dogtagId in dogtagIds)
                 {
@@ -60,7 +66,11 @@ public class QuestHelper(ISptLogger<QuestHelper> logger)
         }
     }
 
-    public void AddWeaponsToKillCondition(Dictionary<MongoId, Quest> quests, string questId, string[] weaponIds)
+    public void AddWeaponsToKillCondition(
+        Dictionary<MongoId, Quest> quests,
+        string questId,
+        string[] weaponIds
+    )
     {
         if (!quests.TryGetValue(questId, out var quest))
         {
@@ -88,10 +98,8 @@ public class QuestHelper(ISptLogger<QuestHelper> logger)
 
                     if (counterCond is { Weapon: not null, ConditionType: "Kills" or "Shots" })
                     {
-
-                        
                         var beforeCount = counterCond.Weapon.Count;
-                        
+
                         if (beforeCount == 0)
                         {
                             logger.Debug("  Skipping empty weapon array");
@@ -107,7 +115,9 @@ public class QuestHelper(ISptLogger<QuestHelper> logger)
                             }
                         }
 
-                        logger.Debug($"  Weapon count before: {beforeCount}, after: {counterCond.Weapon.Count}");
+                        logger.Debug(
+                            $"  Weapon count before: {beforeCount}, after: {counterCond.Weapon.Count}"
+                        );
                     }
                 }
             }
@@ -119,13 +129,22 @@ public class QuestHelper(ISptLogger<QuestHelper> logger)
         }
         else
         {
-            logger.Warning($"No modifications made to quest {questId} - condition structure might differ");
+            logger.Warning(
+                $"No modifications made to quest {questId} - condition structure might differ"
+            );
         }
     }
 
-    public void AddArmorToEquipmentExclusive(Dictionary<MongoId, Quest> quests, string questId, string[] armorIds)
+    public void AddArmorToEquipmentExclusive(
+        Dictionary<MongoId, Quest> quests,
+        string questId,
+        string[] armorIds
+    )
     {
-        if (!quests.TryGetValue(questId, out var quest) || quest.Conditions.AvailableForFinish == null)
+        if (
+            !quests.TryGetValue(questId, out var quest)
+            || quest.Conditions.AvailableForFinish == null
+        )
             return;
 
         foreach (var condition in quest.Conditions.AvailableForFinish)
@@ -146,16 +165,24 @@ public class QuestHelper(ISptLogger<QuestHelper> logger)
         }
     }
 
-    public void AddWeaponsToFindOrHandoverCondition(Dictionary<MongoId, Quest> quests, string questId,
-        string[] weaponIds)
+    public void AddWeaponsToFindOrHandoverCondition(
+        Dictionary<MongoId, Quest> quests,
+        string questId,
+        string[] weaponIds
+    )
     {
-        if (!quests.TryGetValue(questId, out var quest) || quest.Conditions.AvailableForFinish == null)
+        if (
+            !quests.TryGetValue(questId, out var quest)
+            || quest.Conditions.AvailableForFinish == null
+        )
             return;
 
         foreach (var condition in quest.Conditions.AvailableForFinish)
         {
-            if ((condition.ConditionType == "FindItem" || condition.ConditionType == "HandoverItem") &&
-                condition.Target != null)
+            if (
+                (condition.ConditionType == "FindItem" || condition.ConditionType == "HandoverItem")
+                && condition.Target != null
+            )
             {
                 foreach (var weaponId in weaponIds)
                 {
@@ -167,67 +194,71 @@ public class QuestHelper(ISptLogger<QuestHelper> logger)
             }
         }
     }
-    
+
     public void AddWeaponModToCondition(
-    Dictionary<MongoId, Quest> quests,
-    string questId,
-    string modId,
-    string existingModId,
-    bool isInclusive = true)
-{
-    if (!quests.TryGetValue(questId, out var quest) || quest.Conditions.AvailableForFinish == null)
+        Dictionary<MongoId, Quest> quests,
+        string questId,
+        string modId,
+        string existingModId,
+        bool isInclusive = true
+    )
     {
-        logger.Warning($"Quest {questId} not found or has no AvailableForFinish conditions");
-        return;
-    }
-
-    var modType = isInclusive ? "Inclusive" : "Exclusive";
-    var modified = false;
-
-    foreach (var condition in quest.Conditions.AvailableForFinish)
-    {
-        if (condition is { ConditionType: "CounterCreator", Counter.Conditions: not null })
+        if (
+            !quests.TryGetValue(questId, out var quest)
+            || quest.Conditions.AvailableForFinish == null
+        )
         {
-            foreach (var counterCond in condition.Counter.Conditions)
+            logger.Warning($"Quest {questId} not found or has no AvailableForFinish conditions");
+            return;
+        }
+
+        var modType = isInclusive ? "Inclusive" : "Exclusive";
+        var modified = false;
+
+        foreach (var condition in quest.Conditions.AvailableForFinish)
+        {
+            if (condition is { ConditionType: "CounterCreator", Counter.Conditions: not null })
             {
-                var modList = isInclusive 
-                    ? (List<List<string>>)counterCond.WeaponModsInclusive 
-                    : (List<List<string>>)counterCond.WeaponModsExclusive;
-
-                if (modList != null)
+                foreach (var counterCond in condition.Counter.Conditions)
                 {
-                    // Check if existing mod exists anywhere in the list of arrays
-                    var existingModExists = modList
-                        .Any(list => list.Contains(existingModId));
+                    var modList = isInclusive
+                        ? (List<List<string>>)counterCond.WeaponModsInclusive
+                        : (List<List<string>>)counterCond.WeaponModsExclusive;
 
-                    if (existingModExists)
+                    if (modList != null)
                     {
-                        // Check if our mod already exists
-                        var modAlreadyExists = modList
-                            .Any(list => list.Contains(modId));
+                        // Check if existing mod exists anywhere in the list of arrays
+                        var existingModExists = modList.Any(list => list.Contains(existingModId));
 
-                        if (!modAlreadyExists)
+                        if (existingModExists)
                         {
-                            // Add as a new single-item array
-                            modList.Add([modId]);
-                            modified = true;
-                            logger.Debug($"Added mod {modId} to WeaponMods{modType} in quest {questId}");
+                            // Check if our mod already exists
+                            var modAlreadyExists = modList.Any(list => list.Contains(modId));
+
+                            if (!modAlreadyExists)
+                            {
+                                // Add as a new single-item array
+                                modList.Add([modId]);
+                                modified = true;
+                                logger.Debug(
+                                    $"Added mod {modId} to WeaponMods{modType} in quest {questId}"
+                                );
+                            }
                         }
                     }
                 }
             }
         }
-    }
 
-    if (modified)
-    {
-        logger.Debug($"Successfully added mod to quest {questId}");
+        if (modified)
+        {
+            logger.Debug($"Successfully added mod to quest {questId}");
+        }
+        else
+        {
+            logger.Warning(
+                $"Existing mod {existingModId} not found in WeaponMods{modType} for quest {questId}"
+            );
+        }
     }
-    else
-    {
-        logger.Warning($"Existing mod {existingModId} not found in WeaponMods{modType} for quest {questId}");
-    }
-}
-
-
 }

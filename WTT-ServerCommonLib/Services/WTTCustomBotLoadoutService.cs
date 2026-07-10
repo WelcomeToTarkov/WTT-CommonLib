@@ -1,14 +1,13 @@
 ﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Extensions;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Enums;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
@@ -16,31 +15,26 @@ using Path = System.IO.Path;
 
 namespace WTTServerCommonLib.Services;
 
-[Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 1)]
+[Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.PostLoad)]
 public class WTTCustomBotLoadoutService(
-    DatabaseServer databaseServer,
     ISptLogger<WTTCustomBotLoadoutService> logger,
+    BotTable botTable,
     ModHelper modHelper,
-    JsonUtil jsonUtil)
+    JsonUtil jsonUtil
+)
 {
-    private DatabaseTables? _database;
-
     /// <summary>
     /// Loads custom bot loadout configurations from JSON/JSONC files and applies them to bot types in the database.
-    /// 
+    ///
     /// Loadouts are loaded from the mod's "db/CustomBotLoadouts" directory (or a custom path if specified).
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public async Task CreateCustomBotLoadouts(Assembly assembly, string? relativePath = null)
-
     {
-        
         var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
         var defaultDir = Path.Combine("db", "CustomBotLoadouts");
         var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
-
-        if (_database == null) _database = databaseServer.GetTables();
 
         if (!Directory.Exists(finalDir))
         {
@@ -48,10 +42,12 @@ public class WTTCustomBotLoadoutService(
             return;
         }
 
-
-        var jsonFiles = Directory.EnumerateFiles(finalDir, "*.*", SearchOption.AllDirectories)
-            .Where(f => f.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
-                        f.EndsWith(".jsonc", StringComparison.OrdinalIgnoreCase));
+        var jsonFiles = Directory
+            .EnumerateFiles(finalDir, "*.*", SearchOption.AllDirectories)
+            .Where(f =>
+                f.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                || f.EndsWith(".jsonc", StringComparison.OrdinalIgnoreCase)
+            );
 
         foreach (var file in jsonFiles)
         {
@@ -59,26 +55,32 @@ public class WTTCustomBotLoadoutService(
 
             try
             {
-                var customLoadout = await jsonUtil.DeserializeFromFileAsync<CustomBotLoadoutConfig>(file);
-                if (customLoadout != null) ApplyCustomBotLoadout(botTypeName, customLoadout);
-                LogHelper.Debug(logger, $"Successfully applied custom loadout for bot type: {botTypeName}");
+                var customLoadout = await jsonUtil.DeserializeFromFileAsync<CustomBotLoadoutConfig>(
+                    file
+                );
+                if (customLoadout != null)
+                    ApplyCustomBotLoadout(botTypeName, customLoadout);
+                LogHelper.Debug(
+                    logger,
+                    $"Successfully applied custom loadout for bot type: {botTypeName}"
+                );
             }
             catch (Exception ex)
             {
-                logger.Critical($"Failed to process bot loadout file {file} for bot type {botTypeName}", ex);
+                logger.Critical(
+                    $"Failed to process bot loadout file {file} for bot type {botTypeName}",
+                    ex
+                );
             }
         }
     }
 
-    private void ApplyCustomBotLoadout(string botTypeName, CustomBotLoadoutConfig customBotLoadoutConfigLoadout)
+    private void ApplyCustomBotLoadout(
+        string botTypeName,
+        CustomBotLoadoutConfig customBotLoadoutConfigLoadout
+    )
     {
-        if (_database == null)
-        {
-            logger.Error("Database is null");
-            return;
-        }
-
-        if (!_database.Bots.Types.TryGetValue(botTypeName, out var botType))
+        if (!botTable.Types.TryGetValue(botTypeName, out var botType))
         {
             logger.Error($"Bot type '{botTypeName}' not found in database");
             return;
@@ -90,7 +92,8 @@ public class WTTCustomBotLoadoutService(
             return;
         }
 
-        if (customBotLoadoutConfigLoadout.Chances != null) MergeChances(botType, customBotLoadoutConfigLoadout.Chances);
+        if (customBotLoadoutConfigLoadout.Chances != null)
+            MergeChances(botType, customBotLoadoutConfigLoadout.Chances);
 
         if (customBotLoadoutConfigLoadout.Inventory != null)
             MergeInventory(botType, customBotLoadoutConfigLoadout.Inventory);
@@ -105,7 +108,8 @@ public class WTTCustomBotLoadoutService(
             foreach (var equipmentChance in chances.Equipment)
                 try
                 {
-                    botType.BotChances.EquipmentChances[equipmentChance.Key] = equipmentChance.Value;
+                    botType.BotChances.EquipmentChances[equipmentChance.Key] =
+                        equipmentChance.Value;
                 }
                 catch (ArgumentException)
                 {
@@ -126,14 +130,17 @@ public class WTTCustomBotLoadoutService(
             foreach (var equipmentSlot in inventory.Equipment)
                 try
                 {
-                    var equipmentSlotEnum = (EquipmentSlots)Enum.Parse(typeof(EquipmentSlots), equipmentSlot.Key);
+                    var equipmentSlotEnum = (EquipmentSlots)
+                        Enum.Parse(typeof(EquipmentSlots), equipmentSlot.Key);
 
                     if (!botType.BotInventory.Equipment.ContainsKey(equipmentSlotEnum))
-                        botType.BotInventory.Equipment[equipmentSlotEnum] = new Dictionary<MongoId, double>();
+                        botType.BotInventory.Equipment[equipmentSlotEnum] =
+                            new Dictionary<MongoId, double>();
 
                     foreach (var equipmentItem in equipmentSlot.Value)
                         if (MongoId.IsValidMongoId(equipmentItem.Key))
-                            botType.BotInventory.Equipment[equipmentSlotEnum][equipmentItem.Key] = equipmentItem.Value;
+                            botType.BotInventory.Equipment[equipmentSlotEnum][equipmentItem.Key] =
+                                equipmentItem.Value;
                         else
                             logger.Warning($"Invalid MongoId for equipment: {equipmentItem.Key}");
                 }
@@ -149,12 +156,14 @@ public class WTTCustomBotLoadoutService(
                     var baseItemId = new MongoId(baseItemMods.Key);
 
                     if (!botType.BotInventory.Mods.ContainsKey(baseItemId))
-                        botType.BotInventory.Mods[baseItemId] = new Dictionary<string, HashSet<MongoId>>();
+                        botType.BotInventory.Mods[baseItemId] =
+                            new Dictionary<string, HashSet<MongoId>>();
 
                     foreach (var modSlot in baseItemMods.Value)
                     {
                         if (!botType.BotInventory.Mods[baseItemId].ContainsKey(modSlot.Key))
-                            botType.BotInventory.Mods[baseItemId][modSlot.Key] = new HashSet<MongoId>();
+                            botType.BotInventory.Mods[baseItemId][modSlot.Key] =
+                                new HashSet<MongoId>();
 
                         var existingMods = botType.BotInventory.Mods[baseItemId][modSlot.Key];
 
@@ -195,7 +204,6 @@ public class WTTCustomBotLoadoutService(
             foreach (var body in appearance.Body)
                 if (body.Key.IsValidMongoId())
                     botType.BotAppearance.Body[body.Key] = body.Value;
-
 
         if (appearance.Feet != null)
             foreach (var feet in appearance.Feet)

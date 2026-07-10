@@ -1,13 +1,15 @@
-﻿using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
-using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class InventorySlotHelper(ISptLogger<InventorySlotHelper> logger, DatabaseService databaseService)
+public class InventorySlotHelper(
+    ISptLogger<InventorySlotHelper> logger,
+    TemplateTable templateTable
+)
 {
     public void ProcessInventorySlots(CustomItemConfigBase itemConfig, string itemId)
     {
@@ -16,14 +18,12 @@ public class InventorySlotHelper(ISptLogger<InventorySlotHelper> logger, Databas
 
         const string pmcInventoryTemplateId = "55d7217a4bdc2d86028b456d";
 
-        var items = databaseService.GetItems();
+        var items = templateTable.Items;
         var defaultInventorySlots = items[pmcInventoryTemplateId].Properties?.Slots;
         if (defaultInventorySlots == null)
             return;
 
-        var allowedSlots = itemConfig.AddToInventorySlots
-            .Select(slot => slot.ToLower())
-            .ToList();
+        var allowedSlots = itemConfig.AddToInventorySlots.Select(slot => slot.ToLower()).ToList();
 
         foreach (var slot in defaultInventorySlots)
         {
@@ -42,7 +42,10 @@ public class InventorySlotHelper(ISptLogger<InventorySlotHelper> logger, Databas
                     continue;
 
                 if (firstFilter.Filter.Add(itemId))
-                    LogHelper.Debug(logger, $"[InventorySlots] Added {itemId} to inventory slot '{slot.Name}'");
+                    LogHelper.Debug(
+                        logger,
+                        $"[InventorySlots] Added {itemId} to inventory slot '{slot.Name}'"
+                    );
             }
         }
     }
