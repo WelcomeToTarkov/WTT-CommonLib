@@ -110,13 +110,10 @@ public class WTTHideoutControllerExtended(
         // Reward is a list of multiple items, handle differently compared to regular end product
         var extendedRecipe = recipeService.GetExtendedRecipe(recipe.Id);
         var recipeIsExtended = false;
-        if (extendedRecipe != null)
+        if (extendedRecipe is { EndProductItems.Count: > 0 })
         {
-            if (extendedRecipe.EndProductItems?.Count > 0)
-            {
-                itemAndChildrenToSendToPlayer = HandleExtendedReward(extendedRecipe);
-                recipeIsExtended = true;
-            }
+            itemAndChildrenToSendToPlayer = HandleExtendedReward(extendedRecipe);
+            recipeIsExtended = true;
         }
         
         // Reward is weapon/armor preset, handle differently compared to 'normal' items
@@ -126,8 +123,11 @@ public class WTTHideoutControllerExtended(
             itemAndChildrenToSendToPlayer = HandlePresetReward(recipe);
         }
 
-        UnstackRewardIntoValidSize(recipe, itemAndChildrenToSendToPlayer, rewardIsPreset || recipeIsExtended);
-
+        if (!recipeIsExtended)
+        {
+            UnstackRewardIntoValidSize(recipe, itemAndChildrenToSendToPlayer, rewardIsPreset);
+        }
+        
         // Recipe has an `isEncoded` requirement for reward(s), Add `RecodableComponent` property
         if (recipe.IsEncoded ?? false)
         {
@@ -285,7 +285,6 @@ public class WTTHideoutControllerExtended(
                 finalItems.Add(cloned);
             }
         }
-
         return finalItems;
     }
 }
