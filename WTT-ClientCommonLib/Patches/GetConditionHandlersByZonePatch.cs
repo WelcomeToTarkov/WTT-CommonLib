@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -16,7 +15,11 @@ namespace WTTClientCommonLib.Patches
         {
             Type[] parameters = [typeof(string)];
             Type[] generics = [typeof(ConditionZone)];
-            return AccessTools.Method(typeof(QuestBookClass), nameof(QuestBookClass.GetConditionHandlersByZone), parameters, generics);
+            return AccessTools.Method(
+                typeof(QuestBookClass),
+                nameof(QuestBookClass.GetConditionHandlersByZone),
+                parameters,
+                generics);
         }
 
         [PatchPostfix]
@@ -29,11 +32,14 @@ namespace WTTClientCommonLib.Patches
 
             foreach (var quest in __instance)
             {
+                if (quest == null)
+                    continue;
+
                 if (quest.QuestStatus != EQuestStatus.Started &&
                     quest.QuestStatus != EQuestStatus.AvailableForFinish)
                     continue;
 
-                if (quest.Conditions == null)
+                if (quest.Conditions == null || quest.ProgressCheckers == null)
                     continue;
 
                 foreach (var kvp in quest.Conditions)
@@ -41,13 +47,19 @@ namespace WTTClientCommonLib.Patches
                     var status = kvp.Key;
                     var conditions = kvp.Value;
 
+                    if (conditions == null)
+                        continue;
+
                     if (!quest.CurrentStatusTransitions.Contains(status) &&
                         status != quest.QuestStatus)
                         continue;
 
-                    foreach (var cond in conditions)
+                    foreach (var condition in conditions)
                     {
-                        if (cond is not ConditionCounterCreator cc || cc.Conditions == null)
+                        if (condition is not ConditionCounterCreator cc || cc.Conditions == null)
+                            continue;
+
+                        if (IsCounterCreatorComplete(quest, cc))
                             continue;
 
                         foreach (var child in cc.Conditions)
@@ -75,6 +87,33 @@ namespace WTTClientCommonLib.Patches
             }
 
             __result = list;
+        }
+
+        private static bool IsCounterCreatorComplete(QuestClass quest, ConditionCounterCreator cc)
+        {
+            if (quest == null || cc == null)
+                return false;
+
+            if (quest.CompletedConditions != null && quest.CompletedConditions.Contains(cc.id))
+                return true;
+
+            var target = cc.value;
+            if (target <= 0)
+                target = 1;
+
+            var counter = quest.ConditionCountersManager?.GetCounter(cc.id);
+            if (counter != null && counter.Value >= target)
+                return true;
+
+            if (quest.ProgressCheckers != null &&
+                quest.ProgressCheckers.TryGetValue(cc, out var ccCpc) &&
+                ccCpc != null &&
+                ccCpc.CurrentValue >= target)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
