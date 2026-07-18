@@ -106,10 +106,7 @@ public class WTTCustomItemServiceExtended(
     {
         try
         {
-            var registerInHandbook = config.RegisterInHandbook ?? true;
-            var registerInFleaPrices = config.RegisterInFleaPrices ?? true;
-
-            CreateItemFromClone(assembly, newItemId, config, registerInHandbook, registerInFleaPrices);
+            CreateItemFromClone(assembly, newItemId, config);
             LogHelper.Debug(logger, $"Created item {newItemId}");
 
             ProcessAdditionalProperties(newItemId, config);
@@ -124,9 +121,7 @@ public class WTTCustomItemServiceExtended(
     private void CreateItemFromClone(
         Assembly assembly,
         string newItemId,
-        CustomItemConfig config,
-        bool registerInHandbook,
-        bool registerInFleaPrices)
+        CustomItemConfig config)
     {
         var tables = databaseService.GetTables();
 
@@ -144,6 +139,9 @@ public class WTTCustomItemServiceExtended(
         itemRegistrationHelper.UpdateBaseItemPropertiesWithOverrides(config.OverrideProperties, itemClone);
 
         itemRegistrationHelper.AddToItemsDb(newItemId, itemClone);
+
+        var registerInHandbook = config.RegisterInHandbook ?? true;
+        var registerInFleaPrices = config.RegisterInFleaPrices ?? true;
 
         if (registerInHandbook)
         {
@@ -227,7 +225,6 @@ public class WTTCustomItemServiceExtended(
 
         if (config.AddToItemBlacklist == true)
             rewardItemBlacklistHelper.AddToItemBlacklist(newItemId);
-
     }
     
     private void AddDeferredCaliberConfig(string newItemId, CustomItemConfig config)
