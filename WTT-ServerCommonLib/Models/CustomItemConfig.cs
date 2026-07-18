@@ -107,61 +107,88 @@ public class CustomItemConfig : CustomItemConfigBase
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public RewardDetails? RandomLootContainerRewards { get; set; }
 
-    public override void Validate(string itemId)
+    public override IEnumerable<string> GetValidationErrors(string itemId)
     {
-        base.Validate(itemId);
+        foreach (var error in base.GetValidationErrors(itemId))
+            yield return error;
 
         if (AddToTraders == true)
         {
             if (Traders == null || Traders.Count == 0)
-                throw new InvalidDataException($"[{itemId}] traders is required when addtoTraders is true");
-
-            foreach (var traderEntry in Traders)
             {
-                var traderKey = traderEntry.Key;
-                var schemes = traderEntry.Value;
-
-                if (string.IsNullOrWhiteSpace(traderKey))
-                    throw new InvalidDataException($"[{itemId}] traders contains an empty trader key");
-
-                if (schemes == null || schemes.Count == 0)
-                    throw new InvalidDataException($"[{itemId}] traders['{traderKey}'] must contain at least one scheme");
-
-                foreach (var schemeEntry in schemes)
+                yield return $"[{itemId}] traders is required when addtoTraders is true";
+            }
+            else
+            {
+                foreach (var traderEntry in Traders)
                 {
-                    var schemeKey = schemeEntry.Key;
-                    var scheme = schemeEntry.Value;
+                    var traderKey = traderEntry.Key;
+                    var schemes = traderEntry.Value;
 
-                    if (string.IsNullOrWhiteSpace(schemeKey))
-                        throw new InvalidDataException($"[{itemId}] traders['{traderKey}'] contains an empty scheme key");
-
-                    if (scheme == null)
-                        throw new InvalidDataException($"[{itemId}] traders['{traderKey}']['{schemeKey}'] is null");
-
-                    if (scheme.ConfigBarterSettings == null)
-                        throw new InvalidDataException($"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings is required");
-
-                    if (scheme.ConfigBarterSettings.LoyalLevel < 0)
-                        throw new InvalidDataException($"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings.loyalLevel must be >= 0");
-
-                    if (scheme.ConfigBarterSettings.StackObjectsCount < 0)
-                        throw new InvalidDataException($"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings.stackObjectsCount must be >= 0");
-
-                    if (scheme.Barters == null || scheme.Barters.Count == 0)
-                        throw new InvalidDataException($"[{itemId}] traders['{traderKey}']['{schemeKey}'] must include at least one barter");
-
-                    for (var i = 0; i < scheme.Barters.Count; i++)
+                    if (string.IsNullOrWhiteSpace(traderKey))
                     {
-                        var barter = scheme.Barters[i];
+                        yield return $"[{itemId}] traders contains an empty trader key";
+                        continue;
+                    }
 
-                        if (barter == null)
-                            throw new InvalidDataException($"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}] is null");
+                    if (schemes == null || schemes.Count == 0)
+                    {
+                        yield return $"[{itemId}] traders['{traderKey}'] must contain at least one scheme";
+                        continue;
+                    }
 
-                        if (string.IsNullOrWhiteSpace(barter.Template))
-                            throw new InvalidDataException($"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}].template is required");
+                    foreach (var schemeEntry in schemes)
+                    {
+                        var schemeKey = schemeEntry.Key;
+                        var scheme = schemeEntry.Value;
 
-                        if (barter.Count <= 0)
-                            throw new InvalidDataException($"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}].count must be > 0");
+                        if (string.IsNullOrWhiteSpace(schemeKey.ToString()))
+                        {
+                            yield return $"[{itemId}] traders['{traderKey}'] contains an empty scheme key";
+                            continue;
+                        }
+
+                        if (scheme == null)
+                        {
+                            yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'] is null";
+                            continue;
+                        }
+
+                        if (scheme.ConfigBarterSettings == null)
+                        {
+                            yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings is required";
+                        }
+                        else
+                        {
+                            if (scheme.ConfigBarterSettings.LoyalLevel < 0)
+                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings.loyalLevel must be >= 0";
+
+                            if (scheme.ConfigBarterSettings.StackObjectsCount < 0)
+                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings.stackObjectsCount must be >= 0";
+                        }
+
+                        if (scheme.Barters == null || scheme.Barters.Count == 0)
+                        {
+                            yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'] must include at least one barter";
+                            continue;
+                        }
+
+                        for (var i = 0; i < scheme.Barters.Count; i++)
+                        {
+                            var barter = scheme.Barters[i];
+
+                            if (barter == null)
+                            {
+                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}] is null";
+                                continue;
+                            }
+
+                            if (string.IsNullOrWhiteSpace(barter.Template))
+                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}].template is required";
+
+                            if (barter.Count == null || barter.Count <= 0)
+                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}].count must be > 0";
+                        }
                     }
                 }
             }
@@ -170,94 +197,121 @@ public class CustomItemConfig : CustomItemConfigBase
         if (AddToStaticLootContainers == true)
         {
             if (StaticLootContainers == null || StaticLootContainers.Count == 0)
-                throw new InvalidDataException($"[{itemId}] staticLootContainers is required when addtoStaticLootContainers is true");
-
-            for (var i = 0; i < StaticLootContainers.Count; i++)
             {
-                var c = StaticLootContainers[i];
+                yield return $"[{itemId}] staticLootContainers is required when addtoStaticLootContainers is true";
+            }
+            else
+            {
+                for (var i = 0; i < StaticLootContainers.Count; i++)
+                {
+                    var c = StaticLootContainers[i];
 
-                if (c == null)
-                    throw new InvalidDataException($"[{itemId}] staticLootContainers[{i}] is null");
+                    if (c == null)
+                    {
+                        yield return $"[{itemId}] staticLootContainers[{i}] is null";
+                        continue;
+                    }
 
-                if (string.IsNullOrWhiteSpace(c.ContainerName))
-                    throw new InvalidDataException($"[{itemId}] staticLootContainers[{i}].containerName is required");
+                    if (string.IsNullOrWhiteSpace(c.ContainerName))
+                        yield return $"[{itemId}] staticLootContainers[{i}].containerName is required";
 
-                if (c.Probability < 0)
-                    throw new InvalidDataException($"[{itemId}] staticLootContainers[{i}].probability must be >= 0");
+                    if (c.Probability < 0)
+                        yield return $"[{itemId}] staticLootContainers[{i}].probability must be >= 0";
+                }
             }
         }
 
         if (Masteries == true)
         {
             if (MasterySections == null || MasterySections.Count == 0)
-                throw new InvalidDataException($"[{itemId}] masterySections is required when masteries is true");
-
-            for (var i = 0; i < MasterySections.Count; i++)
             {
-                var m = MasterySections[i];
+                yield return $"[{itemId}] masterySections is required when masteries is true";
+            }
+            else
+            {
+                for (var i = 0; i < MasterySections.Count; i++)
+                {
+                    var m = MasterySections[i];
 
-                if (m == null)
-                    throw new InvalidDataException($"[{itemId}] masterySections[{i}] is null");
+                    if (m == null)
+                    {
+                        yield return $"[{itemId}] masterySections[{i}] is null";
+                        continue;
+                    }
 
-                if (m.Templates == null)
-                    throw new InvalidDataException($"[{itemId}] masterySections[{i}].templates is required");
+                    if (m.Templates == null)
+                        yield return $"[{itemId}] masterySections[{i}].templates is required";
 
-                if (m.Name == null)
-                    throw new InvalidDataException($"[{itemId}] masterySections[{i}].name is required");
+                    if (m.Name == null)
+                        yield return $"[{itemId}] masterySections[{i}].name is required";
 
-                if (m.Level2 < 0)
-                    throw new InvalidDataException($"[{itemId}] masterySections[{i}].level2 must be >= 0");
+                    if (m.Level2 < 0)
+                        yield return $"[{itemId}] masterySections[{i}].level2 must be >= 0";
 
-                if (m.Level3 < 0)
-                    throw new InvalidDataException($"[{itemId}] masterySections[{i}].level3 must be >= 0");
+                    if (m.Level3 < 0)
+                        yield return $"[{itemId}] masterySections[{i}].level3 must be >= 0";
+                }
             }
         }
 
         if (AddWeaponPreset == true)
         {
             if (WeaponPresets == null || WeaponPresets.Count == 0)
-                throw new InvalidDataException($"[{itemId}] weaponPresets is required when addWeaponPreset is true");
-
-            for (var i = 0; i < WeaponPresets.Count; i++)
             {
-                var p = WeaponPresets[i];
-
-                if (p == null)
-                    throw new InvalidDataException($"[{itemId}] weaponPresets[{i}] is null");
-
-                if (string.IsNullOrWhiteSpace(p.Id.ToString()))
-                    throw new InvalidDataException($"[{itemId}] weaponPresets[{i}]._id is required");
-
-                if (string.IsNullOrWhiteSpace(p.Type))
-                    throw new InvalidDataException($"[{itemId}] weaponPresets[{i}]._type is required");
-
-                if (string.IsNullOrWhiteSpace(p.Name))
-                    throw new InvalidDataException($"[{itemId}] weaponPresets[{i}]._name is required");
-
-                if (string.IsNullOrWhiteSpace(p.Parent.ToString()))
-                    throw new InvalidDataException($"[{itemId}] weaponPresets[{i}]._parent is required");
-
-                if (p.Items == null || p.Items.Count == 0)
-                    throw new InvalidDataException($"[{itemId}] weaponPresets[{i}] must include at least one item");
-
-                for (var j = 0; j < p.Items.Count; j++)
+                yield return $"[{itemId}] weaponPresets is required when addWeaponPreset is true";
+            }
+            else
+            {
+                for (var i = 0; i < WeaponPresets.Count; i++)
                 {
-                    var item = p.Items[j];
+                    var p = WeaponPresets[i];
 
-                    if (item == null)
-                        throw new InvalidDataException($"[{itemId}] weaponPresets[{i}].items[{j}] is null");
+                    if (p == null)
+                    {
+                        yield return $"[{itemId}] weaponPresets[{i}] is null";
+                        continue;
+                    }
 
-                    if (item.Id == null || string.IsNullOrWhiteSpace(item.Id.ToString()))
-                        throw new InvalidDataException($"[{itemId}] weaponPresets[{i}].items[{j}]._id is required");
+                    if (string.IsNullOrWhiteSpace(p.Id.ToString()))
+                        yield return $"[{itemId}] weaponPresets[{i}]._id is required";
 
-                    if (item.Template == null || string.IsNullOrWhiteSpace(item.Template.ToString()))
-                        throw new InvalidDataException($"[{itemId}] weaponPresets[{i}].items[{j}]._tpl is required");
+                    if (string.IsNullOrWhiteSpace(p.Type))
+                        yield return $"[{itemId}] weaponPresets[{i}]._type is required";
 
-                    if (!string.IsNullOrWhiteSpace(item.ParentId) && string.IsNullOrWhiteSpace(item.SlotId))
-                        throw new InvalidDataException($"[{itemId}] weaponPresets[{i}].items[{j}] has parentId but no slotId");
+                    if (string.IsNullOrWhiteSpace(p.Name))
+                        yield return $"[{itemId}] weaponPresets[{i}]._name is required";
 
-                    if (!string.IsNullOrWhiteSpace(item.SlotId) && string.IsNullOrWhiteSpace(item.ParentId))
-                        throw new InvalidDataException($"[{itemId}] weaponPresets[{i}].items[{j}] has slotId but no parentId");
+                    if (string.IsNullOrWhiteSpace(p.Parent.ToString()))
+                        yield return $"[{itemId}] weaponPresets[{i}]._parent is required";
+
+                    if (p.Items == null || p.Items.Count == 0)
+                    {
+                        yield return $"[{itemId}] weaponPresets[{i}] must include at least one item";
+                        continue;
+                    }
+
+                    for (var j = 0; j < p.Items.Count; j++)
+                    {
+                        var item = p.Items[j];
+
+                        if (item == null)
+                        {
+                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}] is null";
+                            continue;
+                        }
+
+                        if (item.Id == null || string.IsNullOrWhiteSpace(item.Id.ToString()))
+                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}]._id is required";
+
+                        if (item.Template == null || string.IsNullOrWhiteSpace(item.Template.ToString()))
+                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}]._tpl is required";
+
+                        if (!string.IsNullOrWhiteSpace(item.ParentId) && string.IsNullOrWhiteSpace(item.SlotId))
+                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}] has parentId but no slotId";
+
+                        if (!string.IsNullOrWhiteSpace(item.SlotId) && string.IsNullOrWhiteSpace(item.ParentId))
+                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}] has slotId but no parentId";
+                    }
                 }
             }
         }
@@ -265,40 +319,38 @@ public class CustomItemConfig : CustomItemConfigBase
         if (AddToHallOfFame == true)
         {
             if (HallOfFameSlots == null || HallOfFameSlots.Count == 0)
-                throw new InvalidDataException($"[{itemId}] hallOfFameSlots is required when addtoHallOfFame is true");
-
-            for (var i = 0; i < HallOfFameSlots.Count; i++)
             {
-                if (string.IsNullOrWhiteSpace(HallOfFameSlots[i]))
-                    throw new InvalidDataException($"[{itemId}] hallOfFameSlots[{i}] must be a non-empty string");
+                yield return $"[{itemId}] hallOfFameSlots is required when addtoHallOfFame is true";
+            }
+            else
+            {
+                for (var i = 0; i < HallOfFameSlots.Count; i++)
+                {
+                    if (string.IsNullOrWhiteSpace(HallOfFameSlots[i]))
+                        yield return $"[{itemId}] hallOfFameSlots[{i}] must be a non-empty string";
+                }
             }
         }
 
         if (AddToStaticAmmo == true)
         {
             if (StaticAmmoProbability == null)
-                throw new InvalidDataException($"[{itemId}] staticAmmoProbability is required when addtoStaticAmmo is true");
+                yield return $"[{itemId}] staticAmmoProbability is required when addtoStaticAmmo is true";
 
             if (StaticAmmoProbability < 0)
-                throw new InvalidDataException($"[{itemId}] staticAmmoProbability must be >= 0");
+                yield return $"[{itemId}] staticAmmoProbability must be >= 0";
         }
 
         if (AddToEmptyPropSlots == true && EmptyPropSlot == null)
-            throw new InvalidDataException($"[{itemId}] emptyPropSlot is required when addtoEmptyPropSlots is true");
+            yield return $"[{itemId}] emptyPropSlot is required when addtoEmptyPropSlots is true";
 
         if (ParentId == "62f109593b54472778797866")
         {
             if (IsRandomLootContainer != true)
-            {
-                throw new InvalidDataException(
-                    $"[{itemId}] isRandomLootContainer must be true when parentId is RandomLootContainer");
-            }
+                yield return $"[{itemId}] isRandomLootContainer must be true when parentId is RandomLootContainer";
 
             if (RandomLootContainerRewards == null)
-            {
-                throw new InvalidDataException(
-                    $"[{itemId}] randomLootContainerRewards is required when parentId is RandomLootContainer");
-            }
+                yield return $"[{itemId}] randomLootContainerRewards is required when parentId is RandomLootContainer";
         }
     }
 }

@@ -60,14 +60,14 @@ public class WTTCustomItemServiceExtended(
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public async Task CreateCustomItems(Assembly assembly, string? relativePath = null)
-
     {
-        if (_database == null) _database = databaseService.GetTables();
+        if (_database == null)
+            _database = databaseService.GetTables();
 
         try
         {
-            
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
+            var modName = assembly.GetName().Name ?? "UnknownMod";
             var defaultDir = Path.Combine("db", "CustomItems");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
 
@@ -86,16 +86,92 @@ public class WTTCustomItemServiceExtended(
             }
 
             var totalItemsCreated = 0;
+            var validationFailures = new List<(string ItemId, List<string> Errors)>();
+            var creationFailures = new List<(string ItemId, string Error)>();
 
             foreach (var configDict in itemConfigDicts)
-            foreach (var (itemId, configData) in configDict)
             {
-                configData.Validate(itemId);
-                if (CreateItemFromConfig(assembly, itemId, configData))
-                    totalItemsCreated++;
+                foreach (var (itemId, configData) in configDict)
+                {
+                    var validationErrors = configData.GetValidationErrors(itemId).ToList();
+
+                    if (validationErrors.Count > 0)
+                    {
+                        validationFailures.Add((itemId, validationErrors));
+                    }
+
+                    try
+                    {
+                        if (CreateItemFromConfig(assembly, itemId, configData))
+                        {
+                            totalItemsCreated++;
+                        }
+                        else
+                        {
+                            creationFailures.Add((itemId, "CreateItemFromConfig returned false"));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        creationFailures.Add((itemId, ex.Message));
+                    }
+                }
             }
 
-            LogHelper.Debug(logger, $"Created {totalItemsCreated} custom items from {itemConfigDicts.Count} files");
+            LogHelper.Debug(
+                logger,
+                $"Created {totalItemsCreated} custom items from {itemConfigDicts.Count} files");
+
+            if (validationFailures.Count > 0)
+            {
+                var warningSb = new System.Text.StringBuilder();
+
+                warningSb.AppendLine();
+                warningSb.AppendLine("==================================================");
+                warningSb.AppendLine($"CUSTOM ITEM VALIDATION WARNINGS FOR MOD: {modName}");
+                warningSb.AppendLine("==================================================");
+                warningSb.AppendLine($"Created items: {totalItemsCreated}");
+                warningSb.AppendLine($"Validation failures: {validationFailures.Count}");
+                warningSb.AppendLine("==================================================");
+                warningSb.AppendLine("VALIDATION FAILURES:");
+                warningSb.AppendLine("--------------------------------------------------");
+
+                foreach (var failure in validationFailures)
+                {
+                    warningSb.AppendLine($"[{failure.ItemId}]");
+
+                    foreach (var error in failure.Errors)
+                        warningSb.AppendLine($" - {error}");
+
+                    warningSb.AppendLine();
+                }
+
+                warningSb.AppendLine("==================================================");
+
+                logger.Warning(warningSb.ToString());
+            }
+
+            if (creationFailures.Count > 0)
+            {
+                var errorSb = new System.Text.StringBuilder();
+
+                errorSb.AppendLine();
+                errorSb.AppendLine("==================================================");
+                errorSb.AppendLine($"CUSTOM ITEM CREATION ERRORS FOR MOD: {modName}");
+                errorSb.AppendLine("==================================================");
+                errorSb.AppendLine($"Created items: {totalItemsCreated}");
+                errorSb.AppendLine($"Creation failures: {creationFailures.Count}");
+                errorSb.AppendLine("==================================================");
+                errorSb.AppendLine("CREATION FAILURES:");
+                errorSb.AppendLine("--------------------------------------------------");
+
+                foreach (var failure in creationFailures)
+                    errorSb.AppendLine($"[{failure.ItemId}] {failure.Error}");
+
+                errorSb.AppendLine("==================================================");
+
+                logger.Error(errorSb.ToString());
+            }
         }
         catch (Exception ex)
         {

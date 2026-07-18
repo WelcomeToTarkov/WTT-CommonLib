@@ -50,55 +50,63 @@ public abstract class CustomItemConfigBase
     [JsonPropertyName("fleaPriceRoubles")]
     public int? FleaPriceRoubles { get; set; }
 
-    public virtual void Validate(string itemId)
+    public virtual IEnumerable<string> GetValidationErrors(string itemId)
     {
         if (!itemId.IsValidMongoId())
-            throw new InvalidDataException($"[{itemId}] is not a valid MongoId");
+            yield return $"[{itemId}] is not a valid MongoId";
 
         if (string.IsNullOrWhiteSpace(ItemTplToClone))
-            throw new InvalidDataException($"[{itemId}] itemTplToClone is required");
+            yield return $"[{itemId}] itemTplToClone is required";
 
         if (string.IsNullOrWhiteSpace(ParentId))
-            throw new InvalidDataException($"[{itemId}] parentId is required");
+            yield return $"[{itemId}] parentId is required";
 
         if (OverrideProperties == null)
-            throw new InvalidDataException($"[{itemId}] overrideProperties is required");
+            yield return $"[{itemId}] overrideProperties is required";
 
         if (Locales == null || Locales.Count == 0)
-            throw new InvalidDataException($"[{itemId}] locales is required and must contain at least one locale");
+            yield return $"[{itemId}] locales is required and must contain at least one locale";
 
         if (AddToInventorySlots != null)
         {
             for (var i = 0; i < AddToInventorySlots.Count; i++)
+            {
                 if (string.IsNullOrWhiteSpace(AddToInventorySlots[i]))
-                    throw new InvalidDataException($"[{itemId}] addtoInventorySlots[{i}] must be a non-empty string");
+                    yield return $"[{itemId}] addtoInventorySlots[{i}] must be a non-empty string";
+            }
         }
 
         if (AddToModSlots == true)
         {
             if (ModSlot == null || ModSlot.Count == 0)
-                throw new InvalidDataException($"[{itemId}] modSlot is required when addtoModSlots is true");
-
-            for (var i = 0; i < ModSlot.Count; i++)
-                if (string.IsNullOrWhiteSpace(ModSlot[i]))
-                    throw new InvalidDataException($"[{itemId}] modSlot[{i}] must be a non-empty string");
+            {
+                yield return $"[{itemId}] modSlot is required when addtoModSlots is true";
+            }
+            else
+            {
+                for (var i = 0; i < ModSlot.Count; i++)
+                {
+                    if (string.IsNullOrWhiteSpace(ModSlot[i]))
+                        yield return $"[{itemId}] modSlot[{i}] must be a non-empty string";
+                }
+            }
         }
 
         var registerInHandbook = RegisterInHandbook ?? false;
         if (registerInHandbook)
         {
             if (string.IsNullOrWhiteSpace(HandbookParentId))
-                throw new InvalidDataException($"[{itemId}] handbookParentId is required when registerInHandbook is true");
+                yield return $"[{itemId}] handbookParentId is required when registerInHandbook is true";
 
             if (HandbookPriceRoubles == null || HandbookPriceRoubles < 0)
-                throw new InvalidDataException($"[{itemId}] handbookPriceRoubles must be >= 0 when registerInHandbook is true");
+                yield return $"[{itemId}] handbookPriceRoubles must be >= 0 when registerInHandbook is true";
         }
 
         var registerInFleaPrices = RegisterInFleaPrices ?? false;
         if (registerInFleaPrices)
         {
             if (FleaPriceRoubles == null || FleaPriceRoubles < 0)
-                throw new InvalidDataException($"[{itemId}] fleaPriceRoubles must be >= 0 when registerInFleaPrices is true");
+                yield return $"[{itemId}] fleaPriceRoubles must be >= 0 when registerInFleaPrices is true";
         }
     }
 }

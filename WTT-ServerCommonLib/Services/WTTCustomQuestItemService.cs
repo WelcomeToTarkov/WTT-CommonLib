@@ -46,6 +46,7 @@ public class WTTCustomQuestItemService(
         try
         {
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
+            var modName = assembly.GetName().Name ?? "UnknownMod";
             var defaultDir = Path.Combine("db", "CustomQuestItems");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
 
@@ -65,20 +66,110 @@ public class WTTCustomQuestItemService(
             }
 
             var totalItemsCreated = 0;
+            var validationFailures = new List<(string ItemId, List<string> Errors)>();
+            var creationFailures = new List<(string ItemId, string Error)>();
 
             foreach (var configDict in itemConfigDicts)
             {
                 foreach (var (itemId, configData) in configDict)
                 {
-                    configData.Validate(itemId);
+                    var validationErrors = configData.GetValidationErrors(itemId).ToList();
 
-                    if (CreateQuestItemFromConfig(assembly, itemId, configData))
-                        totalItemsCreated++;
+                    if (validationErrors.Count > 0)
+                    {
+                        validationFailures.Add((itemId, validationErrors));
+                    }
+
+                    try
+                    {
+                        if (CreateQuestItemFromConfig(assembly, itemId, configData))
+                        {
+                            totalItemsCreated++;
+                        }
+                        else
+                        {
+                            creationFailures.Add((itemId, "CreateQuestItemFromConfig returned false"));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        creationFailures.Add((itemId, ex.Message));
+                    }
                 }
             }
 
-            LogHelper.Debug(logger,
+            LogHelper.Debug(
+                logger,
                 $"Created {totalItemsCreated} custom quest items from {itemConfigDicts.Count} files");
+
+            if (validationFailures.Count > 0 || creationFailures.Count > 0)
+            {
+                var sb = new System.Text.StringBuilder();
+
+                sb.AppendLine("");
+                sb.AppendLine("==================================================");
+                sb.AppendLine($"CUSTOM QUEST ITEM ISSUES FOR MOD: {modName}");
+                sb.AppendLine("==================================================");
+                sb.AppendLine($"Created items: {totalItemsCreated}");
+                sb.AppendLine($"Validation failures: {validationFailures.Count}");
+                sb.AppendLine($"Creation failures: {creationFailures.Count}");
+                sb.AppendLine("==================================================");
+
+                if (validationFailures.Count > 0)
+                {
+                    var warningSb = new System.Text.StringBuilder();
+
+                    warningSb.AppendLine();
+                    warningSb.AppendLine("==================================================");
+                    warningSb.AppendLine($"CUSTOM QUEST ITEM VALIDATION WARNINGS FOR MOD: {modName}");
+                    warningSb.AppendLine("==================================================");
+                    warningSb.AppendLine($"Created items: {totalItemsCreated}");
+                    warningSb.AppendLine($"Validation failures: {validationFailures.Count}");
+                    warningSb.AppendLine("==================================================");
+                    warningSb.AppendLine("VALIDATION FAILURES:");
+                    warningSb.AppendLine("--------------------------------------------------");
+
+                    foreach (var failure in validationFailures)
+                    {
+                        warningSb.AppendLine($"[{failure.ItemId}]");
+
+                        foreach (var error in failure.Errors)
+                            warningSb.AppendLine($" - {error}");
+
+                        warningSb.AppendLine();
+                    }
+
+                    warningSb.AppendLine("==================================================");
+
+                    logger.Warning(warningSb.ToString());
+                }
+
+                if (creationFailures.Count > 0)
+                {
+                    var errorSb = new System.Text.StringBuilder();
+
+                    errorSb.AppendLine();
+                    errorSb.AppendLine("==================================================");
+                    errorSb.AppendLine($"CUSTOM QUEST ITEM CREATION ERRORS FOR MOD: {modName}");
+                    errorSb.AppendLine("==================================================");
+                    errorSb.AppendLine($"Created items: {totalItemsCreated}");
+                    errorSb.AppendLine($"Creation failures: {creationFailures.Count}");
+                    errorSb.AppendLine("==================================================");
+                    errorSb.AppendLine("CREATION FAILURES:");
+                    errorSb.AppendLine("--------------------------------------------------");
+
+                    foreach (var failure in creationFailures)
+                        errorSb.AppendLine($"[{failure.ItemId}] {failure.Error}");
+
+                    errorSb.AppendLine("==================================================");
+
+                    logger.Error(errorSb.ToString());
+                }
+
+                sb.AppendLine("==================================================");
+
+                logger.Error(sb.ToString());
+            }
         }
         catch (Exception ex)
         {
