@@ -4,6 +4,7 @@ using Fika.Core.Modding;
 using Fika.Core.Modding.Events;
 using Fika.Core.Networking;
 using Fika.Core.Networking.LiteNetLib;
+using JetBrains.Annotations;
 using UnityEngine;
 using WTTClientCommonLib.Fika.Packets;
 using WTTClientCommonLib.Helpers;
@@ -11,8 +12,10 @@ using WTTClientCommonLib.Models;
 
 namespace WTTClientCommonLib.Fika.Helpers;
 
+[UsedImplicitly]
 public class StaticSpawnFikaHelpers
 {
+    [UsedImplicitly]
     public void SubscribeToFikaEvents()
     {
         try
@@ -58,6 +61,7 @@ public class StaticSpawnFikaHelpers
         }
     }
     
+    [UsedImplicitly]
     public static void SendFikaSpawnPacket(CustomSpawnConfig config, Quaternion rotation)
     {
         try

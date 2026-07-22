@@ -3,7 +3,6 @@ using EFT.Hideout;
 using EFT.InventoryLogic;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Security;
 using WTTClientCommonLib.Converters;
 using WTTClientCommonLib.Helpers;
 
@@ -44,19 +43,34 @@ public class ExtendedProductionScheme : ProductionBuildAbstractClass
                 }
                 
                 var items = Singleton<ItemFactoryClass>.Instance.FlatItemsToTree(craftResult.Items).Items;
-                foreach ((string id, Item item) in items)
+                foreach ((string _, Item item) in items)
                 {
-                    if (recipeStackBaseItems.TryGetValue(resultId, out string baseItemTpl))
+                    if (recipeStackBaseItems.TryGetValue(resultId, out string _))
                     {
                         bool isAdded = ResultItemStacks.TryGetValue(resultId, out _);
 
                         if (!isAdded)
                         {
-                            RecipeResultStack resultStack = new RecipeResultStack
+                            RecipeResultStack resultStack;
+                            
+                            if (craftResult.MinStackCount.HasValue && craftResult.MaxStackCount.HasValue)
                             {
-                                Item = item,
-                                Count = craftResult.Count
-                            };
+                                resultStack = new RecipeResultStack
+                                {
+                                    Item = item,
+                                    Count = craftResult.Count,
+                                    MinStackCount = craftResult.MinStackCount.Value,
+                                    MaxStackCount = craftResult.MaxStackCount.Value,
+                                };
+                            }
+                            else
+                            {
+                                resultStack = new RecipeResultStack
+                                {
+                                    Item = item,
+                                    Count = craftResult.Count
+                                };
+                            }
                             
                             ResultItemStacks.Add(resultId, resultStack);
 
@@ -80,12 +94,20 @@ public class RecipeResultStack
 {
     public Item Item;
     public int Count;
+    public int? MinStackCount;
+    public int? MaxStackCount;
 }
 
 public class CustomCraftResult
 {
     [JsonProperty("count")]
     public int Count { get; set; }
+    
+    [JsonProperty("minStackCount")]
+    public int? MinStackCount { get; set; }
+    
+    [JsonProperty("maxStackCount")]
+    public int? MaxStackCount { get; set; }
     
     [JsonProperty("items")]
     public FlatItemsDataClass[] Items { get; set; }
