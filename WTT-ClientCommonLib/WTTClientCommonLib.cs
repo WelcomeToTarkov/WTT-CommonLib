@@ -20,7 +20,7 @@ namespace WTTClientCommonLib;
 
 
 [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
-[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "2.0.21")]
+[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "2.0.22")]
 public class WTTClientCommonLib : BaseUnityPlugin
 {
     private static CommandProcessor.CommandProcessor _commandProcessor;
