@@ -35,6 +35,7 @@ public class WTTCustomQuestItemService(
 {
     private readonly List<(string newItemId, CustomQuestItemConfig config)> _deferredModSlotConfigs = new();
     private readonly List<(string newItemId, CustomQuestItemConfig config)> _deferredSecureFilterConfigs = new();
+    private CommonlibConfig _commonlibConfig;
 
     private DatabaseTables? _database;
 
@@ -42,6 +43,12 @@ public class WTTCustomQuestItemService(
     {
         if (_database == null)
             _database = databaseServer.GetTables();
+        var file = Path.Combine(modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly()), "config.jsonc");
+        var commonlibConfig = await configHelper.LoadJsonFile<CommonlibConfig>(file);
+        if (commonlibConfig != null)
+        {
+            _commonlibConfig = commonlibConfig;
+        }
 
         try
         {
@@ -141,7 +148,10 @@ public class WTTCustomQuestItemService(
 
                     warningSb.AppendLine("==================================================");
 
-                    logger.Warning(warningSb.ToString());
+                    if (_commonlibConfig.ItemValidationLoggingEnabled)
+                    {
+                        LogHelper.WriteWarning(warningSb.ToString());
+                    }
                 }
 
                 if (creationFailures.Count > 0)
@@ -150,7 +160,7 @@ public class WTTCustomQuestItemService(
 
                     errorSb.AppendLine();
                     errorSb.AppendLine("==================================================");
-                    errorSb.AppendLine($"CUSTOM QUEST ITEM CREATION ERRORS FOR MOD: {modName}");
+                    errorSb.AppendLine($"CUSTOM ITEM CREATION ERRORS FOR MOD: {modName}");
                     errorSb.AppendLine("==================================================");
                     errorSb.AppendLine($"Created items: {totalItemsCreated}");
                     errorSb.AppendLine($"Creation failures: {creationFailures.Count}");
@@ -165,10 +175,6 @@ public class WTTCustomQuestItemService(
 
                     logger.Error(errorSb.ToString());
                 }
-
-                sb.AppendLine("==================================================");
-
-                logger.Error(sb.ToString());
             }
         }
         catch (Exception ex)

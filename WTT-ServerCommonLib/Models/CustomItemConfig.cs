@@ -116,7 +116,7 @@ public class CustomItemConfig : CustomItemConfigBase
         {
             if (Traders == null || Traders.Count == 0)
             {
-                yield return $"[{itemId}] traders is required when addtoTraders is true";
+                yield return $"traders is required when addtoTraders is true";
             }
             else
             {
@@ -127,13 +127,13 @@ public class CustomItemConfig : CustomItemConfigBase
 
                     if (string.IsNullOrWhiteSpace(traderKey))
                     {
-                        yield return $"[{itemId}] traders contains an empty trader key";
+                        yield return $"traders contains an empty trader key";
                         continue;
                     }
 
                     if (schemes == null || schemes.Count == 0)
                     {
-                        yield return $"[{itemId}] traders['{traderKey}'] must contain at least one scheme";
+                        yield return $"traders['{traderKey}'] must contain at least one scheme";
                         continue;
                     }
 
@@ -144,32 +144,32 @@ public class CustomItemConfig : CustomItemConfigBase
 
                         if (string.IsNullOrWhiteSpace(schemeKey.ToString()))
                         {
-                            yield return $"[{itemId}] traders['{traderKey}'] contains an empty scheme key";
+                            yield return $"traders['{traderKey}'] contains an empty scheme key";
                             continue;
                         }
 
                         if (scheme == null)
                         {
-                            yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'] is null";
+                            yield return $"traders['{traderKey}']['{schemeKey}'] is null";
                             continue;
                         }
 
                         if (scheme.ConfigBarterSettings == null)
                         {
-                            yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings is required";
+                            yield return $"traders['{traderKey}']['{schemeKey}'].barterSettings is required";
                         }
                         else
                         {
                             if (scheme.ConfigBarterSettings.LoyalLevel < 0)
-                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings.loyalLevel must be >= 0";
+                                yield return $"traders['{traderKey}']['{schemeKey}'].barterSettings.loyalLevel must be >= 0";
 
                             if (scheme.ConfigBarterSettings.StackObjectsCount < 0)
-                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barterSettings.stackObjectsCount must be >= 0";
+                                yield return $"traders['{traderKey}']['{schemeKey}'].barterSettings.stackObjectsCount must be >= 0";
                         }
 
                         if (scheme.Barters == null || scheme.Barters.Count == 0)
                         {
-                            yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'] must include at least one barter";
+                            yield return $"traders['{traderKey}']['{schemeKey}'] must include at least one barter";
                             continue;
                         }
 
@@ -179,15 +179,15 @@ public class CustomItemConfig : CustomItemConfigBase
 
                             if (barter == null)
                             {
-                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}] is null";
+                                yield return $"traders['{traderKey}']['{schemeKey}'].barters[{i}] is null";
                                 continue;
                             }
 
                             if (string.IsNullOrWhiteSpace(barter.Template))
-                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}].template is required";
+                                yield return $"traders['{traderKey}']['{schemeKey}'].barters[{i}].template is required";
 
                             if (barter.Count == null || barter.Count <= 0)
-                                yield return $"[{itemId}] traders['{traderKey}']['{schemeKey}'].barters[{i}].count must be > 0";
+                                yield return $"traders['{traderKey}']['{schemeKey}'].barters[{i}].count must be > 0";
                         }
                     }
                 }
@@ -198,7 +198,7 @@ public class CustomItemConfig : CustomItemConfigBase
         {
             if (StaticLootContainers == null || StaticLootContainers.Count == 0)
             {
-                yield return $"[{itemId}] staticLootContainers is required when addtoStaticLootContainers is true";
+                yield return $"staticLootContainers is required when addtoStaticLootContainers is true";
             }
             else
             {
@@ -208,15 +208,15 @@ public class CustomItemConfig : CustomItemConfigBase
 
                     if (c == null)
                     {
-                        yield return $"[{itemId}] staticLootContainers[{i}] is null";
+                        yield return $"staticLootContainers[{i}] is null";
                         continue;
                     }
 
                     if (string.IsNullOrWhiteSpace(c.ContainerName))
-                        yield return $"[{itemId}] staticLootContainers[{i}].containerName is required";
+                        yield return $"staticLootContainers[{i}].containerName is required";
 
                     if (c.Probability < 0)
-                        yield return $"[{itemId}] staticLootContainers[{i}].probability must be >= 0";
+                        yield return $"staticLootContainers[{i}].probability must be >= 0";
                 }
             }
         }
@@ -225,7 +225,7 @@ public class CustomItemConfig : CustomItemConfigBase
         {
             if (MasterySections == null || MasterySections.Count == 0)
             {
-                yield return $"[{itemId}] masterySections is required when masteries is true";
+                yield return $"masterySections is required when masteries is true";
             }
             else
             {
@@ -235,21 +235,21 @@ public class CustomItemConfig : CustomItemConfigBase
 
                     if (m == null)
                     {
-                        yield return $"[{itemId}] masterySections[{i}] is null";
+                        yield return $"masterySections[{i}] is null";
                         continue;
                     }
 
                     if (m.Templates == null)
-                        yield return $"[{itemId}] masterySections[{i}].templates is required";
+                        yield return $"masterySections[{i}].templates is required";
 
                     if (m.Name == null)
-                        yield return $"[{itemId}] masterySections[{i}].name is required";
+                        yield return $"masterySections[{i}].name is required";
 
                     if (m.Level2 < 0)
-                        yield return $"[{itemId}] masterySections[{i}].level2 must be >= 0";
+                        yield return $"masterySections[{i}].level2 must be >= 0";
 
                     if (m.Level3 < 0)
-                        yield return $"[{itemId}] masterySections[{i}].level3 must be >= 0";
+                        yield return $"masterySections[{i}].level3 must be >= 0";
                 }
             }
         }
@@ -258,7 +258,7 @@ public class CustomItemConfig : CustomItemConfigBase
         {
             if (WeaponPresets == null || WeaponPresets.Count == 0)
             {
-                yield return $"[{itemId}] weaponPresets is required when addWeaponPreset is true";
+                yield return $"weaponPresets is required when addWeaponPreset is true";
             }
             else
             {
@@ -268,25 +268,25 @@ public class CustomItemConfig : CustomItemConfigBase
 
                     if (p == null)
                     {
-                        yield return $"[{itemId}] weaponPresets[{i}] is null";
+                        yield return $"weaponPresets[{i}] is null";
                         continue;
                     }
 
                     if (string.IsNullOrWhiteSpace(p.Id.ToString()))
-                        yield return $"[{itemId}] weaponPresets[{i}]._id is required";
+                        yield return $"weaponPresets[{i}]._id is required";
 
                     if (string.IsNullOrWhiteSpace(p.Type))
-                        yield return $"[{itemId}] weaponPresets[{i}]._type is required";
+                        yield return $"weaponPresets[{i}]._type is required";
 
                     if (string.IsNullOrWhiteSpace(p.Name))
-                        yield return $"[{itemId}] weaponPresets[{i}]._name is required";
+                        yield return $"weaponPresets[{i}]._name is required";
 
                     if (string.IsNullOrWhiteSpace(p.Parent.ToString()))
-                        yield return $"[{itemId}] weaponPresets[{i}]._parent is required";
+                        yield return $"weaponPresets[{i}]._parent is required";
 
                     if (p.Items == null || p.Items.Count == 0)
                     {
-                        yield return $"[{itemId}] weaponPresets[{i}] must include at least one item";
+                        yield return $"weaponPresets[{i}] must include at least one item";
                         continue;
                     }
 
@@ -296,21 +296,21 @@ public class CustomItemConfig : CustomItemConfigBase
 
                         if (item == null)
                         {
-                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}] is null";
+                            yield return $"weaponPresets[{i}].items[{j}] is null";
                             continue;
                         }
 
                         if (item.Id == null || string.IsNullOrWhiteSpace(item.Id.ToString()))
-                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}]._id is required";
+                            yield return $"weaponPresets[{i}].items[{j}]._id is required";
 
                         if (item.Template == null || string.IsNullOrWhiteSpace(item.Template.ToString()))
-                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}]._tpl is required";
+                            yield return $"weaponPresets[{i}].items[{j}]._tpl is required";
 
                         if (!string.IsNullOrWhiteSpace(item.ParentId) && string.IsNullOrWhiteSpace(item.SlotId))
-                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}] has parentId but no slotId";
+                            yield return $"weaponPresets[{i}].items[{j}] has parentId but no slotId";
 
                         if (!string.IsNullOrWhiteSpace(item.SlotId) && string.IsNullOrWhiteSpace(item.ParentId))
-                            yield return $"[{itemId}] weaponPresets[{i}].items[{j}] has slotId but no parentId";
+                            yield return $"weaponPresets[{i}].items[{j}] has slotId but no parentId";
                     }
                 }
             }
@@ -320,14 +320,14 @@ public class CustomItemConfig : CustomItemConfigBase
         {
             if (HallOfFameSlots == null || HallOfFameSlots.Count == 0)
             {
-                yield return $"[{itemId}] hallOfFameSlots is required when addtoHallOfFame is true";
+                yield return $"hallOfFameSlots is required when addtoHallOfFame is true";
             }
             else
             {
                 for (var i = 0; i < HallOfFameSlots.Count; i++)
                 {
                     if (string.IsNullOrWhiteSpace(HallOfFameSlots[i]))
-                        yield return $"[{itemId}] hallOfFameSlots[{i}] must be a non-empty string";
+                        yield return $"hallOfFameSlots[{i}] must be a non-empty string";
                 }
             }
         }
@@ -335,22 +335,22 @@ public class CustomItemConfig : CustomItemConfigBase
         if (AddToStaticAmmo == true)
         {
             if (StaticAmmoProbability == null)
-                yield return $"[{itemId}] staticAmmoProbability is required when addtoStaticAmmo is true";
+                yield return $"staticAmmoProbability is required when addtoStaticAmmo is true";
 
             if (StaticAmmoProbability < 0)
-                yield return $"[{itemId}] staticAmmoProbability must be >= 0";
+                yield return $"staticAmmoProbability must be >= 0";
         }
 
         if (AddToEmptyPropSlots == true && EmptyPropSlot == null)
-            yield return $"[{itemId}] emptyPropSlot is required when addtoEmptyPropSlots is true";
+            yield return $"emptyPropSlot is required when addtoEmptyPropSlots is true";
 
         if (ParentId == "62f109593b54472778797866")
         {
             if (IsRandomLootContainer != true)
-                yield return $"[{itemId}] isRandomLootContainer must be true when parentId is RandomLootContainer";
+                yield return $"isRandomLootContainer must be true when parentId is RandomLootContainer";
 
             if (RandomLootContainerRewards == null)
-                yield return $"[{itemId}] randomLootContainerRewards is required when parentId is RandomLootContainer";
+                yield return $"randomLootContainerRewards is required when parentId is RandomLootContainer";
         }
     }
 }

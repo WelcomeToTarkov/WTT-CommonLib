@@ -1,5 +1,6 @@
 ﻿using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Models.Eft.ItemEvent;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Services;
@@ -47,6 +48,7 @@ public class WTTCustomItemServiceExtended(
     private readonly List<(string newItemId, CustomItemConfig config)> _deferredModSlotConfigs = new();
     private readonly List<(string newItemId, CustomItemConfig config)> _deferredSecureFilterConfigs = new();
     private readonly List<(string newItemId, CustomItemConfig config)> _deferredCaliberConfigs = new();
+    private CommonlibConfig _commonlibConfig;
 
     private DatabaseTables? _database;
 
@@ -63,6 +65,13 @@ public class WTTCustomItemServiceExtended(
     {
         if (_database == null)
             _database = databaseService.GetTables();
+
+        var file = Path.Combine(modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly()), "config.jsonc");
+        var commonlibConfig = await configHelper.LoadJsonFile<CommonlibConfig>(file);
+        if (commonlibConfig != null)
+        {
+            _commonlibConfig = commonlibConfig;
+        }
 
         try
         {
@@ -147,8 +156,10 @@ public class WTTCustomItemServiceExtended(
                 }
 
                 warningSb.AppendLine("==================================================");
-
-                logger.Warning(warningSb.ToString());
+                if (_commonlibConfig.ItemValidationLoggingEnabled)
+                {
+                    LogHelper.WriteWarning(warningSb.ToString());
+                }
             }
 
             if (creationFailures.Count > 0)
