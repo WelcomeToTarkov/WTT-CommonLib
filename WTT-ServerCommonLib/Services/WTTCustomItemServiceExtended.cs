@@ -10,6 +10,7 @@ using WTTServerCommonLib.Constants;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using WTTServerCommonLib.Services.ItemServiceHelpers;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 using Path = System.IO.Path;
 
@@ -181,7 +182,10 @@ public class WTTCustomItemServiceExtended(
 
                 errorSb.AppendLine("==================================================");
 
-                logger.Error(errorSb.ToString());
+                if (_commonlibConfig.ItemValidationLoggingEnabled)
+                {
+                    LogHelper.WriteError(errorSb.ToString());
+                }
             }
         }
         catch (Exception ex)
@@ -189,22 +193,28 @@ public class WTTCustomItemServiceExtended(
             logger.Error($"Error loading configs: {ex.Message}");
         }
     }
+
     private bool CreateItemFromConfig(Assembly assembly,string newItemId, CustomItemConfig config)
     {
+        var modName = assembly.GetName().Name ?? "UnknownMod";
         try
         {
             CreateItemFromClone(assembly, newItemId, config);
-            LogHelper.Debug(logger, $"Created item {newItemId}");
+            LogHelper.Debug(logger, $"{modName}:Created item {newItemId}");
 
             ProcessAdditionalProperties(newItemId, config);
             return true;
         }
         catch (Exception ex)
         {
-            logger.Error($"Failed to create item {newItemId}: {ex.Message}");
+            if (_commonlibConfig.ItemValidationLoggingEnabled)
+            {
+                logger.Error($"[WTT-CommonLib] - THIS MOD ----> [{modName}] <----- Failed to create item {newItemId}: {ex.Message}");
+            }
             return false;
         }
     }
+
     private void CreateItemFromClone(
         Assembly assembly,
         string newItemId,

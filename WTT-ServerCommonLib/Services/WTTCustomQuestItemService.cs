@@ -173,7 +173,11 @@ public class WTTCustomQuestItemService(
 
                     errorSb.AppendLine("==================================================");
 
-                    logger.Error(errorSb.ToString());
+
+                    if (_commonlibConfig.ItemValidationLoggingEnabled)
+                    {
+                        LogHelper.WriteError(errorSb.ToString());
+                    }
                 }
             }
         }
@@ -185,17 +189,20 @@ public class WTTCustomQuestItemService(
 
     private bool CreateQuestItemFromConfig(Assembly assembly, string newItemId, CustomQuestItemConfig config)
     {
+        var modName = assembly.GetName().Name ?? "UnknownMod";
         try
         {
             CreateQuestItemFromClone(assembly, newItemId, config);
             LogHelper.Debug(logger, $"Created quest item {newItemId}");
-
             ProcessAdditionalProperties(newItemId, config);
             return true;
         }
         catch (Exception ex)
         {
-            logger.Error($"Failed to create quest item {newItemId}: {ex.Message}");
+            if (_commonlibConfig.ItemValidationLoggingEnabled)
+            {
+                logger.Error($"[WTT-CommonLib]: THIS MOD ----> [{modName}] <---- Failed to create quest item {newItemId}: {ex.Message}");
+            }
             return false;
         }
     }
