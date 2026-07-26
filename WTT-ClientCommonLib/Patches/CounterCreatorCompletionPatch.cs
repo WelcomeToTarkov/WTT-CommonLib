@@ -1,10 +1,7 @@
-﻿using EFT.Quests;
+﻿using System.Reflection;
+using EFT.Quests;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -13,11 +10,11 @@ namespace WTTClientCommonLib.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(QuestClass), nameof(QuestClass.IsConditionDone));
+            return AccessTools.Method(typeof(Quest), nameof(Quest.IsConditionDone));
         }
 
         [PatchPostfix]
-        public static void Postfix(QuestClass __instance, Condition condition, ref bool __result)
+        public static void Postfix(Quest __instance, Condition condition, ref bool __result)
         {
             if (__instance == null || condition == null)
                 return;
@@ -38,7 +35,7 @@ namespace WTTClientCommonLib.Patches
             }
         }
 
-        private static bool IsCounterCreatorComplete(QuestClass quest, ConditionCounterCreator cc)
+        private static bool IsCounterCreatorComplete(Quest quest, ConditionCounterCreator cc)
         {
             if (quest == null || cc == null)
                 return false;
@@ -54,10 +51,12 @@ namespace WTTClientCommonLib.Patches
             if (counter != null && counter.Value >= target)
                 return true;
 
-            if (quest.ProgressCheckers != null &&
-                quest.ProgressCheckers.TryGetValue(cc, out var ccCpc) &&
-                ccCpc != null &&
-                ccCpc.CurrentValue >= target)
+            if (
+                quest.ProgressCheckers != null
+                && quest.ProgressCheckers.TryGetValue(cc, out var ccCpc)
+                && ccCpc != null
+                && ccCpc.CurrentValue >= target
+            )
             {
                 return true;
             }
@@ -65,7 +64,10 @@ namespace WTTClientCommonLib.Patches
             return false;
         }
 
-        private static ConditionCounterCreator? FindParentCounterCreator(QuestClass quest, Condition child)
+        private static ConditionCounterCreator? FindParentCounterCreator(
+            Quest quest,
+            Condition child
+        )
         {
             if (quest == null || child == null || child.ParentId == null)
                 return null;

@@ -6,9 +6,9 @@ public static class ResourceHelper
 {
     public static void AddEntry(string key, object value)
     {
-        if (!ResourcesCache.dictionary_0.ContainsKey(key))
+        if (!ResourcesCache._storage.ContainsKey(key))
         {
-            ResourcesCache.dictionary_0.Add(key, value);
+            ResourcesCache._storage.Add(key, value);
             LogHelper.LogDebug($"[WTT-ClientCommonLib] Registered {key}.");
         }
         else

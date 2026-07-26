@@ -37,7 +37,7 @@ internal class ClothingBundleRendererPatch : ModulePatch
             GameObject asset = null;
             try
             {
-                asset = __instance.iEasyAssets.GetAsset<GameObject>(
+                asset = __instance._easyAssets.GetAsset<GameObject>(
                     clothing.Prefab.path,
                     clothing.Prefab.rcid
                 );
@@ -78,8 +78,8 @@ internal class ClothingBundleRendererPatch : ModulePatch
             var parentObject = new GameObject("ClothingBundleParent");
             parentObject.layer = LayersMaskController.WeaponPreview;
             parentObject.transform.SetPositionAndRotation(
-                __instance.gameObject_0.transform.position,
-                __instance.gameObject_0.transform.rotation
+                __instance._clothingMeshContainer.transform.position,
+                __instance._clothingMeshContainer.transform.rotation
             );
 
             // Create a GameObject for each SkinnedMeshRenderer
@@ -123,17 +123,17 @@ internal class ClothingBundleRendererPatch : ModulePatch
         GameObject asset
     )
     {
-        var originalGameObject = instance.gameObject_0;
-        var originalMeshFilter = instance.meshFilter_0;
-        var originalMeshRenderer = instance.meshRenderer_0;
+        var originalGameObject = instance._clothingMeshContainer;
+        var originalMeshFilter = instance._filter;
+        var originalMeshRenderer = instance._renderer;
 
         try
         {
             // Wait if already rendering
-            while (instance.bool_2)
+            while (instance._containerIsBusy)
                 await JobScheduler.Yield();
 
-            instance.bool_2 = true;
+            instance._containerIsBusy = true;
 
             // Ensure the parent object is active
             if (!parentObject.activeSelf)
@@ -210,12 +210,12 @@ internal class ClothingBundleRendererPatch : ModulePatch
             if (validMeshCount == 0)
             {
                 Logger.LogWarning("No valid meshes found for rendering");
-                instance.bool_2 = false;
+                instance._containerIsBusy = false;
                 return default;
             }
 
             // Temporarily replace the instance's GameObject with our multi-mesh object
-            instance.gameObject_0 = parentObject;
+            instance._clothingMeshContainer = parentObject;
 
             // Create a dummy mesh with the combined bounds
             var boundsMesh = new Mesh();
@@ -223,11 +223,11 @@ internal class ClothingBundleRendererPatch : ModulePatch
 
             var parentMeshFilter = parentObject.AddComponent<MeshFilter>();
             parentMeshFilter.sharedMesh = boundsMesh;
-            instance.meshFilter_0 = parentMeshFilter;
+            instance._filter = parentMeshFilter;
 
             // Add a MeshRenderer to the parent
             var parentMeshRenderer = parentObject.AddComponent<MeshRenderer>();
-            instance.meshRenderer_0 = parentMeshRenderer;
+            instance._renderer = parentMeshRenderer;
 
             // Get the PreviewPivot component
             var pivot = asset?.GetComponent<PreviewPivot>();
@@ -235,12 +235,12 @@ internal class ClothingBundleRendererPatch : ModulePatch
             // Use the sprite factory with our multi-mesh object
             var result = await spriteFactory(parentObject, pivot);
 
-            instance.bool_2 = false;
+            instance._containerIsBusy = false;
 
             // Restore the original GameObject and components
-            instance.gameObject_0 = originalGameObject;
-            instance.meshFilter_0 = originalMeshFilter;
-            instance.meshRenderer_0 = originalMeshRenderer;
+            instance._clothingMeshContainer = originalGameObject;
+            instance._filter = originalMeshFilter;
+            instance._renderer = originalMeshRenderer;
 
             // Clean up the temporary objects
             if (parentObject != null)
@@ -256,10 +256,10 @@ internal class ClothingBundleRendererPatch : ModulePatch
         }
         catch (Exception e)
         {
-            instance.bool_2 = false;
-            instance.gameObject_0 = originalGameObject;
-            instance.meshFilter_0 = originalMeshFilter;
-            instance.meshRenderer_0 = originalMeshRenderer;
+            instance._containerIsBusy = false;
+            instance._clothingMeshContainer = originalGameObject;
+            instance._filter = originalMeshFilter;
+            instance._renderer = originalMeshRenderer;
 
             Logger.LogError($"Error in CompleteRendering: {e}");
 

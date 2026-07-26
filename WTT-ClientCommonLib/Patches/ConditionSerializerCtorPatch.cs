@@ -15,7 +15,7 @@ namespace WTTClientCommonLib.Patches
         [PatchPostfix]
         public static void Postfix(ConditionSerializer __instance)
         {
-            __instance.list_0.Add(typeof(ConditionSalvage));
+            __instance._types.Add(typeof(ConditionSalvage));
         }
     }
 }

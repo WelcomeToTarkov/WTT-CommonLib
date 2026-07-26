@@ -1,5 +1,4 @@
-﻿using SPTarkov.Server.Core.Models.Utils;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
+﻿using SPTarkov.Common.Models.Logging;
 
 namespace WTTServerCommonLib.Helpers;
 

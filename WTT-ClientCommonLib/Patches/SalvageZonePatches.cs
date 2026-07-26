@@ -84,7 +84,7 @@ namespace WTTClientCommonLib.Patches
             ClientTransitController transit;
             if (actions == null && TransitController.Exist(out transit))
             {
-                actions = transit.availableInteractionState;
+                actions = transit._availableInteractionState;
             }
 
             if (actions != null)

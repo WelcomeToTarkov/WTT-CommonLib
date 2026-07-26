@@ -181,7 +181,7 @@ public class ProduceViewLoadedPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(ProduceView), nameof(ProduceView.method_2));
+        return AccessTools.Method(typeof(ProduceView), nameof(ProduceView.Show));
     }
 
     [PatchPostfix]

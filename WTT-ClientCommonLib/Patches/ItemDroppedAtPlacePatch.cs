@@ -122,7 +122,7 @@ internal class ItemDroppedAtPlacePatch : ModulePatch
                         if (salvageDone)
                         {
                             state.SalvageDone = true;
-                            salvageCpc.CurrentValue_1 = true;
+                            salvageCpc._currentValue = true;
                             SignalConditionCompleted(player, quest, status, salvageCond);
                         }
 

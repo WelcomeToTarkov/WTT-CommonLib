@@ -62,7 +62,7 @@ internal class HideoutCustomizationTexturesPatch : ModulePatch
 
         try
         {
-            var icons = __instance.hideoutCustomizationIcons_0;
+            var icons = __instance._icons;
             if (icons != null)
             {
                 icons.ShootingRangeMarkTextures.TryAdd(assetName, customTexture);

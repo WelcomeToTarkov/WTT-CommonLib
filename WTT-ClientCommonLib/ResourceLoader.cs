@@ -192,9 +192,9 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
             }
 
             foreach (var kvp in voiceResponse)
-                if (!InGameBundles.dictionary_0.ContainsKey(kvp.Key))
+                if (!InGameBundles._phrasesPaths.ContainsKey(kvp.Key))
                 {
-                    InGameBundles.dictionary_0[kvp.Key] = kvp.Value;
+                    InGameBundles._phrasesPaths[kvp.Key] = kvp.Value;
                     LogHelper.LogDebug($"Added voice key: {kvp.Key}");
                 }
 

@@ -100,7 +100,7 @@ namespace WTTClientCommonLib.Patches
             __result = list;
         }
 
-        private static bool IsCounterCreatorComplete(QuestClass quest, ConditionCounterCreator cc)
+        private static bool IsCounterCreatorComplete(Quest quest, ConditionCounterCreator cc)
         {
             if (quest == null || cc == null)
                 return false;

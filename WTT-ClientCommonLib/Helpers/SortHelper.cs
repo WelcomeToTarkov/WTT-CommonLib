@@ -17,17 +17,17 @@ namespace WTTClientCommonLib.Helpers
 
         public static int GetSortOrder(this Type itemType)
         {
-            return ItemSorter.list_0.IndexOf(itemType);
+            return ItemSorter._itemSuccessors.IndexOf(itemType);
         }
 
         public static void Insert(int sortIndex, Type itemType)
         {
-            ItemSorter.list_0.Insert(sortIndex, itemType);
+            ItemSorter._itemSuccessors.Insert(sortIndex, itemType);
         }
 
         public static void SetIndex(int newIndex, Type itemType)
         {
-            List<Type> list = ItemSorter.list_0;
+            List<Type> list = ItemSorter._itemSuccessors;
             int oldIndex = list.IndexOf(itemType);
 
             if (oldIndex < 0)
@@ -62,7 +62,7 @@ namespace WTTClientCommonLib.Helpers
                 return;
             }
 
-            ItemSorter.list_0.Insert(itemIndex + offset, itemType);
+            ItemSorter._itemSuccessors.Insert(itemIndex + offset, itemType);
         }
     }
 }

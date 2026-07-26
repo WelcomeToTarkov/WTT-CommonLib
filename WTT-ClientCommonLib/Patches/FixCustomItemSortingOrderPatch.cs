@@ -17,7 +17,7 @@ namespace WTTClientCommonLib.Patches
         }
 
         [PatchPrefix]
-        public static bool PatchPrefix(ItemExtensions __instance, ref int __result, Item i)
+        public static bool PatchPrefix(ref int __result, Item i)
         {
             Type type = i.GetType();
 
