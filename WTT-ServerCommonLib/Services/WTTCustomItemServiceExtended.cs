@@ -112,14 +112,8 @@ public class WTTCustomItemServiceExtended(
 
                     try
                     {
-                        if (CreateItemFromConfig(assembly, itemId, configData))
-                        {
-                            totalItemsCreated++;
-                        }
-                        else
-                        {
-                            creationFailures.Add((itemId, "CreateItemFromConfig returned false"));
-                        }
+                        CreateItemFromConfig(assembly, itemId, configData);
+                        totalItemsCreated++;
                     }
                     catch (Exception ex)
                     {
@@ -197,22 +191,12 @@ public class WTTCustomItemServiceExtended(
     private bool CreateItemFromConfig(Assembly assembly,string newItemId, CustomItemConfig config)
     {
         var modName = assembly.GetName().Name ?? "UnknownMod";
-        try
-        {
-            CreateItemFromClone(assembly, newItemId, config);
-            LogHelper.Debug(logger, $"{modName}:Created item {newItemId}");
 
-            ProcessAdditionalProperties(newItemId, config);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            if (_commonlibConfig.ItemValidationLoggingEnabled)
-            {
-                logger.Error($"[WTT-CommonLib] - THIS MOD ----> [{modName}] <----- Failed to create item {newItemId}: {ex.Message}");
-            }
-            return false;
-        }
+        CreateItemFromClone(assembly, newItemId, config);
+        LogHelper.Debug(logger, $"{modName}:Created item {newItemId}");
+
+        ProcessAdditionalProperties(newItemId, config);
+        return true;
     }
 
     private void CreateItemFromClone(
