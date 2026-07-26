@@ -11,20 +11,20 @@ using Version = SemanticVersioning.Version;
 
 namespace WTTServerCommonLib;
 
-public record ModMetadata : AbstractModMetadata
+public record ModMetadata : IModMetadata
 {
-    public override string ModGuid { get; init; } = "com.wtt.commonlib";
-    public override string Name { get; init; } = "WTT-ServerCommonLib";
-    public override string Author { get; init; } = "GrooveypenguinX";
-    public override List<string>? Contributors { get; init; }
-    public override Version Version { get; init; } =
+    public string ModGuid { get; init; } = "com.wtt.commonlib";
+    public string Name { get; init; } = "WTT-ServerCommonLib";
+    public string Author { get; init; } = "GrooveypenguinX";
+    public List<string>? Contributors { get; init; }
+    public Version Version { get; init; } =
         new(typeof(ModMetadata).Assembly.GetName().Version?.ToString(3));
-    public override Range SptVersion { get; init; } = new("~4.1.0");
-    public override List<string>? Incompatibilities { get; init; }
-    public override Dictionary<string, Range>? ModDependencies { get; init; }
-    public override string? Url { get; init; }
-    public override string License { get; init; } = "WTT";
-    public override bool HasPrepatcher { get; init; } = false;
+    public Range SptVersion { get; init; } = new("~4.1.0");
+    public List<string>? Incompatibilities { get; init; }
+    public Dictionary<string, Range>? ModDependencies { get; init; }
+    public string? Url { get; init; }
+    public string License { get; init; } = "WTT";
+    public bool HasPrepatcher { get; init; } = false;
 }
 
 [Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.Preload)]

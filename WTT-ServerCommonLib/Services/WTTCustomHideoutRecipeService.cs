@@ -86,7 +86,7 @@ public class WTTCustomHideoutRecipeService(
 
                 if (recipeExists)
                 {
-                    if (logger.IsLogEnabled(SPTarkov.Common.Models.Logging.LogLevel.Debug))
+                    if (logger.IsLogEnabled(LogLevel.Debug))
                         LogHelper.Debug(logger, $"Recipe {recipe.Id} already exists, skipping");
                     continue;
                 }

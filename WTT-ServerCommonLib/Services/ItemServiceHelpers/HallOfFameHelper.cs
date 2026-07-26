@@ -5,7 +5,6 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
-using LogLevel = SPTarkov.Common.Models.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
