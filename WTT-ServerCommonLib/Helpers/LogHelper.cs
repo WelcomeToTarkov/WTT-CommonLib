@@ -1,13 +1,30 @@
-﻿using System.Diagnostics;
-using SPTarkov.Common.Models.Logging;
+﻿using SPTarkov.Server.Core.Models.Utils;
+using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Helpers;
 
 public static class LogHelper
 {
-    [Conditional("DEBUG")]
     public static void Debug<T>(ISptLogger<T> logger, string message)
     {
+#if DEBUG
         logger.Info(message);
+#endif
+    }
+
+    public static void WriteWarning(string message)
+    {
+        var original = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(message);
+        Console.ForegroundColor = original;
+    }
+
+    public static void WriteError(string message)
+    {
+        var original = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine(message);
+        Console.ForegroundColor = original;
     }
 }

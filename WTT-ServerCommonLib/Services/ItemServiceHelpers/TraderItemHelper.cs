@@ -63,6 +63,7 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, TradersTable 
 
                     if (scheme.ConfigBarterSettings.BuyRestrictionMax != null)
                     {
+                        newItem.Upd.BuyRestrictionCurrent = 0;
                         newItem.Upd.BuyRestrictionMax = scheme
                             .ConfigBarterSettings
                             .BuyRestrictionMax;

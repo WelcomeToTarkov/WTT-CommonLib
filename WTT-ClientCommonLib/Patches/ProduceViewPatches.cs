@@ -56,8 +56,6 @@ public class ProduceViewShowPatch : ModulePatch
                 recipeResultStacks.Add(resultStack);
             }
 
-            LogHelper.LogInfo($"found extended scheme for craft scheme: {schemeId}");
-
             // update initial end product
             RecipeResultStack firstStack = extendedScheme.FirstResult;
             viewFactory.Show(
@@ -66,7 +64,17 @@ public class ProduceViewShowPatch : ModulePatch
                 __instance.ItemUiContext
             );
 
-            if (extendedScheme.FirstResult.Count > 1)
+            if (
+                firstStack.MinStackCount >= 1
+                && firstStack.MinStackCount < firstStack.MaxStackCount
+            )
+            {
+                viewFactory.SetCounterText(
+                    $"{StackCountDisplayHelper.GetShortBalance(firstStack.MinStackCount.Value, firstStack.Item.TemplateId.ToString())} - {StackCountDisplayHelper.GetShortBalance(firstStack.MaxStackCount.Value, firstStack.Item.TemplateId.ToString())}"
+                );
+                viewFactory.ShowInfo(true, false);
+            }
+            else if (firstStack.Count > 1)
             {
                 viewFactory.SetCounterText(extendedScheme.FirstResult.Count.ToString());
                 viewFactory.ShowInfo(true, false);
@@ -141,9 +149,18 @@ public class ProduceViewShowPatch : ModulePatch
                         __instance.InventoryController,
                         __instance.ItemUiContext
                     );
-
                     // use result stack count for item count
-                    if (resultStack.Count > 1)
+                    if (
+                        resultStack.MinStackCount >= 1
+                        && resultStack.MaxStackCount > resultStack.MinStackCount
+                    )
+                    {
+                        viewFactory.SetCounterText(
+                            $"{StackCountDisplayHelper.GetShortBalance(resultStack.MinStackCount.Value, resultStack.Item.TemplateId.ToString())} - {StackCountDisplayHelper.GetShortBalance(resultStack.MaxStackCount.Value, resultStack.Item.TemplateId.ToString())}"
+                        );
+                        factory.ShowInfo(true, false);
+                    }
+                    else if (resultStack.Count > 1)
                     {
                         factory.SetCounterText(resultStack.Count.ToString());
                         factory.ShowInfo(true, false);
@@ -188,8 +205,21 @@ public class ProduceViewLoadedPatch : ModulePatch
                 __instance.ItemUiContext
             );
 
-            viewFactory.SetCounterText(extendedScheme.FirstResult.Count.ToString());
-            viewFactory.ShowInfo(extendedScheme.FirstResult.Count > 1, false);
+            if (
+                firstStack.MinStackCount >= 1
+                && firstStack.MaxStackCount > firstStack.MinStackCount
+            )
+            {
+                viewFactory.SetCounterText(
+                    $"{StackCountDisplayHelper.GetShortBalance(firstStack.MinStackCount.Value, firstStack.Item.TemplateId.ToString())} - {StackCountDisplayHelper.GetShortBalance(firstStack.MaxStackCount.Value, firstStack.Item.TemplateId.ToString())}"
+                );
+                viewFactory.ShowInfo(true, false);
+            }
+            else
+            {
+                viewFactory.SetCounterText(extendedScheme.FirstResult.Count.ToString());
+                viewFactory.ShowInfo(extendedScheme.FirstResult.Count > 1, false);
+            }
         }
     }
 }

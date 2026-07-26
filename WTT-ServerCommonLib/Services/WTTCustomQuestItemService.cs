@@ -36,12 +36,24 @@ public class WTTCustomQuestItemService(
         string newItemId,
         CustomQuestItemConfig config
     )> _deferredSecureFilterConfigs = new();
+    private CommonlibConfig _commonlibConfig;
 
     public async Task CreateCustomQuestItems(Assembly assembly, string? relativePath = null)
     {
+        var file = Path.Combine(
+            modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly()),
+            "config.jsonc"
+        );
+        var commonlibConfig = await configHelper.LoadJsonFile<CommonlibConfig>(file);
+        if (commonlibConfig != null)
+        {
+            _commonlibConfig = commonlibConfig;
+        }
+
         try
         {
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
+            var modName = assembly.GetName().Name ?? "UnknownMod";
             var defaultDir = Path.Combine("db", "CustomQuestItems");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
 
@@ -62,15 +74,29 @@ public class WTTCustomQuestItemService(
             }
 
             var totalItemsCreated = 0;
+            var validationFailures = new List<(string ItemId, List<string> Errors)>();
+            var creationFailures = new List<(string ItemId, string Error)>();
 
             foreach (var configDict in itemConfigDicts)
             {
                 foreach (var (itemId, configData) in configDict)
                 {
-                    configData.Validate(itemId);
+                    var validationErrors = configData.GetValidationErrors(itemId).ToList();
 
-                    if (CreateQuestItemFromConfig(assembly, itemId, configData))
+                    if (validationErrors.Count > 0)
+                    {
+                        validationFailures.Add((itemId, validationErrors));
+                    }
+
+                    try
+                    {
+                        CreateQuestItemFromConfig(assembly, itemId, configData);
                         totalItemsCreated++;
+                    }
+                    catch (Exception ex)
+                    {
+                        creationFailures.Add((itemId, ex.Message));
+                    }
                 }
             }
 
@@ -78,6 +104,79 @@ public class WTTCustomQuestItemService(
                 logger,
                 $"Created {totalItemsCreated} custom quest items from {itemConfigDicts.Count} files"
             );
+
+            if (validationFailures.Count > 0 || creationFailures.Count > 0)
+            {
+                var sb = new System.Text.StringBuilder();
+
+                sb.AppendLine("");
+                sb.AppendLine("==================================================");
+                sb.AppendLine($"CUSTOM QUEST ITEM ISSUES FOR MOD: {modName}");
+                sb.AppendLine("==================================================");
+                sb.AppendLine($"Created items: {totalItemsCreated}");
+                sb.AppendLine($"Validation failures: {validationFailures.Count}");
+                sb.AppendLine($"Creation failures: {creationFailures.Count}");
+                sb.AppendLine("==================================================");
+
+                if (validationFailures.Count > 0)
+                {
+                    var warningSb = new System.Text.StringBuilder();
+
+                    warningSb.AppendLine();
+                    warningSb.AppendLine("==================================================");
+                    warningSb.AppendLine(
+                        $"CUSTOM QUEST ITEM VALIDATION WARNINGS FOR MOD: {modName}"
+                    );
+                    warningSb.AppendLine("==================================================");
+                    warningSb.AppendLine($"Created items: {totalItemsCreated}");
+                    warningSb.AppendLine($"Validation failures: {validationFailures.Count}");
+                    warningSb.AppendLine("==================================================");
+                    warningSb.AppendLine("VALIDATION FAILURES:");
+                    warningSb.AppendLine("--------------------------------------------------");
+
+                    foreach (var failure in validationFailures)
+                    {
+                        warningSb.AppendLine($"[{failure.ItemId}]");
+
+                        foreach (var error in failure.Errors)
+                            warningSb.AppendLine($" - {error}");
+
+                        warningSb.AppendLine();
+                    }
+
+                    warningSb.AppendLine("==================================================");
+
+                    if (_commonlibConfig.ItemValidationLoggingEnabled)
+                    {
+                        LogHelper.WriteWarning(warningSb.ToString());
+                    }
+                }
+
+                if (creationFailures.Count > 0)
+                {
+                    var errorSb = new System.Text.StringBuilder();
+
+                    errorSb.AppendLine();
+                    errorSb.AppendLine("==================================================");
+                    errorSb.AppendLine($"CUSTOM ITEM CREATION ERRORS FOR MOD: {modName}");
+                    errorSb.AppendLine("==================================================");
+                    errorSb.AppendLine($"Created items: {totalItemsCreated}");
+                    errorSb.AppendLine($"Creation failures: {creationFailures.Count}");
+                    errorSb.AppendLine("==================================================");
+                    errorSb.AppendLine("CREATION FAILURES:");
+                    errorSb.AppendLine("--------------------------------------------------");
+
+                    foreach (var failure in creationFailures)
+                        errorSb.AppendLine($"[{failure.ItemId}] {failure.Error}");
+
+                    errorSb.AppendLine("==================================================");
+
+                    if (_commonlibConfig.ItemValidationLoggingEnabled)
+                    {
+                        LogHelper.WriteError(errorSb.ToString());
+                    }
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -91,19 +190,11 @@ public class WTTCustomQuestItemService(
         CustomQuestItemConfig config
     )
     {
-        try
-        {
-            CreateQuestItemFromClone(assembly, newItemId, config);
-            LogHelper.Debug(logger, $"Created quest item {newItemId}");
-
-            ProcessAdditionalProperties(newItemId, config);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.Error($"Failed to create quest item {newItemId}: {ex.Message}");
-            return false;
-        }
+        var modName = assembly.GetName().Name ?? "UnknownMod";
+        CreateQuestItemFromClone(assembly, newItemId, config);
+        LogHelper.Debug(logger, $"Created quest item {newItemId}");
+        ProcessAdditionalProperties(newItemId, config);
+        return true;
     }
 
     private void CreateQuestItemFromClone(

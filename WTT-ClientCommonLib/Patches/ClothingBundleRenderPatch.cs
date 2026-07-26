@@ -68,15 +68,11 @@ internal class ClothingBundleRendererPatch : ModulePatch
             // Skip if 1 or fewer materials found
             if (uniqueMaterials.Count <= 1)
             {
-                Logger.LogInfo(
+                Logger.LogDebug(
                     $"Skipping patch: Only {uniqueMaterials.Count} unique materials found"
                 );
                 return true;
             }
-
-            Logger.LogInfo(
-                $"Applying multi-mesh patch: {allRenderers.Length} renderers, {uniqueMaterials.Count} unique materials on {clothing.Name.Localized()}"
-            );
 
             // Create a parent object to hold all mesh objects
             var parentObject = new GameObject("ClothingBundleParent");
@@ -217,10 +213,6 @@ internal class ClothingBundleRendererPatch : ModulePatch
                 instance.bool_2 = false;
                 return default;
             }
-
-            Logger.LogInfo(
-                $"Rendering with {validMeshCount} valid meshes. Bounds size: {combinedBounds.size}"
-            );
 
             // Temporarily replace the instance's GameObject with our multi-mesh object
             instance.gameObject_0 = parentObject;

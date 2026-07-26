@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Items;
@@ -53,6 +53,7 @@ public class WTTCustomItemServiceExtended(
     )> _deferredSecureFilterConfigs = new();
     private readonly List<(string newItemId, CustomItemConfig config)> _deferredCaliberConfigs =
         new();
+    private CommonlibConfig _commonlibConfig;
 
     /// <summary>
     /// Loads custom item configurations from JSON/JSONC files and creates items with all associated properties.
@@ -65,9 +66,20 @@ public class WTTCustomItemServiceExtended(
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public async Task CreateCustomItems(Assembly assembly, string? relativePath = null)
     {
+        var file = Path.Combine(
+            modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly()),
+            "config.jsonc"
+        );
+        var commonlibConfig = await configHelper.LoadJsonFile<CommonlibConfig>(file);
+        if (commonlibConfig != null)
+        {
+            _commonlibConfig = commonlibConfig;
+        }
+
         try
         {
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
+            var modName = assembly.GetName().Name ?? "UnknownMod";
             var defaultDir = Path.Combine("db", "CustomItems");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
 
@@ -88,19 +100,92 @@ public class WTTCustomItemServiceExtended(
             }
 
             var totalItemsCreated = 0;
+            var validationFailures = new List<(string ItemId, List<string> Errors)>();
+            var creationFailures = new List<(string ItemId, string Error)>();
 
             foreach (var configDict in itemConfigDicts)
-            foreach (var (itemId, configData) in configDict)
             {
-                configData.Validate(itemId);
-                if (CreateItemFromConfig(assembly, itemId, configData))
-                    totalItemsCreated++;
+                foreach (var (itemId, configData) in configDict)
+                {
+                    var validationErrors = configData.GetValidationErrors(itemId).ToList();
+
+                    if (validationErrors.Count > 0)
+                    {
+                        validationFailures.Add((itemId, validationErrors));
+                    }
+
+                    try
+                    {
+                        CreateItemFromConfig(assembly, itemId, configData);
+                        totalItemsCreated++;
+                    }
+                    catch (Exception ex)
+                    {
+                        creationFailures.Add((itemId, ex.Message));
+                    }
+                }
             }
 
             LogHelper.Debug(
                 logger,
                 $"Created {totalItemsCreated} custom items from {itemConfigDicts.Count} files"
             );
+
+            if (validationFailures.Count > 0)
+            {
+                var warningSb = new System.Text.StringBuilder();
+
+                warningSb.AppendLine();
+                warningSb.AppendLine("==================================================");
+                warningSb.AppendLine($"CUSTOM ITEM VALIDATION WARNINGS FOR MOD: {modName}");
+                warningSb.AppendLine("==================================================");
+                warningSb.AppendLine($"Created items: {totalItemsCreated}");
+                warningSb.AppendLine($"Validation failures: {validationFailures.Count}");
+                warningSb.AppendLine("==================================================");
+                warningSb.AppendLine("VALIDATION FAILURES:");
+                warningSb.AppendLine("--------------------------------------------------");
+
+                foreach (var failure in validationFailures)
+                {
+                    warningSb.AppendLine($"[{failure.ItemId}]");
+
+                    foreach (var error in failure.Errors)
+                        warningSb.AppendLine($" - {error}");
+
+                    warningSb.AppendLine();
+                }
+
+                warningSb.AppendLine("==================================================");
+                if (_commonlibConfig.ItemValidationLoggingEnabled)
+                {
+                    LogHelper.WriteWarning(warningSb.ToString());
+                }
+            }
+
+            if (creationFailures.Count > 0)
+            {
+                var errorSb = new System.Text.StringBuilder();
+
+                errorSb.AppendLine();
+                errorSb.AppendLine("==================================================");
+                errorSb.AppendLine($"CUSTOM ITEM CREATION ERRORS FOR MOD: {modName}");
+                errorSb.AppendLine("==================================================");
+                errorSb.AppendLine($"Created items: {totalItemsCreated}");
+                errorSb.AppendLine($"Creation failures: {creationFailures.Count}");
+                errorSb.AppendLine("==================================================");
+                errorSb.AppendLine("CREATION FAILURES:");
+                errorSb.AppendLine("--------------------------------------------------");
+
+                foreach (var failure in creationFailures)
+                    errorSb.AppendLine($"[{failure.ItemId}] {failure.Error}");
+
+                errorSb.AppendLine("==================================================");
+
+                if (_commonlibConfig.ItemValidationLoggingEnabled)
+                {
+                    LogHelper.WriteError(errorSb.ToString());
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -110,37 +195,16 @@ public class WTTCustomItemServiceExtended(
 
     private bool CreateItemFromConfig(Assembly assembly, string newItemId, CustomItemConfig config)
     {
-        try
-        {
-            var registerInHandbook = config.RegisterInHandbook ?? true;
-            var registerInFleaPrices = config.RegisterInFleaPrices ?? true;
+        var modName = assembly.GetName().Name ?? "UnknownMod";
 
-            CreateItemFromClone(
-                assembly,
-                newItemId,
-                config,
-                registerInHandbook,
-                registerInFleaPrices
-            );
-            LogHelper.Debug(logger, $"Created item {newItemId}");
+        CreateItemFromClone(assembly, newItemId, config);
+        LogHelper.Debug(logger, $"{modName}:Created item {newItemId}");
 
-            ProcessAdditionalProperties(newItemId, config);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.Error($"Failed to create item {newItemId}: {ex.Message}");
-            return false;
-        }
+        ProcessAdditionalProperties(newItemId, config);
+        return true;
     }
 
-    private void CreateItemFromClone(
-        Assembly assembly,
-        string newItemId,
-        CustomItemConfig config,
-        bool registerInHandbook,
-        bool registerInFleaPrices
-    )
+    private void CreateItemFromClone(Assembly assembly, string newItemId, CustomItemConfig config)
     {
         if (templateTable.Items.TryGetValue(newItemId, out var existingItem))
             throw new InvalidOperationException($"ItemId already exists. {existingItem.Name}");
@@ -164,6 +228,9 @@ public class WTTCustomItemServiceExtended(
         );
 
         itemRegistrationHelper.AddToItemsDb(newItemId, itemClone);
+
+        var registerInHandbook = config.RegisterInHandbook ?? true;
+        var registerInFleaPrices = config.RegisterInFleaPrices ?? true;
 
         if (registerInHandbook)
         {

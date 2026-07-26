@@ -50,10 +50,6 @@ public class WTTClientCommonLib : BaseUnityPlugin
                 LogHelper.LogInfo("Fika detected - loading Fika support");
                 LoadFikaModule();
             }
-            else
-            {
-                LogHelper.LogInfo("Fika not detected - single-player mode");
-            }
 
             AssetLoader = new AssetLoader(Logger);
             SpawnCommands = new SpawnCommands(Logger, AssetLoader);
@@ -112,8 +108,6 @@ public class WTTClientCommonLib : BaseUnityPlugin
                     "SendFikaSpawnPacket",
                     BindingFlags.Public | BindingFlags.Static
                 );
-
-                LogHelper.LogInfo("Fika module loaded and initialized");
             }
             else
             {
