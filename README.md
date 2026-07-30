@@ -1227,6 +1227,8 @@ await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(assembly,
     "endProductItems": {
         "69dfa332259cb3202c3d04a2": {
             "count": 3,
+            "minStackCount": 1,
+            "maxStackCount": 3,
             "items": [
                 {
                     "_id": "69daf153ba7df4fce9b709e0",
@@ -1281,11 +1283,14 @@ await wttCommon.CustomHideoutRecipeService.CreateHideoutRecipes(assembly,
 **Optional fields (`HideoutProductionExtended`)**:
 - `endProductItems: []`
   - Specifies an array of `CustomCraftResult` to return from the recipe
-    - `count` determines the amount of items
+    - `count` determines the amount of items given
+    - `minStackCount` defines the minimum amount of items per stack
+    - `maxStackCount` defines the maximum amount of items per stack
     - `items` array of items to return
     - You can specify multiple recipe results
   - If present:
     - `endProduct` is used solely for the crafting menu search. Has to be a valid item template id
+    - `minStackCount` and `maxStackCount` are optional values that reward a random amount of a stackable item
     - `count` is ignored, craft amounts come from `CustomCraftResult`
 
 ---
