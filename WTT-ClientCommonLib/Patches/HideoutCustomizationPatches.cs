@@ -39,7 +39,8 @@ internal class HideoutCustomizationTexturesPatch : ModulePatch
     {
         return AccessTools.Method(
             typeof(HideoutCustomizationController),
-            nameof(HideoutCustomizationController.InstallCustomization)
+            nameof(HideoutCustomizationController.InstallCustomization),
+            new[] { typeof(ResourceKey), typeof(EHideoutCustomizationType) }
         );
     }
 
@@ -54,18 +55,16 @@ internal class HideoutCustomizationTexturesPatch : ModulePatch
             return;
 
         string assetName = resourceKey.ToAssetName();
-        if (
-            assetName == null
-            || !ResourceLoader._customMarkTextures.TryGetValue(assetName, out var customTexture)
-        )
+        if (assetName == null ||
+            !ResourceLoader._customMarkTextures.TryGetValue(assetName, out var customTexture))
             return;
 
         try
         {
-            var icons = __instance._icons;
+            var icons = __instance.Icons; // prefer property if accessible
             if (icons != null)
             {
-                icons.ShootingRangeMarkTextures.TryAdd(assetName, customTexture);
+                icons.ShootingRangeMarkTextures[assetName] = customTexture;
             }
         }
         catch (Exception ex)
@@ -74,3 +73,4 @@ internal class HideoutCustomizationTexturesPatch : ModulePatch
         }
     }
 }
+

@@ -181,7 +181,20 @@ public class ProduceViewLoadedPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(ProduceView), nameof(ProduceView.Show));
+        return AccessTools.Method(
+            typeof(ProduceView),
+            nameof(ProduceView.Show),
+            new[]
+            {
+                typeof(ItemUiContext),
+                typeof(InventoryController),
+                typeof(ProductionScheme),
+                typeof(ItemsProducerBase),
+                typeof(Action<string>),
+                typeof(Action<string>),
+                typeof(bool)
+            }
+        );
     }
 
     [PatchPostfix]
