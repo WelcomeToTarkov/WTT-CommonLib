@@ -171,10 +171,7 @@ public class WTTCustomQuestItemService(
 
                     errorSb.AppendLine("==================================================");
 
-                    if (_commonlibConfig.ItemValidationLoggingEnabled)
-                    {
-                        LogHelper.WriteError(errorSb.ToString());
-                    }
+                    LogHelper.WriteError(errorSb.ToString());
                 }
             }
         }

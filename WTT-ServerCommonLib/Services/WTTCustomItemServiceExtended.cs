@@ -181,10 +181,8 @@ public class WTTCustomItemServiceExtended(
 
                 errorSb.AppendLine("==================================================");
 
-                if (_commonlibConfig.ItemValidationLoggingEnabled)
-                {
-                    LogHelper.WriteError(errorSb.ToString());
-                }
+
+                LogHelper.WriteError(errorSb.ToString());
             }
         }
         catch (Exception ex)
