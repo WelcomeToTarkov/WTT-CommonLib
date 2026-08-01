@@ -221,6 +221,8 @@ namespace WTTClientCommonLib.Patches
 
                         fakeStash.Grids[0] = fakeGrid;
 
+                        fakeStash.CurrentAddress = inventoryController.CreateItemAddress();
+
                         IDatabaseIdGenerator idGen = inventoryController;
                         var newId = new MongoID(idGen.NextId);
                         var rootMongo = new MongoID(fakeStash.Id);
