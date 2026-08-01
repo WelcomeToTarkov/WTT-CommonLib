@@ -20,7 +20,7 @@ public enum ImageType
 
 public static class ImageManager
 {
-    private const string BaseCachePath = "SPT/user/cache/";
+    private const string BaseCachePath = "SPT_Runtime/user/cache/";
     private const string HideoutIconsCachePath = BaseCachePath + "hideouticons/";
     private const string ShootingRangeMarksCachePath = BaseCachePath + "shootingrangemarks/";
 
@@ -53,7 +53,7 @@ public static class ImageManager
 
     public static string GetImagePath(ImageItem image, ImageType type)
     {
-        return RequestHandler.IsLocal ? $"SPT/{image.ModPath}/" : GetCachePath(type);
+        return RequestHandler.IsLocal ? $"SPT_Runtime/{image.ModPath}/" : GetCachePath(type);
     }
 
     public static string GetImageFilePath(ImageItem image, ImageType type)
