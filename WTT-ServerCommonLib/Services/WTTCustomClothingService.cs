@@ -306,7 +306,6 @@ public class WTTCustomClothingService(
                 LoyaltyLevel = config.LoyaltyLevel,
                 ProfileLevel = config.ProfileLevel,
                 Standing = config.Standing,
-                SkillRequirements = config.SkillRequirements ?? [],
                 QuestRequirements = config.QuestRequirements ?? [],
                 AchievementRequirements = config.AchievementRequirements ?? [],
                 ItemRequirements = itemRequirements,

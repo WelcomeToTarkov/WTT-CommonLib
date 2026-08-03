@@ -67,9 +67,6 @@ public class CustomClothingConfig
     [JsonPropertyName("watchRotation")]
     public SPTarkov.Server.Core.Models.Eft.Common.Vector3? WatchRotation { get; set; }
 
-    [JsonPropertyName("skillRequirements")]
-    public List<SkillRequirement>? SkillRequirements { get; set; }
-
     [JsonPropertyName("questRequirements")]
     public List<string>? QuestRequirements { get; set; }
 
@@ -214,7 +211,6 @@ public static class CustomClothingConfigValidator
                 $"'profileLevel' must be non-negative, got {config.ProfileLevel}."
             );
 
-        ValidateStringList(config.SkillRequirements.Select(r => r.SkillName), "skillRequirements");
         ValidateStringList(config.QuestRequirements, "questRequirements");
         ValidateStringList(config.AchievementRequirements, "achievementRequirements");
     }
