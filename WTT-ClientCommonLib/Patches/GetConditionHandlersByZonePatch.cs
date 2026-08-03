@@ -1,10 +1,10 @@
-﻿using EFT.Quests;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using EFT.Quests;
+using HarmonyLib;
+using SPT.Reflection.Patching;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -16,17 +16,19 @@ namespace WTTClientCommonLib.Patches
             Type[] parameters = [typeof(string)];
             Type[] generics = [typeof(ConditionZone)];
             return AccessTools.Method(
-                typeof(QuestBookClass),
-                nameof(QuestBookClass.GetConditionHandlersByZone),
+                typeof(QuestBook),
+                nameof(QuestBook.GetConditionHandlersByZone),
                 parameters,
-                generics);
+                generics
+            );
         }
 
         [PatchPostfix]
         public static void Postfix(
-            QuestBookClass __instance,
+            QuestBook __instance,
             string zoneId,
-            ref IEnumerable<ConditionProgressChecker> __result)
+            ref IEnumerable<ConditionProgressChecker> __result
+        )
         {
             var list = __result?.ToList() ?? new List<ConditionProgressChecker>();
 
@@ -35,8 +37,10 @@ namespace WTTClientCommonLib.Patches
                 if (quest == null)
                     continue;
 
-                if (quest.QuestStatus != EQuestStatus.Started &&
-                    quest.QuestStatus != EQuestStatus.AvailableForFinish)
+                if (
+                    quest.QuestStatus != EQuestStatus.Started
+                    && quest.QuestStatus != EQuestStatus.AvailableForFinish
+                )
                     continue;
 
                 if (quest.Conditions == null || quest.ProgressCheckers == null)
@@ -50,8 +54,10 @@ namespace WTTClientCommonLib.Patches
                     if (conditions == null)
                         continue;
 
-                    if (!quest.CurrentStatusTransitions.Contains(status) &&
-                        status != quest.QuestStatus)
+                    if (
+                        !quest.CurrentStatusTransitions.Contains(status)
+                        && status != quest.QuestStatus
+                    )
                         continue;
 
                     foreach (var condition in conditions)
@@ -70,11 +76,16 @@ namespace WTTClientCommonLib.Patches
                             if (zoneChild.zoneId != zoneId)
                                 continue;
 
-                            if (zoneChild is not ConditionLeaveItemAtLocation &&
-                                zoneChild is not ConditionSalvage)
+                            if (
+                                zoneChild is not ConditionLeaveItemAtLocation
+                                && zoneChild is not ConditionSalvage
+                            )
                                 continue;
 
-                            if (!quest.ProgressCheckers.TryGetValue(child, out var cpc) || cpc == null)
+                            if (
+                                !quest.ProgressCheckers.TryGetValue(child, out var cpc)
+                                || cpc == null
+                            )
                                 continue;
 
                             if (!list.Contains(cpc))
@@ -89,7 +100,7 @@ namespace WTTClientCommonLib.Patches
             __result = list;
         }
 
-        private static bool IsCounterCreatorComplete(QuestClass quest, ConditionCounterCreator cc)
+        private static bool IsCounterCreatorComplete(Quest quest, ConditionCounterCreator cc)
         {
             if (quest == null || cc == null)
                 return false;
@@ -105,10 +116,12 @@ namespace WTTClientCommonLib.Patches
             if (counter != null && counter.Value >= target)
                 return true;
 
-            if (quest.ProgressCheckers != null &&
-                quest.ProgressCheckers.TryGetValue(cc, out var ccCpc) &&
-                ccCpc != null &&
-                ccCpc.CurrentValue >= target)
+            if (
+                quest.ProgressCheckers != null
+                && quest.ProgressCheckers.TryGetValue(cc, out var ccCpc)
+                && ccCpc != null
+                && ccCpc.CurrentValue >= target
+            )
             {
                 return true;
             }

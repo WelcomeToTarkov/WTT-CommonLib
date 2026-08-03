@@ -1,11 +1,8 @@
 ﻿using System.Text.Json.Serialization;
-using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Models.Common;
-using SPTarkov.Server.Core.Models.Eft.Common;
-using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Config;
-using SPTarkov.Server.Core.Models.Spt.Mod;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace WTTServerCommonLib.Models;
 
@@ -303,13 +300,22 @@ public class CustomItemConfig : CustomItemConfigBase
                         if (item.Id == null || string.IsNullOrWhiteSpace(item.Id.ToString()))
                             yield return $"weaponPresets[{i}].items[{j}]._id is required";
 
-                        if (item.Template == null || string.IsNullOrWhiteSpace(item.Template.ToString()))
+                        if (
+                            item.Template == null
+                            || string.IsNullOrWhiteSpace(item.Template.ToString())
+                        )
                             yield return $"weaponPresets[{i}].items[{j}]._tpl is required";
 
-                        if (!string.IsNullOrWhiteSpace(item.ParentId) && string.IsNullOrWhiteSpace(item.SlotId))
+                        if (
+                            !string.IsNullOrWhiteSpace(item.ParentId)
+                            && string.IsNullOrWhiteSpace(item.SlotId)
+                        )
                             yield return $"weaponPresets[{i}].items[{j}] has parentId but no slotId";
 
-                        if (!string.IsNullOrWhiteSpace(item.SlotId) && string.IsNullOrWhiteSpace(item.ParentId))
+                        if (
+                            !string.IsNullOrWhiteSpace(item.SlotId)
+                            && string.IsNullOrWhiteSpace(item.ParentId)
+                        )
                             yield return $"weaponPresets[{i}].items[{j}] has slotId but no parentId";
                     }
                 }
@@ -357,35 +363,44 @@ public class CustomItemConfig : CustomItemConfigBase
 
 public class ConfigTraderScheme
 {
-    [JsonPropertyName("barterSettings")] public required ConfigBarterSettings ConfigBarterSettings { get; set; }
+    [JsonPropertyName("barterSettings")]
+    public required ConfigBarterSettings ConfigBarterSettings { get; set; }
 
-    [JsonPropertyName("barters")] public required List<ConfigBarterScheme> Barters { get; set; } = new();
-    
+    [JsonPropertyName("barters")]
+    public required List<ConfigBarterScheme> Barters { get; set; } = new();
 }
 
 public class ConfigBarterSettings
 {
-    [JsonPropertyName("loyalLevel")] public required int LoyalLevel { get; set; }
+    [JsonPropertyName("loyalLevel")]
+    public required int LoyalLevel { get; set; }
 
-    [JsonPropertyName("unlimitedCount")] public required bool UnlimitedCount { get; set; }
+    [JsonPropertyName("unlimitedCount")]
+    public required bool UnlimitedCount { get; set; }
 
-    [JsonPropertyName("stackObjectsCount")] public required int StackObjectsCount { get; set; }
+    [JsonPropertyName("stackObjectsCount")]
+    public required int StackObjectsCount { get; set; }
 
-    [JsonPropertyName("buyRestrictionMax")] public int? BuyRestrictionMax { get; set; }
-    
+    [JsonPropertyName("buyRestrictionMax")]
+    public int? BuyRestrictionMax { get; set; }
 }
 
 public class ConfigBarterScheme
 {
-    [JsonPropertyName("count")] public virtual double? Count { get; set; }
+    [JsonPropertyName("count")]
+    public virtual double? Count { get; set; }
 
-    [JsonPropertyName("_tpl")] public virtual string Template { get; set; }
+    [JsonPropertyName("_tpl")]
+    public virtual string Template { get; set; }
 
-    [JsonPropertyName("onlyFunctional")] public virtual bool? OnlyFunctional { get; set; }
+    [JsonPropertyName("onlyFunctional")]
+    public virtual bool? OnlyFunctional { get; set; }
 
-    [JsonPropertyName("sptQuestLocked")] public virtual bool? SptQuestLocked { get; set; }
+    [JsonPropertyName("sptQuestLocked")]
+    public virtual bool? SptQuestLocked { get; set; }
 
-    [JsonPropertyName("level")] public virtual int? Level { get; set; }
+    [JsonPropertyName("level")]
+    public virtual int? Level { get; set; }
 
     [JsonPropertyName("side")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -394,16 +409,18 @@ public class ConfigBarterScheme
 
 public class ConfigStaticLootContainer
 {
-    [JsonPropertyName("containerName")] public required string ContainerName { get; set; } = string.Empty;
+    [JsonPropertyName("containerName")]
+    public required string ContainerName { get; set; } = string.Empty;
 
-    [JsonPropertyName("probability")] public required int Probability { get; set; }
+    [JsonPropertyName("probability")]
+    public required int Probability { get; set; }
 }
 
 public class EmptySlotScheme
 {
     [JsonPropertyName("itemToAddTo")]
     public string ItemToAddTo { get; set; } = string.Empty;
-        
+
     [JsonPropertyName("modSlot")]
     public string ModSlot { get; set; } = string.Empty;
 }

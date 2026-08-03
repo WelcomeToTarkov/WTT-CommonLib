@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using EFT;
 using EFT.Hideout;
-using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using UnityEngine;
@@ -11,12 +9,14 @@ using WTTClientCommonLib.Helpers;
 
 namespace WTTClientCommonLib.Patches;
 
-
 internal class HideoutCustomizationIconPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(HideoutCustomizationIcons), nameof(HideoutCustomizationIcons.GetSprite));
+        return AccessTools.Method(
+            typeof(HideoutCustomizationIcons),
+            nameof(HideoutCustomizationIcons.GetSprite)
+        );
     }
 
     [PatchPrefix]
@@ -37,25 +37,34 @@ internal class HideoutCustomizationTexturesPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(GClass2421), nameof(GClass2421.method_2));
+        return AccessTools.Method(
+            typeof(HideoutCustomizationController),
+            nameof(HideoutCustomizationController.InstallCustomization),
+            new[] { typeof(ResourceKey), typeof(EHideoutCustomizationType) }
+        );
     }
 
     [PatchPrefix]
-    static void Prefix(ResourceKey resourceKey, EHideoutCustomizationType customizationType, GClass2421 __instance)
+    static void Prefix(
+        ResourceKey resourceKey,
+        EHideoutCustomizationType customizationType,
+        HideoutCustomizationController __instance
+    )
     {
         if (customizationType != EHideoutCustomizationType.ShootingRangeMark)
             return;
 
         string assetName = resourceKey.ToAssetName();
-        if (assetName == null || !ResourceLoader._customMarkTextures.TryGetValue(assetName, out var customTexture))
+        if (assetName == null ||
+            !ResourceLoader._customMarkTextures.TryGetValue(assetName, out var customTexture))
             return;
 
         try
         {
-            var icons = __instance.HideoutCustomizationIcons_0;
+            var icons = __instance.Icons; // prefer property if accessible
             if (icons != null)
             {
-                icons.ShootingRangeMarkTextures.TryAdd(assetName, customTexture);
+                icons.ShootingRangeMarkTextures[assetName] = customTexture;
             }
         }
         catch (Exception ex)
@@ -64,3 +73,4 @@ internal class HideoutCustomizationTexturesPatch : ModulePatch
         }
     }
 }
+

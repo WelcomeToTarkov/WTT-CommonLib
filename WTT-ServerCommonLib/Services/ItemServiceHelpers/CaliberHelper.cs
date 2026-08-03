@@ -1,27 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class CaliberHelper(ISptLogger<CaliberHelper> logger, DatabaseService databaseService)
+public class CaliberHelper(ISptLogger<CaliberHelper> logger, TemplateTable templateTable)
 {
-
     public void ProcessCaliberConfig(CustomItemConfig itemConfig, string newItemId)
     {
         if (itemConfig.AddCaliberToAllCloneLocations != true)
             return;
 
-        var tables = databaseService.GetTables();
-        var items = tables.Templates.Items;
+        var items = templateTable.Items;
 
         try
         {
@@ -59,10 +53,19 @@ public class CaliberHelper(ISptLogger<CaliberHelper> logger, DatabaseService dat
                     UpdateFilters(chamber.Properties.Filters, cloneId, newId, itemId);
     }
 
-    private void UpdateFilters(IEnumerable<SlotFilter> filters, string cloneId, string newId, string itemId)
+    private void UpdateFilters(
+        IEnumerable<SlotFilter> filters,
+        string cloneId,
+        string newId,
+        string itemId
+    )
     {
         foreach (var filter in filters)
-            if (filter.Filter != null && filter.Filter.Contains(cloneId) && filter.Filter.Add(newId))
+            if (
+                filter.Filter != null
+                && filter.Filter.Contains(cloneId)
+                && filter.Filter.Add(newId)
+            )
                 LogHelper.Debug(logger, $"Added {newId} to filter in {itemId}");
     }
 }

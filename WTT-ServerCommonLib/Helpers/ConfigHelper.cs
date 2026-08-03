@@ -1,5 +1,5 @@
-﻿using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Models.Utils;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Utils;
 
 namespace WTTServerCommonLib.Helpers;
@@ -7,7 +7,8 @@ namespace WTTServerCommonLib.Helpers;
 [Injectable]
 public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
 {
-    public T? TryDeserialize<T>(string jsonContent) where T : class
+    public T? TryDeserialize<T>(string jsonContent)
+        where T : class
     {
         try
         {
@@ -18,7 +19,9 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
             return null;
         }
     }
-    public async Task<List<T>> LoadJsonFileFlexible<T>(string filePath) where T : class
+
+    public async Task<List<T>> LoadJsonFileFlexible<T>(string filePath)
+        where T : class
     {
         var results = new List<T>();
 
@@ -66,7 +69,9 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
 
         return results;
     }
-    public async Task<T?> LoadJsonFile<T>(string filePath) where T : class
+
+    public async Task<T?> LoadJsonFile<T>(string filePath)
+        where T : class
     {
         if (!File.Exists(filePath))
         {
@@ -77,12 +82,12 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
         try
         {
             var data = await jsonUtil.DeserializeFromFileAsync<T>(filePath);
-        
+
             if (data != null)
                 LogHelper.Debug(logger, $"Loaded file: {filePath}");
             else
                 logger.Warning($"Failed to deserialize {filePath}");
-            
+
             return data;
         }
         catch (Exception ex)
@@ -96,9 +101,11 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
     {
         var result = new List<T>();
 
-        if (!Directory.Exists(directoryPath)) return result;
+        if (!Directory.Exists(directoryPath))
+            return result;
 
-        var jsonFiles = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories)
+        var jsonFiles = Directory
+            .GetFiles(directoryPath, "*.*", SearchOption.AllDirectories)
             .Where(f => f.EndsWith(".json") || f.EndsWith(".jsonc"))
             .ToArray();
 
@@ -120,12 +127,14 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
         return result;
     }
 
-
-    public async Task<Dictionary<string, Dictionary<string, string>>> LoadLocalesFromDirectory(string directoryPath)
+    public async Task<Dictionary<string, Dictionary<string, string>>> LoadLocalesFromDirectory(
+        string directoryPath
+    )
     {
         var locales = new Dictionary<string, Dictionary<string, string>>();
 
-        var jsonFiles = Directory.GetFiles(directoryPath, "*.json", SearchOption.AllDirectories)
+        var jsonFiles = Directory
+            .GetFiles(directoryPath, "*.json", SearchOption.AllDirectories)
             .Concat(Directory.GetFiles(directoryPath, "*.jsonc", SearchOption.AllDirectories))
             .ToArray();
 
@@ -135,7 +144,9 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
 
             try
             {
-                var data = await jsonUtil.DeserializeFromFileAsync<Dictionary<string, string>>(filePath);
+                var data = await jsonUtil.DeserializeFromFileAsync<Dictionary<string, string>>(
+                    filePath
+                );
 
                 if (data != null)
                 {
@@ -152,7 +163,8 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
         return locales;
     }
 
-    public void SaveJsonFileSync<T>(string filePath, T data) where T : class
+    public void SaveJsonFileSync<T>(string filePath, T data)
+        where T : class
     {
         try
         {

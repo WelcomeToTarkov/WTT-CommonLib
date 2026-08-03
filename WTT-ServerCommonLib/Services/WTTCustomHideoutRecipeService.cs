@@ -1,26 +1,24 @@
 ﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services;
 
 [Injectable(InjectionType.Singleton)]
 public class WTTCustomHideoutRecipeService(
     ISptLogger<WTTCustomHideoutRecipeService> logger,
-    DatabaseServer databaseServer,
+    HideoutTable hideoutTable,
     ModHelper modHelper,
     ConfigHelper configHelper
 )
 {
-    private DatabaseTables? _database;
-    private Dictionary<MongoId, HideoutProductionExtended> _extendedRecipes = []; 
+    private Dictionary<MongoId, HideoutProductionExtended> _extendedRecipes = [];
 
     public async Task CreateHideoutRecipes(Assembly assembly, string? relativePath = null)
     {
@@ -30,30 +28,35 @@ public class WTTCustomHideoutRecipeService(
             var defaultDir = Path.Combine("db", "CustomHideoutRecipes");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
 
-            if (_database == null)
-                _database = databaseServer.GetTables();
-
             if (!Directory.Exists(finalDir))
             {
                 logger.Error($"Directory not found at {finalDir}");
                 return;
             }
-            
-            var jsonFiles = Directory.GetFiles(finalDir, "*.*", SearchOption.AllDirectories)
-                .Where(f => f.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
-                            f.EndsWith(".jsonc", StringComparison.OrdinalIgnoreCase))
+
+            var jsonFiles = Directory
+                .GetFiles(finalDir, "*.*", SearchOption.AllDirectories)
+                .Where(f =>
+                    f.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                    || f.EndsWith(".jsonc", StringComparison.OrdinalIgnoreCase)
+                )
                 .ToArray();
-            
+
             var allRecipes = new List<HideoutProductionExtended>();
 
             foreach (var filePath in jsonFiles)
             {
-                var recipes = await configHelper.LoadJsonFileFlexible<HideoutProductionExtended>(filePath);
+                var recipes = await configHelper.LoadJsonFileFlexible<HideoutProductionExtended>(
+                    filePath
+                );
 
                 if (recipes.Count > 0)
                 {
                     allRecipes.AddRange(recipes);
-                    LogHelper.Debug(logger, $"Loaded {recipes.Count} recipes from {Path.GetFileName(filePath)}");
+                    LogHelper.Debug(
+                        logger,
+                        $"Loaded {recipes.Count} recipes from {Path.GetFileName(filePath)}"
+                    );
                 }
                 else
                 {
@@ -71,12 +74,15 @@ public class WTTCustomHideoutRecipeService(
             {
                 if (!MongoId.IsValidMongoId(recipe.Id))
                 {
-                    logger.Error($"Missing or invalid Id in recipe for end product {recipe.EndProduct}");
+                    logger.Error(
+                        $"Missing or invalid Id in recipe for end product {recipe.EndProduct}"
+                    );
                     continue;
                 }
 
-                var recipeExists = _database.Hideout.Production.Recipes != null &&
-                                   _database.Hideout.Production.Recipes.Any(r => r.Id == recipe.Id);
+                var recipeExists =
+                    hideoutTable.Production.Recipes != null
+                    && hideoutTable.Production.Recipes.Any(r => r.Id == recipe.Id);
 
                 if (recipeExists)
                 {
@@ -84,20 +90,26 @@ public class WTTCustomHideoutRecipeService(
                         LogHelper.Debug(logger, $"Recipe {recipe.Id} already exists, skipping");
                     continue;
                 }
-                
-                _database.Hideout.Production.Recipes?.Add(recipe);
-                
+
+                hideoutTable.Production.Recipes?.Add(recipe);
+
                 LogHelper.Debug(logger, recipe.ToString());
 
                 if (recipe.EndProductItems != null && recipe.EndProductItems.Count > 0)
                 {
                     _extendedRecipes.Add(recipe.Id, recipe);
                 }
-                
-                LogHelper.Debug(logger, $"Added hideout recipe {recipe.Id} for item {recipe.EndProduct}");
+
+                LogHelper.Debug(
+                    logger,
+                    $"Added hideout recipe {recipe.Id} for item {recipe.EndProduct}"
+                );
             }
 
-            LogHelper.Debug(logger, $"Successfully registered {allRecipes.Count} hideout recipes ({_extendedRecipes.Count} extended)");
+            LogHelper.Debug(
+                logger,
+                $"Successfully registered {allRecipes.Count} hideout recipes ({_extendedRecipes.Count} extended)"
+            );
         }
         catch (Exception ex)
         {

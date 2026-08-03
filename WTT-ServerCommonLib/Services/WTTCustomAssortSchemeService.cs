@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Extensions;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using Path = System.IO.Path;
@@ -14,15 +14,15 @@ namespace WTTServerCommonLib.Services;
 
 [Injectable(InjectionType.Singleton)]
 public class WTTCustomAssortSchemeService(
-    DatabaseService databaseService,
     ISptLogger<WTTCustomAssortSchemeService> logger,
+    TradersTable tradersTable,
     ModHelper modHelper,
     ConfigHelper configHelper
 )
 {
     /// <summary>
     /// Loads custom trader assortment schemes from JSON/JSONC files and merges them into trader inventories.
-    /// 
+    ///
     /// Assort schemes are loaded from the mod's "db/CustomAssortSchemes" directory (or a custom path if specified).
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
@@ -36,17 +36,20 @@ public class WTTCustomAssortSchemeService(
         if (!Directory.Exists(finalDir))
             throw new DirectoryNotFoundException($"Config directory not found at {finalDir}");
 
-        var jsonFiles = Directory.GetFiles(finalDir, "*.json")
+        var jsonFiles = Directory
+            .GetFiles(finalDir, "*.json")
             .Concat(Directory.GetFiles(finalDir, "*.jsonc"))
             .ToArray();
-        
+
         if (jsonFiles.Length == 0)
         {
             logger.Warning($"No assort scheme files found in {finalDir}");
             return;
         }
 
-        var assortList = await configHelper.LoadAllJsonFiles<Dictionary<string, TraderAssort>>(finalDir);
+        var assortList = await configHelper.LoadAllJsonFiles<Dictionary<string, TraderAssort>>(
+            finalDir
+        );
 
         if (assortList.Count == 0)
         {
@@ -64,8 +67,6 @@ public class WTTCustomAssortSchemeService(
 
     private void ApplyAssorts(List<Dictionary<string, TraderAssort>> assortsToApply)
     {
-        var tables = databaseService.GetTables();
-
         foreach (var schemeDict in assortsToApply)
         foreach (var kvp in schemeDict)
         {
@@ -88,7 +89,7 @@ public class WTTCustomAssortSchemeService(
                 continue;
             }
 
-            if (!tables.Traders.TryGetValue(actualTraderId, out var trader))
+            if (!tradersTable.TryGetValue(actualTraderId, out var trader))
             {
                 logger.Warning($"Trader not found in DB: ({actualTraderId})");
                 continue;
@@ -96,7 +97,7 @@ public class WTTCustomAssortSchemeService(
 
             trader.Assort.Items.AddRange(newAssort.Items);
 
-            foreach (var scheme in newAssort.BarterScheme) 
+            foreach (var scheme in newAssort.BarterScheme)
                 trader.Assort.BarterScheme[scheme.Key] = scheme.Value;
 
             foreach (var levelItem in newAssort.LoyalLevelItems)

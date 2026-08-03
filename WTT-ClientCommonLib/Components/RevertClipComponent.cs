@@ -1,5 +1,4 @@
 ﻿using System;
-using EFT.UI;
 using UnityEngine;
 using WTTClientCommonLib.Helpers;
 

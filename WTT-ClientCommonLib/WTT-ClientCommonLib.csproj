@@ -1,164 +1,164 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>WTT-ClientCommonLib</AssemblyName>
+    <Description>A common library for adding slot images, rig layouts, and voices to the client</Description>
+    <PackageId>WTT-ClientCommonLib</PackageId>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <Version>3.0.3</Version>
+    <Authors>GrooveypenguinX</Authors>
+    <Description>WTT Common Library - Client components</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <Configurations>Debug;Release;UNITY_EDITOR;Publish</Configurations>
+    <RootNamespace>WTTClientCommonLib</RootNamespace>
+    <Platforms>AnyCPU</Platforms>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <AssemblyName>WTT-ClientCommonLib</AssemblyName>
-        <Description>A common library for adding slot images, rig layouts, and voices to the client</Description>
-        <PackageId>WTT-ClientCommonLib</PackageId>
-        <AssemblyVersion>$(Version)</AssemblyVersion>
-        <FileVersion>$(Version)</FileVersion>
-        <Version>2.0.23</Version>
-        <Authors>GrooveypenguinX</Authors>
-        <Description>WTT Common Library - Client components</Description>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <LangVersion>latest</LangVersion>
-        <Configurations>Debug;Release;UNITY_EDITOR;Publish</Configurations>
-        <RootNamespace>WTTClientCommonLib</RootNamespace>
-        <Platforms>AnyCPU</Platforms>
-        <TargetFramework>netstandard2.1</TargetFramework>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DocumentationFile>bin\Debug\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-        <DocumentationFile>bin\Debug\$(AssemblyName).xml</DocumentationFile>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DocumentationFile>bin\Release\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-        <DocumentationFile>bin\Release\$(AssemblyName).xml</DocumentationFile>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Publish'">
+    <DocumentationFile>bin\Publish\$(AssemblyName).xml</DocumentationFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Publish'">
-        <DocumentationFile>bin\Publish\$(AssemblyName).xml</DocumentationFile>
-        <DebugType>none</DebugType>
-    </PropertyGroup>
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-    </PropertyGroup>
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="" />
+    <None
+      Include="..\..\..\BepInEx\patchers\FixPluginTypesSerialization.dll"
+      Link="Patchers\FixPluginTypesSerialization.dll"
+    />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="build\**" />
+    <Compile Remove="Interfaces\**" />
+    <EmbeddedResource Remove="build\**" />
+    <EmbeddedResource Remove="Interfaces\**" />
+    <None Remove="build\**" />
+    <None Remove="Interfaces\**" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <None Include="../README.md" Pack="true" PackagePath="" />
-        <None Include="..\..\..\BepInEx\patchers\FixPluginTypesSerialization.dll" Link="Patchers\FixPluginTypesSerialization.dll" />
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Remove="build\**" />
-        <Compile Remove="Interfaces\**" />
-        <EmbeddedResource Remove="build\**" />
-        <EmbeddedResource Remove="Interfaces\**" />
-        <None Remove="build\**" />
-        <None Remove="Interfaces\**" />
-    </ItemGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\BepInEx\core\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>..\..\..\BepInEx\core\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="bsg.console.core">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\bsg.console.core.dll</HintPath>
+    </Reference>
+    <Reference Include="Comfort">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
+    </Reference>
+    <Reference Include="DissonanceVoip">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\DissonanceVoip.dll</HintPath>
+    </Reference>
+    <Reference Include="Fika.Core">
+      <HintPath>..\..\..\BepInEx\plugins\Fika\Fika.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="ItemComponent.Types">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="ItemTemplate.Types">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\ItemTemplate.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Serialization">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
+    </Reference>
+    <Reference Include="spt-common">
+      <HintPath>..\..\..\BepInEx\plugins\spt\spt-common.dll</HintPath>
+    </Reference>
+    <Reference Include="spt-custom">
+      <HintPath>..\..\..\BepInEx\plugins\spt\spt-custom.dll</HintPath>
+    </Reference>
+    <Reference Include="spt-custom">
+      <HintPath>..\..\..\BepInEx\plugins\spt\spt-custom.dll</HintPath>
+    </Reference>
+    <Reference Include="spt-reflection">
+      <HintPath>..\..\..\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+      <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
-    <ItemGroup>
-        <Reference Include="0Harmony">
-            <HintPath>..\..\..\BepInEx\core\0Harmony.dll</HintPath>
-        </Reference>
-        <Reference Include="Assembly-CSharp">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
-        </Reference>
-        <Reference Include="BepInEx">
-            <HintPath>..\..\..\BepInEx\core\BepInEx.dll</HintPath>
-        </Reference>
-        <Reference Include="bsg.console.core">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\bsg.console.core.dll</HintPath>
-        </Reference>
-        <Reference Include="Comfort">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
-        </Reference>
-        <Reference Include="DissonanceVoip">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\DissonanceVoip.dll</HintPath>
-        </Reference>
-        <Reference Include="Fika.Core">
-          <HintPath>..\..\..\BepInEx\plugins\Fika\Fika.Core.dll</HintPath>
-        </Reference>
-        <Reference Include="ItemComponent.Types">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
-        </Reference>
-        <Reference Include="ItemTemplate.Types">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\ItemTemplate.Types.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="Sirenix.Serialization">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
-        </Reference>
-        <Reference Include="spt-common">
-            <HintPath>..\..\..\BepInEx\plugins\spt\spt-common.dll</HintPath>
-        </Reference>
-        <Reference Include="spt-custom">
-          <HintPath>..\..\..\BepInEx\plugins\spt\spt-custom.dll</HintPath>
-        </Reference>
-        <Reference Include="spt-custom">
-          <HintPath>..\..\..\BepInEx\plugins\spt\spt-custom.dll</HintPath>
-        </Reference>
-        <Reference Include="spt-reflection">
-            <HintPath>..\..\..\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AnimationModule">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AssetBundleModule">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AudioModule">
-          <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ImageConversionModule">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.IMGUIModule">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.InputLegacyModule">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.PhysicsModule">
-            <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UI">
-          <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestAudioModule">
-          <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestModule">
-          <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestWWWModule">
-          <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
-        </Reference>
-    </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
 
-    <ItemGroup>
-        <Compile Update="Properties\Settings.Designer.cs">
-            <DesignTimeSharedInput>True</DesignTimeSharedInput>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>Settings.settings</DependentUpon>
-        </Compile>
-    </ItemGroup>
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
 
-    <ItemGroup>
-        <None Update="Properties\Settings.settings">
-            <Generator>SettingsSingleFileGenerator</Generator>
-            <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-        </None>
-    </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Patchers\" />
+    <Folder Include="Resources\QuestIcons\" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Patchers\" />
-      <Folder Include="Resources\QuestIcons\" />
-    </ItemGroup>
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="@echo off&#xD;&#xA;setlocal enabledelayedexpansion&#xD;&#xA;&#xD;&#xA;REM Set variables&#xD;&#xA;set MODNAME=$(TargetName)&#xD;&#xA;set DLLPATH=$(TargetDir)$(TargetName).dll&#xD;&#xA;set XMLPATH=$(TargetDir)$(TargetName).xml&#xD;&#xA;set OUTDIR=..\..\..\BepInEx\plugins\%25MODNAME%25&#xD;&#xA;set RESOURCESDIR=$(ProjectDir)Resources&#xD;&#xA;set BUILDOUTDIR=..\Build\BepInEx\plugins\%25MODNAME%25&#xD;&#xA;&#xD;&#xA;REM Patchers source/output&#xD;&#xA;set PATCHERSSRC=$(ProjectDir)Patchers&#xD;&#xA;set PATCHERSOUTDIR=..\..\..\BepInEx\patchers&#xD;&#xA;set BUILDPATCHERSOUTDIR=..\Build\BepInEx\patchers&#xD;&#xA;&#xD;&#xA;REM Create output directories if they don't exist&#xD;&#xA;if not exist &quot;%25OUTDIR%25&quot; mkdir &quot;%25OUTDIR%25&quot;&#xD;&#xA;if not exist &quot;%25BUILDOUTDIR%25&quot; mkdir &quot;%25BUILDOUTDIR%25&quot;&#xD;&#xA;if not exist &quot;%25PATCHERSOUTDIR%25&quot; mkdir &quot;%25PATCHERSOUTDIR%25&quot;&#xD;&#xA;if not exist &quot;%25BUILDPATCHERSOUTDIR%25&quot; mkdir &quot;%25BUILDPATCHERSOUTDIR%25&quot;&#xD;&#xA;&#xD;&#xA;REM Copy the DLL to BepInEx plugins directory&#xD;&#xA;copy /Y &quot;%25DLLPATH%25&quot; &quot;%25OUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xD;&#xA;echo [PostBuild] Copied %25MODNAME%25.dll to %25OUTDIR%25&#xD;&#xA;&#xD;&#xA;REM Copy all contents from Resources folder recursively to SPT&#xA;if exist &quot;%25RESOURCESDIR%25&quot; (&#xA;    xcopy &quot;%25RESOURCESDIR%25&quot; &quot;%25OUTDIR%25&quot; /E /I /Y &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied Resources to %25OUTDIR%25&#xA;) else (&#xA;    echo [PostBuild] Warning: Resources folder not found at %25RESOURCESDIR%25&#xA;)&#xD;&#xA;&#xD;&#xA;REM Copy the XML file to BepInEx plugins directory&#xD;&#xA;if exist &quot;%25XMLPATH%25&quot; (&#xD;&#xA;    copy /Y &quot;%25XMLPATH%25&quot; &quot;%25OUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xD;&#xA;    echo [PostBuild] Copied %25MODNAME%25.xml to %25OUTDIR%25&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;REM Copy the DLL to Build/BepInEx plugins directory&#xD;&#xA;copy /Y &quot;%25DLLPATH%25&quot; &quot;%25BUILDOUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xD;&#xA;echo [PostBuild] Copied %25MODNAME%25.dll to %25BUILDOUTDIR%25&#xD;&#xA;&#xD;&#xA;REM Copy the XML file to Build/BepInEx plugins directory&#xD;&#xA;if exist &quot;%25XMLPATH%25&quot; (&#xD;&#xA;    copy /Y &quot;%25XMLPATH%25&quot; &quot;%25BUILDOUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xD;&#xA;    echo [PostBuild] Copied %25MODNAME%25.xml to %25BUILDOUTDIR%25&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;REM Copy Patchers folder contents to BepInEx patchers directories&#xD;&#xA;if exist &quot;%25PATCHERSSRC%25\&quot; (&#xD;&#xA;    xcopy &quot;%25PATCHERSSRC%25\*&quot; &quot;%25PATCHERSOUTDIR%25\&quot; /E /I /Y &gt;nul&#xD;&#xA;    echo [PostBuild] Copied Patchers to %25PATCHERSOUTDIR%25&#xD;&#xA;&#xD;&#xA;    xcopy &quot;%25PATCHERSSRC%25\*&quot; &quot;%25BUILDPATCHERSOUTDIR%25\&quot; /E /I /Y &gt;nul&#xD;&#xA;    echo [PostBuild] Copied Patchers to %25BUILDPATCHERSOUTDIR%25&#xD;&#xA;) else (&#xD;&#xA;    echo [PostBuild] No Patchers folder found at %25PATCHERSSRC%25&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;echo [PostBuild] BepInEx build output: %25OUTDIR%25 and %25BUILDOUTDIR%25&#xD;&#xA;&#xD;&#xA;REM Publish to NuGet if Publish configuration&#xD;&#xA;if &quot;$(Configuration)&quot;==&quot;Publish&quot; (&#xD;&#xA;    echo [PostBuild] Publishing $(PackageId) v$(Version) to NuGet...&#xD;&#xA;    call &quot;$(ProjectDir)nuget-publish-project.bat&quot; $(PackageId) $(Version)&#xD;&#xA;)&#xD;&#xA;endlocal" />
-    </Target>
-
-
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="@echo off&#xD;&#xA;setlocal enabledelayedexpansion&#xD;&#xA;&#xD;&#xA;REM Set variables&#xD;&#xA;set MODNAME=$(TargetName)&#xD;&#xA;set DLLPATH=$(TargetDir)$(TargetName).dll&#xD;&#xA;set XMLPATH=$(TargetDir)$(TargetName).xml&#xD;&#xA;set OUTDIR=..\..\..\BepInEx\plugins\%25MODNAME%25&#xD;&#xA;set RESOURCESDIR=$(ProjectDir)Resources&#xD;&#xA;set BUILDOUTDIR=..\Build\BepInEx\plugins\%25MODNAME%25&#xD;&#xA;&#xD;&#xA;REM Patchers source/output&#xD;&#xA;set PATCHERSSRC=$(ProjectDir)Patchers&#xD;&#xA;set PATCHERSOUTDIR=..\..\..\BepInEx\patchers&#xD;&#xA;set BUILDPATCHERSOUTDIR=..\Build\BepInEx\patchers&#xD;&#xA;&#xD;&#xA;REM Create output directories if they don't exist&#xD;&#xA;if not exist &quot;%25OUTDIR%25&quot; mkdir &quot;%25OUTDIR%25&quot;&#xD;&#xA;if not exist &quot;%25BUILDOUTDIR%25&quot; mkdir &quot;%25BUILDOUTDIR%25&quot;&#xD;&#xA;if not exist &quot;%25PATCHERSOUTDIR%25&quot; mkdir &quot;%25PATCHERSOUTDIR%25&quot;&#xD;&#xA;if not exist &quot;%25BUILDPATCHERSOUTDIR%25&quot; mkdir &quot;%25BUILDPATCHERSOUTDIR%25&quot;&#xD;&#xA;&#xD;&#xA;REM Copy the DLL to BepInEx plugins directory&#xD;&#xA;copy /Y &quot;%25DLLPATH%25&quot; &quot;%25OUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xD;&#xA;echo [PostBuild] Copied %25MODNAME%25.dll to %25OUTDIR%25&#xD;&#xA;&#xD;&#xA;REM Copy all contents from Resources folder recursively to SPT&#xA;if exist &quot;%25RESOURCESDIR%25&quot; (&#xA;    xcopy &quot;%25RESOURCESDIR%25&quot; &quot;%25OUTDIR%25&quot; /E /I /Y &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied Resources to %25OUTDIR%25&#xA;) else (&#xA;    echo [PostBuild] Warning: Resources folder not found at %25RESOURCESDIR%25&#xA;)&#xD;&#xA;&#xD;&#xA;REM Copy the XML file to BepInEx plugins directory&#xD;&#xA;if exist &quot;%25XMLPATH%25&quot; (&#xD;&#xA;    copy /Y &quot;%25XMLPATH%25&quot; &quot;%25OUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xD;&#xA;    echo [PostBuild] Copied %25MODNAME%25.xml to %25OUTDIR%25&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;REM Copy the DLL to Build/BepInEx plugins directory&#xD;&#xA;copy /Y &quot;%25DLLPATH%25&quot; &quot;%25BUILDOUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xD;&#xA;echo [PostBuild] Copied %25MODNAME%25.dll to %25BUILDOUTDIR%25&#xD;&#xA;&#xD;&#xA;REM Copy the XML file to Build/BepInEx plugins directory&#xD;&#xA;if exist &quot;%25XMLPATH%25&quot; (&#xD;&#xA;    copy /Y &quot;%25XMLPATH%25&quot; &quot;%25BUILDOUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xD;&#xA;    echo [PostBuild] Copied %25MODNAME%25.xml to %25BUILDOUTDIR%25&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;REM Copy Patchers folder contents to BepInEx patchers directories&#xD;&#xA;if exist &quot;%25PATCHERSSRC%25\&quot; (&#xD;&#xA;    xcopy &quot;%25PATCHERSSRC%25\*&quot; &quot;%25PATCHERSOUTDIR%25\&quot; /E /I /Y &gt;nul&#xD;&#xA;    echo [PostBuild] Copied Patchers to %25PATCHERSOUTDIR%25&#xD;&#xA;&#xD;&#xA;    xcopy &quot;%25PATCHERSSRC%25\*&quot; &quot;%25BUILDPATCHERSOUTDIR%25\&quot; /E /I /Y &gt;nul&#xD;&#xA;    echo [PostBuild] Copied Patchers to %25BUILDPATCHERSOUTDIR%25&#xD;&#xA;) else (&#xD;&#xA;    echo [PostBuild] No Patchers folder found at %25PATCHERSSRC%25&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;echo [PostBuild] BepInEx build output: %25OUTDIR%25 and %25BUILDOUTDIR%25&#xD;&#xA;&#xD;&#xA;REM Publish to NuGet if Publish configuration&#xD;&#xA;if &quot;$(Configuration)&quot;==&quot;Publish&quot; (&#xD;&#xA;    echo [PostBuild] Publishing $(PackageId) v$(Version) to NuGet...&#xD;&#xA;    call &quot;$(ProjectDir)nuget-publish-project.bat&quot; $(PackageId) $(Version)&#xD;&#xA;)&#xD;&#xA;endlocal" />
+  </Target>
 </Project>

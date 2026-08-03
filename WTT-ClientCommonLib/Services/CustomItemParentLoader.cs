@@ -1,33 +1,35 @@
-using EFT.InventoryLogic;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
+using EFT.InventoryLogic;
 using WTTClientCommonLib.Attributes;
 using WTTClientCommonLib.Helpers;
-using WTTClientCommonLib.Models;
 
 namespace WTTClientCommonLib.Services;
 
 public class CustomItemParentLoader
 {
     public static CustomItemParentLoader Instance;
-    
-    private Dictionary<string, ItemTemplate> _customParents = new Dictionary<string, ItemTemplate>();
+
+    private Dictionary<string, ItemTemplate> _customParents =
+        new Dictionary<string, ItemTemplate>();
     private bool _parentsRegistered = false;
 
     public CustomItemParentLoader()
     {
-        if (Instance != null) return;
-        
+        if (Instance != null)
+            return;
+
         Instance = this;
     }
-    
+
     public void FetchCustomParentsFromServer()
     {
         try
         {
-            var parentData = Utils.Get<Dictionary<string, ItemTemplate>>("/wttcommonlib/parents/custom/get");
+            var parentData = Helpers.Utils.Get<Dictionary<string, ItemTemplate>>(
+                "/wttcommonlib/parents/custom/get"
+            );
 
             if (parentData != null)
             {
@@ -47,12 +49,13 @@ public class CustomItemParentLoader
 
     public async Task RegisterCustomParents()
     {
-        if (_parentsRegistered) return;
-        
+        if (_parentsRegistered)
+            return;
+
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
         List<CustomParent> customParents = [];
         List<TemplateIdToObjectType> mappings = [];
-        
+
         // load all classes that use customparent attribute
         foreach (var assembly in assemblies)
         {
@@ -71,18 +74,16 @@ public class CustomItemParentLoader
         {
             if (parent.Item == null)
             {
-                mappings.Add(new TemplateIdToObjectType(
-                    parent.ParentId,
-                    null,
-                    parent.Template,
-                    null
-                ));
+                mappings.Add(
+                    new TemplateIdToObjectType(parent.ParentId, null, parent.Template, null)
+                );
                 continue;
             }
 
-            var ctor = parent.Template == null
-                ? parent.Item.GetConstructor(new[] { typeof(string) })
-                : parent.Item.GetConstructor(new[] { typeof(string), parent.Template });
+            var ctor =
+                parent.Template == null
+                    ? parent.Item.GetConstructor(new[] { typeof(string) })
+                    : parent.Item.GetConstructor(new[] { typeof(string), parent.Template });
 
             if (ctor == null)
             {
@@ -90,18 +91,23 @@ public class CustomItemParentLoader
                 continue;
             }
 
-            mappings.Add(new TemplateIdToObjectType(
-                parent.ParentId,
-                parent.Item,
-                parent.Template,
-                (id, tpl) => (Item)(parent.Template == null
-                    ? ctor.Invoke(new object[] { id })
-                    : ctor.Invoke(new object[] { id, tpl }))
-            ));
+            mappings.Add(
+                new TemplateIdToObjectType(
+                    parent.ParentId,
+                    parent.Item,
+                    parent.Template,
+                    (id, tpl) =>
+                        (Item)(
+                            parent.Template == null
+                                ? ctor.Invoke(new object[] { id })
+                                : ctor.Invoke(new object[] { id, tpl })
+                        )
+                )
+            );
         }
 
         CustomTemplateIdToObjectService.AddNewTemplateIdToObjectMapping(mappings);
-        
+
         _parentsRegistered = true;
     }
 }

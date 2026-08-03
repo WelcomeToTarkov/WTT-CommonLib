@@ -1,11 +1,11 @@
+using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
-using System.ComponentModel;
-using System.Reflection;
+using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Services.Items;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using Path = System.IO.Path;
@@ -15,16 +15,14 @@ namespace WTTServerCommonLib.Services;
 [Injectable(InjectionType.Singleton)]
 public class WTTCustomItemParentService(
     ISptLogger<WTTCustomItemParentService> logger,
-    DatabaseService dbService,
+    TemplateTable templateTable,
+    TradersTable tradersTable,
     ModHelper modHelper,
     ConfigHelper configHelper,
     ItemBaseClassService itemBaseClassService
 )
 {
     private readonly Dictionary<MongoId, CustomItemParentConfig> _loadedParents = [];
-    private Dictionary<MongoId, TemplateItem> ItemsDb => dbService.GetItems();
-    private Dictionary<MongoId, Trader> TraderDb => dbService.GetTables().Traders;
-
     private static readonly MongoId DefaultInventoryId = "55d7217a4bdc2d86028b456d";
 
     /// <summary>
@@ -33,7 +31,10 @@ public class WTTCustomItemParentService(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
-    public async Task CreateCustomParents(Assembly assembly, string relativePath = "db/CustomParents")
+    public async Task CreateCustomParents(
+        Assembly assembly,
+        string relativePath = "db/CustomParents"
+    )
     {
         string modDir = modHelper.GetAbsolutePathToModFolder(assembly);
         string parentDir = Path.Combine(modDir, relativePath);
@@ -48,14 +49,16 @@ public class WTTCustomItemParentService(
 
         foreach (string filePath in files)
         {
-            var allParents = await configHelper.LoadJsonFileFlexible<Dictionary<MongoId, CustomItemParentConfig>>(filePath);
+            var allParents = await configHelper.LoadJsonFileFlexible<
+                Dictionary<MongoId, CustomItemParentConfig>
+            >(filePath);
 
             if (allParents.Count == 0)
             {
                 logger.Warning("No custom parents found");
                 return;
             }
-            
+
             foreach (Dictionary<MongoId, CustomItemParentConfig> parents in allParents)
             {
                 foreach ((MongoId id, CustomItemParentConfig tpl) in parents)
@@ -75,7 +78,7 @@ public class WTTCustomItemParentService(
     {
         try
         {
-            var items = dbService.GetTables().Templates.Items;
+            var items = templateTable.Items;
 
             items.Add(id, tpl);
             itemBaseClassService.AddItemToCache(id);
@@ -98,7 +101,10 @@ public class WTTCustomItemParentService(
                 AddParentToTraderBuyLists(id, tpl.Traders);
             }
 
-            LogHelper.Debug(logger, $"Added parent {tpl.Id} to database, cache, and extra filters/buy lists");
+            LogHelper.Debug(
+                logger,
+                $"Added parent {tpl.Id} to database, cache, and extra filters/buy lists"
+            );
 
             return true;
         }
@@ -115,12 +121,14 @@ public class WTTCustomItemParentService(
         {
             var actualContainerId = ItemTplResolver.ResolveId(containerNameOrId);
 
-            Dictionary<MongoId, TemplateItem> items = dbService.GetItems();
+            Dictionary<MongoId, TemplateItem> items = templateTable.Items;
             items.TryGetValue(actualContainerId, out TemplateItem? container);
 
             if (container == null)
             {
-                logger.Warning($"Could not find container '{containerNameOrId}' (resolved to {actualContainerId})");
+                logger.Warning(
+                    $"Could not find container '{containerNameOrId}' (resolved to {actualContainerId})"
+                );
                 return;
             }
 
@@ -137,7 +145,10 @@ public class WTTCustomItemParentService(
             if (!firstFilter.Filter.Contains(parentId))
             {
                 firstFilter.Filter.Add(parentId);
-                LogHelper.Debug(logger, $"Added parent {parentId} to container '{containerNameOrId}' ({actualContainerId}) filters");
+                LogHelper.Debug(
+                    logger,
+                    $"Added parent {parentId} to container '{containerNameOrId}' ({actualContainerId}) filters"
+                );
             }
         }
         catch (ArgumentException ex)
@@ -148,18 +159,24 @@ public class WTTCustomItemParentService(
 
     private void AddParentToInventorySlots(MongoId parentId, IEnumerable<string> slotNames)
     {
-        if (!ItemsDb.TryGetValue(DefaultInventoryId, out var defaultInventory) || defaultInventory.Properties?.Slots == null)
+        if (
+            !templateTable.Items.TryGetValue(DefaultInventoryId, out var defaultInventory)
+            || defaultInventory.Properties?.Slots == null
+        )
         {
             logger.Warning($"Could not find default inventory {DefaultInventoryId}");
             return;
         }
 
-        var targetNames = slotNames?.ToHashSet(StringComparer.OrdinalIgnoreCase)
-                          ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var targetNames =
+            slotNames?.ToHashSet(StringComparer.OrdinalIgnoreCase)
+            ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         if (targetNames.Count == 0)
         {
-            logger.Warning($"No inventory slots specified for parent {parentId}, skipping inventory slot injection");
+            logger.Warning(
+                $"No inventory slots specified for parent {parentId}, skipping inventory slot injection"
+            );
             return;
         }
 
@@ -179,7 +196,10 @@ public class WTTCustomItemParentService(
             if (!firstFilter.Filter.Contains(parentId))
             {
                 firstFilter.Filter.Add(parentId);
-                LogHelper.Debug(logger, $"Added parent {parentId} to inventory slot {slot.Name} filters");
+                LogHelper.Debug(
+                    logger,
+                    $"Added parent {parentId} to inventory slot {slot.Name} filters"
+                );
             }
         }
     }
@@ -188,7 +208,9 @@ public class WTTCustomItemParentService(
     {
         if (traderNames == null)
         {
-            logger.Warning($"No traders specified for parent {parentId}, skipping trader buy list injection");
+            logger.Warning(
+                $"No traders specified for parent {parentId}, skipping trader buy list injection"
+            );
             return;
         }
 
@@ -203,9 +225,11 @@ public class WTTCustomItemParentService(
                 continue;
             }
 
-            if (!TraderDb.TryGetValue(traderId, out var trader))
+            if (!tradersTable.TryGetValue(traderId, out var trader))
             {
-                logger.Warning($"Trader id {traderId} not found in database for name '{traderName}'");
+                logger.Warning(
+                    $"Trader id {traderId} not found in database for name '{traderName}'"
+                );
                 continue;
             }
 
@@ -219,7 +243,10 @@ public class WTTCustomItemParentService(
             if (!itemsBuy.Category.Contains(parentId))
             {
                 itemsBuy.Category.Add(parentId);
-                LogHelper.Debug(logger, $"Added parent {parentId} to trader '{traderName}' ({traderId}) buy categories");
+                LogHelper.Debug(
+                    logger,
+                    $"Added parent {parentId} to trader '{traderName}' ({traderId}) buy categories"
+                );
             }
         }
     }

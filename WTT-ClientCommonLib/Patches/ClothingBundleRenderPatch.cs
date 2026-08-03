@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Diz.Jobs;
+using EFT;
+using EFT.Customization;
+using HarmonyLib;
 using SPT.Reflection.Patching;
 using UnityEngine;
 using WTTClientCommonLib.Helpers;
@@ -14,16 +17,19 @@ internal class ClothingBundleRendererPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return typeof(GClass925).GetMethod("RenderModel",
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        return AccessTools.Method(
+            typeof(ClothingIconCreator),
+            nameof(ClothingIconCreator.RenderModel)
+        );
     }
 
     [PatchPrefix]
     private static bool PatchPrefix(
-        GClass925 __instance,
-        GClass3677 clothing,
-        GClass924<GClass3677, GClass3685>.SpriteFactory spriteFactory,
-        ref Task<GClass924<GClass3677, GClass3685>.RenderModelResult> __result)
+        ClothingIconCreator __instance,
+        CustomizationClothing clothing,
+        IconCreatorBase<CustomizationClothing, ClothingIcon>.SpriteFactory spriteFactory,
+        ref Task<IconCreatorBase<CustomizationClothing, ClothingIcon>.RenderModelResult> __result
+    )
     {
         try
         {
@@ -31,18 +37,24 @@ internal class ClothingBundleRendererPatch : ModulePatch
             GameObject asset = null;
             try
             {
-                asset = __instance.IEasyAssets.GetAsset<GameObject>(clothing.Prefab.path, clothing.Prefab.rcid);
+                asset = __instance._easyAssets.GetAsset<GameObject>(
+                    clothing.Prefab.path,
+                    clothing.Prefab.rcid
+                );
             }
             catch (Exception ex)
             {
                 // Bundle not loaded, fall back to original method
-                LogHelper.LogDebug($"Bundle not loaded for {clothing.Prefab.path}, using original method");
+                LogHelper.LogDebug(
+                    $"Bundle not loaded for {clothing.Prefab.path}, using original method"
+                );
                 return true;
             }
             var allRenderers = asset?.GetComponentsInChildren<SkinnedMeshRenderer>(true);
 
             // If no renderers or only one renderer, let the original method handle it
-            if (allRenderers == null || allRenderers.Length <= 1) return true;
+            if (allRenderers == null || allRenderers.Length <= 1)
+                return true;
 
             // Count total unique materials across all renderers
             var uniqueMaterials = new HashSet<Material>();
@@ -56,16 +68,18 @@ internal class ClothingBundleRendererPatch : ModulePatch
             // Skip if 1 or fewer materials found
             if (uniqueMaterials.Count <= 1)
             {
-                Logger.LogDebug($"Skipping patch: Only {uniqueMaterials.Count} unique materials found");
+                Logger.LogDebug(
+                    $"Skipping patch: Only {uniqueMaterials.Count} unique materials found"
+                );
                 return true;
             }
 
             // Create a parent object to hold all mesh objects
             var parentObject = new GameObject("ClothingBundleParent");
-            parentObject.layer = LayerMaskClass.WeaponPreview;
+            parentObject.layer = LayersMaskController.WeaponPreview;
             parentObject.transform.SetPositionAndRotation(
-                __instance.GameObject_0.transform.position,
-                __instance.GameObject_0.transform.rotation
+                __instance._clothingMeshContainer.transform.position,
+                __instance._clothingMeshContainer.transform.rotation
             );
 
             // Create a GameObject for each SkinnedMeshRenderer
@@ -99,28 +113,35 @@ internal class ClothingBundleRendererPatch : ModulePatch
         }
     }
 
-    private static async Task<GClass924<GClass3677, GClass3685>.RenderModelResult> CompleteRendering(
-        GClass925 instance,
-        GClass924<GClass3677, GClass3685>.SpriteFactory spriteFactory,
+    private static async Task<IconCreatorBase<
+        CustomizationClothing,
+        ClothingIcon
+    >.RenderModelResult> CompleteRendering(
+        ClothingIconCreator instance,
+        IconCreatorBase<CustomizationClothing, ClothingIcon>.SpriteFactory spriteFactory,
         GameObject parentObject,
-        GameObject asset)
+        GameObject asset
+    )
     {
-        var originalGameObject = instance.GameObject_0;
-        var originalMeshFilter = instance.MeshFilter_0;
-        var originalMeshRenderer = instance.MeshRenderer_0;
+        var originalGameObject = instance._clothingMeshContainer;
+        var originalMeshFilter = instance._filter;
+        var originalMeshRenderer = instance._renderer;
 
         try
         {
             // Wait if already rendering
-            while (instance.Bool_2) await JobScheduler.Yield();
+            while (instance._containerIsBusy)
+                await JobScheduler.Yield();
 
-            instance.Bool_2 = true;
+            instance._containerIsBusy = true;
 
             // Ensure the parent object is active
-            if (!parentObject.activeSelf) parentObject.SetActive(true);
+            if (!parentObject.activeSelf)
+                parentObject.SetActive(true);
 
             // Rotate all child meshes
-            foreach (Transform child in parentObject.transform) child.Rotate(90f, 0f, 0f, Space.Self);
+            foreach (Transform child in parentObject.transform)
+                child.Rotate(90f, 0f, 0f, Space.Self);
 
             // NOW calculate combined bounds from all child meshes (with rotation applied)
             var combinedBounds = new Bounds(Vector3.zero, Vector3.zero);
@@ -165,7 +186,8 @@ internal class ClothingBundleRendererPatch : ModulePatch
 
                     // Create bounds from transformed corners
                     var worldBounds = new Bounds(corners[0], Vector3.zero);
-                    for (var i = 1; i < corners.Length; i++) worldBounds.Encapsulate(corners[i]);
+                    for (var i = 1; i < corners.Length; i++)
+                        worldBounds.Encapsulate(corners[i]);
 
                     if (!boundsInitialized)
                     {
@@ -181,18 +203,19 @@ internal class ClothingBundleRendererPatch : ModulePatch
                 }
             }
 
-            LogHelper.LogDebug($"Rendering with {validMeshCount} valid meshes. Bounds size: {combinedBounds.size}");
-
+            LogHelper.LogDebug(
+                $"Rendering with {validMeshCount} valid meshes. Bounds size: {combinedBounds.size}"
+            );
 
             if (validMeshCount == 0)
             {
                 Logger.LogWarning("No valid meshes found for rendering");
-                instance.Bool_2 = false;
+                instance._containerIsBusy = false;
                 return default;
             }
 
             // Temporarily replace the instance's GameObject with our multi-mesh object
-            instance.GameObject_0 = parentObject;
+            instance._clothingMeshContainer = parentObject;
 
             // Create a dummy mesh with the combined bounds
             var boundsMesh = new Mesh();
@@ -200,11 +223,11 @@ internal class ClothingBundleRendererPatch : ModulePatch
 
             var parentMeshFilter = parentObject.AddComponent<MeshFilter>();
             parentMeshFilter.sharedMesh = boundsMesh;
-            instance.MeshFilter_0 = parentMeshFilter;
+            instance._filter = parentMeshFilter;
 
             // Add a MeshRenderer to the parent
             var parentMeshRenderer = parentObject.AddComponent<MeshRenderer>();
-            instance.MeshRenderer_0 = parentMeshRenderer;
+            instance._renderer = parentMeshRenderer;
 
             // Get the PreviewPivot component
             var pivot = asset?.GetComponent<PreviewPivot>();
@@ -212,33 +235,36 @@ internal class ClothingBundleRendererPatch : ModulePatch
             // Use the sprite factory with our multi-mesh object
             var result = await spriteFactory(parentObject, pivot);
 
-            instance.Bool_2 = false;
+            instance._containerIsBusy = false;
 
             // Restore the original GameObject and components
-            instance.GameObject_0 = originalGameObject;
-            instance.MeshFilter_0 = originalMeshFilter;
-            instance.MeshRenderer_0 = originalMeshRenderer;
+            instance._clothingMeshContainer = originalGameObject;
+            instance._filter = originalMeshFilter;
+            instance._renderer = originalMeshRenderer;
 
             // Clean up the temporary objects
-            if (parentObject != null) Object.Destroy(parentObject);
-            if (boundsMesh != null) Object.Destroy(boundsMesh);
+            if (parentObject != null)
+                Object.Destroy(parentObject);
+            if (boundsMesh != null)
+                Object.Destroy(boundsMesh);
 
-            return new GClass924<GClass3677, GClass3685>.RenderModelResult
+            return new IconCreatorBase<CustomizationClothing, ClothingIcon>.RenderModelResult
             {
                 sprite = result,
-                zeroMipWasLoaded = true
+                zeroMipWasLoaded = true,
             };
         }
         catch (Exception e)
         {
-            instance.Bool_2 = false;
-            instance.GameObject_0 = originalGameObject;
-            instance.MeshFilter_0 = originalMeshFilter;
-            instance.MeshRenderer_0 = originalMeshRenderer;
+            instance._containerIsBusy = false;
+            instance._clothingMeshContainer = originalGameObject;
+            instance._filter = originalMeshFilter;
+            instance._renderer = originalMeshRenderer;
 
             Logger.LogError($"Error in CompleteRendering: {e}");
 
-            if (parentObject != null) Object.Destroy(parentObject);
+            if (parentObject != null)
+                Object.Destroy(parentObject);
             return default;
         }
     }

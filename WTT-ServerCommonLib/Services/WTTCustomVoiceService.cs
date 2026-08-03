@@ -1,33 +1,32 @@
 ﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using Path = System.IO.Path;
 
 namespace WTTServerCommonLib.Services;
 
-[Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.PostDBModLoader + 1)]
+[Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.PostLoad)]
 public class WTTCustomVoiceService(
     ISptLogger<WTTCustomVoiceService> logger,
-    DatabaseServer databaseServer,
+    TemplateTable templateTable,
+    BotTable botTable,
+    LocaleTable localeTable,
     ConfigHelper configHelper,
     ModHelper modHelper
 )
 {
-    private DatabaseTables? _database;
     private readonly Lock _lock = new();
     private readonly Dictionary<string, string> _voiceBundleMappings = [];
 
-
     /// <summary>
     /// Loads custom voice configs from JSON/JSONC files and registers them to the game database.
-    /// 
+    ///
     /// Voices are loaded from the mod's "db/CustomVoices" directory (or a custom path if specified).
     ///
     /// </summary>
@@ -35,8 +34,6 @@ public class WTTCustomVoiceService(
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public async Task CreateCustomVoices(Assembly assembly, string? relativePath = null)
     {
-        if (_database == null) _database = databaseServer.GetTables();
-
         try
         {
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
@@ -49,7 +46,9 @@ public class WTTCustomVoiceService(
                 return;
             }
 
-            var voiceConfigDicts = await configHelper.LoadAllJsonFiles<Dictionary<string, CustomVoiceConfig>>(finalDir);
+            var voiceConfigDicts = await configHelper.LoadAllJsonFiles<
+                Dictionary<string, CustomVoiceConfig>
+            >(finalDir);
 
             if (voiceConfigDicts.Count == 0)
             {
@@ -61,7 +60,8 @@ public class WTTCustomVoiceService(
 
             foreach (var dict in voiceConfigDicts)
             {
-                if (dict.Count == 0) continue;
+                if (dict.Count == 0)
+                    continue;
 
                 foreach (var (voiceId, config) in dict)
                     if (ProcessVoiceConfig(voiceId, config))
@@ -72,7 +72,10 @@ public class WTTCustomVoiceService(
                     }
             }
 
-            LogHelper.Debug(logger, $"Created {totalVoicesCreated} custom voices from {voiceConfigDicts.Count} files");
+            LogHelper.Debug(
+                logger,
+                $"Created {totalVoicesCreated} custom voices from {voiceConfigDicts.Count} files"
+            );
         }
         catch (Exception ex)
         {
@@ -84,12 +87,6 @@ public class WTTCustomVoiceService(
     {
         try
         {
-            if (_database == null)
-            {
-                logger.Error("Database not initialized");
-                return false;
-            }
-
             CreateAndAddVoice(voiceId, voiceConfig);
             AddVoiceToCustomizationStorage(voiceId, voiceConfig);
             HandleLocale(voiceId, voiceConfig);
@@ -107,8 +104,6 @@ public class WTTCustomVoiceService(
 
     private void CreateAndAddVoice(string voiceId, CustomVoiceConfig voiceConfig)
     {
-        if (_database == null) return;
-
         var voice = new CustomizationItem
         {
             Id = voiceId,
@@ -121,32 +116,32 @@ public class WTTCustomVoiceService(
                 ShortName = voiceConfig.Name,
                 Description = voiceConfig.Name,
                 Side = voiceConfig.SideSpecificVoice ?? ["Usec", "Bear"],
-                Prefab = voiceConfig.Name
-            }
+                Prefab = voiceConfig.Name,
+            },
         };
 
-        _database.Templates.Customization[voiceId] = voice;
+        templateTable.Customization[voiceId] = voice;
         LogHelper.Debug(logger, $"Added voice customization: {voiceId}");
 
         if (voiceConfig.AddVoiceToPlayer)
         {
-            _database.Templates.Character.Add(voiceId);
+            templateTable.Character.Add(voiceId);
             LogHelper.Debug(logger, $"Added voice {voiceId} to player character");
         }
     }
 
     private void AddVoiceToCustomizationStorage(string voiceId, CustomVoiceConfig voiceConfig)
     {
-        if (_database == null) return;
-        if (!voiceConfig.AddVoiceToPlayer) return;
+        if (!voiceConfig.AddVoiceToPlayer)
+            return;
 
-        var customizationStorage = _database.Templates.CustomisationStorage;
+        var customizationStorage = templateTable.CustomisationStorage;
 
         var voiceStorage = new CustomisationStorage
         {
             Id = voiceId,
             Source = CustomisationSource.DEFAULT,
-            Type = CustomisationType.VOICE
+            Type = CustomisationType.VOICE,
         };
 
         customizationStorage.Add(voiceStorage);
@@ -154,15 +149,17 @@ public class WTTCustomVoiceService(
 
     private void HandleLocale(string voiceId, CustomVoiceConfig voiceConfig)
     {
-        if (_database == null || voiceConfig.Locales == null) return;
+        if (voiceConfig.Locales == null)
+            return;
 
-        var globalLocales = _database.Locales.Global;
+        var globalLocales = localeTable.Global;
         var voiceLocaleKey = $"{voiceId} Name";
 
         foreach (var (localeCode, lazyLocale) in globalLocales)
             lazyLocale.AddTransformer(localeData =>
             {
-                if (localeData == null) return localeData;
+                if (localeData == null)
+                    return localeData;
 
                 if (voiceConfig.Locales.TryGetValue(localeCode, out var localizedName))
                     localeData[voiceLocaleKey] = localizedName;
@@ -175,22 +172,27 @@ public class WTTCustomVoiceService(
 
     private void ProcessBotVoices(string voiceId, CustomVoiceConfig voiceConfig)
     {
-        if (_database == null || voiceConfig.AddToBotTypes == null) return;
+        if (voiceConfig.AddToBotTypes == null)
+            return;
 
         foreach (var (botType, weight) in voiceConfig.AddToBotTypes)
             try
             {
                 var botTypeKey = botType.ToLower();
 
-                if (!_database.Bots.Types.TryGetValue(botTypeKey, out var botDb))
+                if (!botTable.Types.TryGetValue(botTypeKey, out var botDb))
                 {
                     logger.Warning($"Bot type '{botTypeKey}' not found in database");
                     continue;
                 }
 
-                if (botDb != null) botDb.BotAppearance.Voice[voiceId] = weight;
+                if (botDb != null)
+                    botDb.BotAppearance.Voice[voiceId] = weight;
 
-                LogHelper.Debug(logger, $"Added voice {voiceId} to bot type '{botTypeKey}' with weight {weight}");
+                LogHelper.Debug(
+                    logger,
+                    $"Added voice {voiceId} to bot type '{botTypeKey}' with weight {weight}"
+                );
             }
             catch (Exception ex)
             {

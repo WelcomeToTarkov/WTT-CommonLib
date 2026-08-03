@@ -1,10 +1,7 @@
-﻿using EFT.Quests;
+﻿using System.Reflection;
+using EFT.Quests;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -13,7 +10,10 @@ namespace WTTClientCommonLib.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass4048), nameof(GClass4048.Create));
+            return AccessTools.Method(
+                typeof(ConditionProgressCheckersFactory),
+                nameof(ConditionProgressCheckersFactory.Create)
+            );
         }
 
         [PatchPrefix]

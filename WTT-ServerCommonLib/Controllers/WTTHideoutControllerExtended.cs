@@ -1,8 +1,11 @@
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Controllers;
 using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Generators;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Commerce;
+using SPTarkov.Server.Core.Helpers.Items;
+using SPTarkov.Server.Core.Helpers.Profile;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
@@ -10,10 +13,14 @@ using SPTarkov.Server.Core.Models.Eft.Hideout;
 using SPTarkov.Server.Core.Models.Eft.Inventory;
 using SPTarkov.Server.Core.Models.Eft.ItemEvent;
 using SPTarkov.Server.Core.Models.Enums;
-using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Models.Spt.Config;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Routers;
 using SPTarkov.Server.Core.Servers;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Services.Commerce;
+using SPTarkov.Server.Core.Services.Hideout;
+using SPTarkov.Server.Core.Services.Locales;
+using SPTarkov.Server.Core.Services.Profile;
 using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Cloners;
 using WTTServerCommonLib.Models;
@@ -25,7 +32,6 @@ namespace WTTServerCommonLib.Controllers;
 public class WTTHideoutControllerExtended(
     ISptLogger<HideoutController> logger,
     TimeUtil timeUtil,
-    DatabaseService databaseService,
     InventoryHelper inventoryHelper,
     ItemHelper itemHelper,
     SaveServer saveServer,
@@ -41,29 +47,41 @@ public class WTTHideoutControllerExtended(
     FenceService fenceService,
     CircleOfCultistService circleOfCultistService,
     ICloner cloner,
-    ConfigServer configServer,
-    WTTCustomHideoutRecipeService recipeService) : HideoutController(
-    logger,
-    timeUtil,
-    databaseService,
-    inventoryHelper,
-    itemHelper,
-    saveServer,
-    presetHelper,
-    paymentHelper,
-    eventOutputHolder,
-    httpResponseUtil,
-    profileHelper,
-    hideoutHelper,
-    scavCaseRewardGenerator,
-    serverLocalisationService,
-    profileActivityService,
-    fenceService,
-    circleOfCultistService,
-    cloner,
-    configServer)
+    WTTCustomHideoutRecipeService recipeService,
+    HideoutTable hideoutTable,
+    GlobalTable globalTable,
+    HideoutConfig hideoutConfig
+)
+    : HideoutController(
+        logger,
+        hideoutTable,
+        globalTable,
+        timeUtil,
+        inventoryHelper,
+        itemHelper,
+        saveServer,
+        presetHelper,
+        paymentHelper,
+        eventOutputHolder,
+        httpResponseUtil,
+        profileHelper,
+        hideoutHelper,
+        scavCaseRewardGenerator,
+        serverLocalisationService,
+        profileActivityService,
+        fenceService,
+        circleOfCultistService,
+        cloner,
+        hideoutConfig
+    )
 {
-    public void HandleExtendedRecipe(MongoId sessionID, HideoutProduction recipe, PmcData pmcData, HideoutTakeProductionRequestData request, ItemEventRouterResponse output)
+    public void HandleExtendedRecipe(
+        MongoId sessionID,
+        HideoutProduction recipe,
+        PmcData pmcData,
+        HideoutTakeProductionRequestData request,
+        ItemEventRouterResponse output
+    )
     {
         // Find craft/production in player profile
         MongoId? prodId = null;
@@ -89,11 +107,19 @@ public class WTTHideoutControllerExtended(
         // If we're unable to find the production, send an error to the client
         if (prodId is null)
         {
-            logger.Error(serverLocalisationService.GetText("hideout-unable_to_find_production_in_profile_by_recipie_id", request.RecipeId));
+            logger.Error(
+                serverLocalisationService.GetText(
+                    "hideout-unable_to_find_production_in_profile_by_recipie_id",
+                    request.RecipeId
+                )
+            );
 
             httpResponseUtil.AppendErrorToOutput(
                 output,
-                serverLocalisationService.GetText("hideout-unable_to_find_production_in_profile_by_recipie_id", request.RecipeId)
+                serverLocalisationService.GetText(
+                    "hideout-unable_to_find_production_in_profile_by_recipie_id",
+                    request.RecipeId
+                )
             );
 
             return;
@@ -115,7 +141,7 @@ public class WTTHideoutControllerExtended(
             itemAndChildrenToSendToPlayer = HandleExtendedReward(extendedRecipe);
             recipeIsExtended = true;
         }
-        
+
         // Reward is weapon/armor preset, handle differently compared to 'normal' items
         var rewardIsPreset = !recipeIsExtended && presetHelper.HasPreset(recipe.EndProduct);
         if (rewardIsPreset)
@@ -127,7 +153,7 @@ public class WTTHideoutControllerExtended(
         {
             UnstackRewardIntoValidSize(recipe, itemAndChildrenToSendToPlayer, rewardIsPreset);
         }
-        
+
         // Recipe has an `isEncoded` requirement for reward(s), Add `RecodableComponent` property
         if (recipe.IsEncoded ?? false)
         {
@@ -135,7 +161,10 @@ public class WTTHideoutControllerExtended(
             {
                 rewardItems.FirstOrDefault()?.AddUpd();
 
-                rewardItems.FirstOrDefault().Upd.RecodableComponent = new UpdRecodableComponent { IsEncoded = true };
+                rewardItems.FirstOrDefault().Upd.RecodableComponent = new UpdRecodableComponent
+                {
+                    IsEncoded = true,
+                };
             }
         }
 
@@ -155,18 +184,20 @@ public class WTTHideoutControllerExtended(
         if (area is not null && request.RecipeId != area.LastRecipe)
         // 5 points per craft upon the end of production for alternating between 2 different crafting recipes in the same module
         {
-            craftingExpAmount += HideoutConfig.CraftingExpAmount; // Default is 12.5, scaled (at 0.4 scale => 5 points per alternating craft)
+            craftingExpAmount += hideoutConfig.CraftingExpAmount; // Default is 12.5, scaled (at 0.4 scale => 5 points per alternating craft)
         }
 
         // Update variable with time spent crafting item(s)
         // 1.5 (3.75 w/ applying default 0.4 scale) points per 8 hours of crafting
         totalCraftingHours += recipe.ProductionTime;
-        if (totalCraftingHours / HideoutConfig.HoursForSkillCrafting >= 1)
+        if (totalCraftingHours / hideoutConfig.HoursForSkillCrafting >= 1)
         {
             // Spent enough time crafting to get a bonus xp multiplier
-            var multiplierCrafting = Math.Floor(totalCraftingHours.Value / HideoutConfig.HoursForSkillCrafting);
-            craftingExpAmount += (HideoutConfig.CraftingExpForHoursOfCrafting * multiplierCrafting);
-            totalCraftingHours -= HideoutConfig.HoursForSkillCrafting * multiplierCrafting;
+            var multiplierCrafting = Math.Floor(
+                totalCraftingHours.Value / hideoutConfig.HoursForSkillCrafting
+            );
+            craftingExpAmount += (hideoutConfig.CraftingExpForHoursOfCrafting * multiplierCrafting);
+            totalCraftingHours -= hideoutConfig.HoursForSkillCrafting * multiplierCrafting;
         }
 
         // Make sure we can fit both the craft result and tools in the stash
@@ -222,18 +253,22 @@ public class WTTHideoutControllerExtended(
         //  - Delete the production in profile Hideout.Production
         // Hideout Management skill
         // ? Use a configuration variable for the value?
-        var globals = databaseService.GetGlobals();
         profileHelper.AddSkillPointsToPlayer(
             pmcData,
             SkillTypes.HideoutManagement,
-            globals.Configuration.SkillsSettings.HideoutManagement.SkillPointsPerCraft,
+            globalTable.Configuration.SkillsSettings.HideoutManagement.SkillPointsPerCraft,
             true
         );
 
         // Add Crafting skill to player profile
         if (craftingExpAmount > 0)
         {
-            profileHelper.AddSkillPointsToPlayer(pmcData, SkillTypes.Crafting, craftingExpAmount, true);
+            profileHelper.AddSkillPointsToPlayer(
+                pmcData,
+                SkillTypes.Crafting,
+                craftingExpAmount,
+                true
+            );
 
             // TODO: verify this is still giving intellect skill points on live
             var intellectAmountToGive = 0.5 * Math.Round((double)(craftingExpAmount / 15));
@@ -261,7 +296,11 @@ public class WTTHideoutControllerExtended(
         // production.json is set to
         if (recipe.Continuous.GetValueOrDefault(false))
         {
-            hideoutProduction.ProductionTime = hideoutHelper.GetAdjustedCraftTimeWithSkills(pmcData, recipe.Id, true);
+            hideoutProduction.ProductionTime = hideoutHelper.GetAdjustedCraftTimeWithSkills(
+                pmcData,
+                recipe.Id,
+                true
+            );
         }
 
         // Flag normal (not continuous) crafts as complete

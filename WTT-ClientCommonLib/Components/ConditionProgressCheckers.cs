@@ -1,11 +1,7 @@
 ﻿using EFT.Quests;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace WTTClientCommonLib.Components
 {
-
     public class SalvageConditionChecker : ConditionProgressChecker
     {
         private bool _done;

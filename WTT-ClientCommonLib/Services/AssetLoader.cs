@@ -28,8 +28,9 @@ public class AssetLoader(ManualLogSource logger)
     {
         try
         {
-            return Utils.Get<List<CustomSpawnConfig>>("/wttcommonlib/spawnsystem/configs/get")
-                   ?? new List<CustomSpawnConfig>();
+            return Helpers.Utils.Get<List<CustomSpawnConfig>>(
+                    "/wttcommonlib/spawnsystem/configs/get"
+                ) ?? new List<CustomSpawnConfig>();
         }
         catch (Exception ex)
         {
@@ -42,11 +43,15 @@ public class AssetLoader(ManualLogSource logger)
     {
         try
         {
-            if (string.IsNullOrEmpty(config.PrefabName) ||
-                string.IsNullOrEmpty(config.BundleName) ||
-                string.IsNullOrEmpty(config.LocationID))
+            if (
+                string.IsNullOrEmpty(config.PrefabName)
+                || string.IsNullOrEmpty(config.BundleName)
+                || string.IsNullOrEmpty(config.LocationID)
+            )
             {
-                LogHelper.LogDebug($"[WTT-SpawnSystem] Invalid config: {JsonConvert.SerializeObject(config)}");
+                LogHelper.LogDebug(
+                    $"[WTT-SpawnSystem] Invalid config: {JsonConvert.SerializeObject(config)}"
+                );
                 return;
             }
 
@@ -68,7 +73,8 @@ public class AssetLoader(ManualLogSource logger)
 
             // Load and spawn prefab
             var prefab = LoadPrefabFromBundle(config.BundleName, config.PrefabName);
-            if (prefab == null) return;
+            if (prefab == null)
+                return;
 
             var rotation = Quaternion.Euler(config.Rotation);
             if (WTTClientCommonLib.FikaInstalled)
@@ -95,7 +101,8 @@ public class AssetLoader(ManualLogSource logger)
             if (exists != config.QuestMustExist.Value)
             {
                 LogHelper.LogDebug(
-                    $"[CONDITION] Quest existence check failed. Expected: {config.QuestMustExist}, Actual: {exists}");
+                    $"[CONDITION] Quest existence check failed. Expected: {config.QuestMustExist}, Actual: {exists}"
+                );
                 return false;
             }
         }
@@ -116,13 +123,15 @@ public class AssetLoader(ManualLogSource logger)
                 if (Enum.TryParse<EQuestStatus>(statusStr, out var requiredStatus))
                 {
                     validStatuses.Add(statusStr);
-                    if (quest.Status == requiredStatus) anyMatch = true;
+                    if (quest.Status == requiredStatus)
+                        anyMatch = true;
                 }
 
             if (!anyMatch)
             {
                 LogHelper.LogDebug(
-                    $"[CONDITION] None of required statuses matched: {string.Join(", ", validStatuses)}. Actual: {quest.Status}");
+                    $"[CONDITION] None of required statuses matched: {string.Join(", ", validStatuses)}. Actual: {quest.Status}"
+                );
                 return false;
             }
         }
@@ -134,19 +143,24 @@ public class AssetLoader(ManualLogSource logger)
                     if (Enum.TryParse<EQuestStatus>(statusStr, out var excludedStatus))
                         if (quest.Status == excludedStatus)
                         {
-                            LogHelper.LogDebug($"[CONDITION] Excluded status matched: {excludedStatus}");
+                            LogHelper.LogDebug(
+                                $"[CONDITION] Excluded status matched: {excludedStatus}"
+                            );
                             return false;
                         }
 
         // Required item in inventory
         if (!string.IsNullOrEmpty(config.RequiredItemInInventory))
         {
-            var hasItem = player.Profile.Inventory.AllRealPlayerItems
-                .Any(item => item.TemplateId == config.RequiredItemInInventory);
+            var hasItem = player.Profile.Inventory.AllRealPlayerItems.Any(item =>
+                item.TemplateId == config.RequiredItemInInventory
+            );
 
             if (!hasItem)
             {
-                LogHelper.LogDebug($"[CONDITION] Missing required item: {config.RequiredItemInInventory}");
+                LogHelper.LogDebug(
+                    $"[CONDITION] Missing required item: {config.RequiredItemInInventory}"
+                );
                 return false;
             }
         }
@@ -156,7 +170,8 @@ public class AssetLoader(ManualLogSource logger)
             if (player.Profile.Info.Level < config.RequiredLevel.Value)
             {
                 LogHelper.LogDebug(
-                    $"[CONDITION] Level too low. Required: {config.RequiredLevel}, Actual: {player.Profile.Info.Level}");
+                    $"[CONDITION] Level too low. Required: {config.RequiredLevel}, Actual: {player.Profile.Info.Level}"
+                );
                 return false;
             }
 
@@ -167,7 +182,8 @@ public class AssetLoader(ManualLogSource logger)
             if (!playerFaction.Equals(config.RequiredFaction, StringComparison.OrdinalIgnoreCase))
             {
                 LogHelper.LogDebug(
-                    $"[CONDITION] Wrong faction. Required: {config.RequiredFaction}, Actual: {playerFaction}");
+                    $"[CONDITION] Wrong faction. Required: {config.RequiredFaction}, Actual: {playerFaction}"
+                );
                 return false;
             }
         }
@@ -175,7 +191,9 @@ public class AssetLoader(ManualLogSource logger)
         // Enhanced linked quest condition
         if (!string.IsNullOrEmpty(config.LinkedQuestId))
         {
-            var linkedQuest = player.Profile.QuestsData.FirstOrDefault(q => q.Id == config.LinkedQuestId);
+            var linkedQuest = player.Profile.QuestsData.FirstOrDefault(q =>
+                q.Id == config.LinkedQuestId
+            );
 
             // Existence check
             if (config.LinkedQuestMustExist.HasValue)
@@ -184,7 +202,8 @@ public class AssetLoader(ManualLogSource logger)
                 if (linkedExists != config.LinkedQuestMustExist.Value)
                 {
                     LogHelper.LogDebug(
-                        $"[CONDITION] Linked quest existence check failed. Expected: {config.LinkedQuestMustExist}, Actual: {linkedExists}");
+                        $"[CONDITION] Linked quest existence check failed. Expected: {config.LinkedQuestMustExist}, Actual: {linkedExists}"
+                    );
                     return false;
                 }
             }
@@ -194,7 +213,9 @@ public class AssetLoader(ManualLogSource logger)
             {
                 if (linkedQuest == null)
                 {
-                    LogHelper.LogDebug("[CONDITION] Required linked statuses but quest doesn't exist");
+                    LogHelper.LogDebug(
+                        "[CONDITION] Required linked statuses but quest doesn't exist"
+                    );
                     return false;
                 }
 
@@ -205,13 +226,15 @@ public class AssetLoader(ManualLogSource logger)
                     if (Enum.TryParse<EQuestStatus>(statusStr, out var requiredStatus))
                     {
                         validStatuses.Add(statusStr);
-                        if (linkedQuest.Status == requiredStatus) anyMatch = true;
+                        if (linkedQuest.Status == requiredStatus)
+                            anyMatch = true;
                     }
 
                 if (!anyMatch)
                 {
                     LogHelper.LogDebug(
-                        $"[CONDITION] None of linked required statuses matched: {string.Join(", ", validStatuses)}. Actual: {linkedQuest?.Status}");
+                        $"[CONDITION] None of linked required statuses matched: {string.Join(", ", validStatuses)}. Actual: {linkedQuest?.Status}"
+                    );
                     return false;
                 }
             }
@@ -223,7 +246,9 @@ public class AssetLoader(ManualLogSource logger)
                         if (Enum.TryParse<EQuestStatus>(statusStr, out var excludedStatus))
                             if (linkedQuest.Status == excludedStatus)
                             {
-                                LogHelper.LogDebug($"[CONDITION] Linked excluded status matched: {excludedStatus}");
+                                LogHelper.LogDebug(
+                                    $"[CONDITION] Linked excluded status matched: {excludedStatus}"
+                                );
                                 return false;
                             }
         }
@@ -232,7 +257,9 @@ public class AssetLoader(ManualLogSource logger)
         if (!string.IsNullOrEmpty(config.RequiredBossSpawned))
             if (!CheckBossSpawned(config.RequiredBossSpawned))
             {
-                LogHelper.LogDebug($"[CONDITION] Required boss not spawned: {config.RequiredBossSpawned}");
+                LogHelper.LogDebug(
+                    $"[CONDITION] Required boss not spawned: {config.RequiredBossSpawned}"
+                );
                 return false;
             }
 
@@ -286,7 +313,9 @@ public class AssetLoader(ManualLogSource logger)
             {
                 LogHelper.LogDebug("[AssetLoader] Downloading bundle manifest...");
                 await BundleManager.DownloadManifest();
-                LogHelper.LogDebug($"[AssetLoader] Manifest loaded with {BundleManager.Bundles.Count} bundles available");
+                LogHelper.LogDebug(
+                    $"[AssetLoader] Manifest loaded with {BundleManager.Bundles.Count} bundles available"
+                );
             }
 
             _bundleKeyLookup.Clear();
@@ -309,7 +338,7 @@ public class AssetLoader(ManualLogSource logger)
         try
         {
             var bundleKey = bundleIdentifier;
-            
+
             if (!BundleManager.Bundles.ContainsKey(bundleKey))
             {
                 if (_bundleKeyLookup.TryGetValue(bundleIdentifier, out var resolvedKey))
@@ -318,7 +347,9 @@ public class AssetLoader(ManualLogSource logger)
                 }
                 else
                 {
-                    logger.LogError($"[AssetLoader] Bundle '{bundleIdentifier}' not found in manifest (tried as short name and full key)");
+                    logger.LogError(
+                        $"[AssetLoader] Bundle '{bundleIdentifier}' not found in manifest (tried as short name and full key)"
+                    );
                     return null;
                 }
             }
@@ -330,7 +361,7 @@ public class AssetLoader(ManualLogSource logger)
             }
 
             var bundlePath = BundleManager.GetBundleFilePath(bundleItem);
-            
+
             if (!File.Exists(bundlePath))
             {
                 logger.LogError($"[AssetLoader] Bundle file not found at: {bundlePath}");
@@ -353,7 +384,9 @@ public class AssetLoader(ManualLogSource logger)
             var prefab = bundle.LoadAsset<GameObject>(assetName);
             if (prefab == null)
             {
-                logger.LogError($"[AssetLoader] Prefab '{assetName}' not found in bundle '{bundleKey}'");
+                logger.LogError(
+                    $"[AssetLoader] Prefab '{assetName}' not found in bundle '{bundleKey}'"
+                );
                 return null;
             }
 
@@ -381,8 +414,9 @@ public class AssetLoader(ManualLogSource logger)
 
     public void UnloadAllBundles()
     {
-        if (_loadedBundles.Count == 0) return;
-        
+        if (_loadedBundles.Count == 0)
+            return;
+
         foreach (var bundle in _loadedBundles.Values)
         {
             try
@@ -394,7 +428,7 @@ public class AssetLoader(ManualLogSource logger)
                 logger.LogError($"[AssetLoader] Error unloading bundle: {ex}");
             }
         }
-        
+
         _loadedBundles.Clear();
         LogHelper.LogDebug("[AssetLoader] All bundles unloaded");
     }

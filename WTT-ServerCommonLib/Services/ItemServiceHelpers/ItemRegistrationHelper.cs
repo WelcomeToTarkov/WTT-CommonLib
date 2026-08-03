@@ -1,31 +1,31 @@
-﻿using HarmonyLib.Tools;
+﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
-using SPTarkov.Server.Core.Services.Mod;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Services.Items;
+using SPTarkov.Server.Core.Services.Modding;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers
 {
     [Injectable(InjectionType.Singleton)]
     public class ItemRegistrationHelper(
         ISptLogger<ItemRegistrationHelper> logger,
-        DatabaseService databaseService,
+        TemplateTable templateTable,
+        LocaleTable localeTable,
         ItemBaseClassService itemBaseClassService,
         ModItemCacheService modItemCacheService,
         ItemHelper itemHelper
     )
     {
-        public void UpdateBaseItemPropertiesWithOverrides(TemplateItemProperties? overrideProperties, TemplateItem itemClone)
+        public void UpdateBaseItemPropertiesWithOverrides(
+            TemplateItemProperties? overrideProperties,
+            TemplateItem itemClone
+        )
         {
             if (overrideProperties is null || itemClone.Properties is null)
                 return;
@@ -39,7 +39,7 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
                 {
                     MemberTypes.Property => ((PropertyInfo)member).GetValue(overrideProperties),
                     MemberTypes.Field => ((FieldInfo)member).GetValue(overrideProperties),
-                    _ => null
+                    _ => null,
                 };
 
                 if (value is null)
@@ -68,28 +68,32 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
 
         public void AddToItemsDb(string newItemId, TemplateItem itemToAdd)
         {
-            if (!databaseService.GetItems().TryAdd(newItemId, itemToAdd))
+            if (!templateTable.Items.TryAdd(newItemId, itemToAdd))
                 logger.Warning($"Unable to add: {newItemId} To Database");
         }
 
         public void AddToHandbookDb(string newItemId, string parentId, int priceRoubles)
         {
-            databaseService.GetTemplates().Handbook.Items.Add(
+            templateTable.Handbook.Items.Add(
                 new HandbookItem
                 {
                     Id = new MongoId(newItemId),
                     ParentId = parentId,
-                    Price = priceRoubles
-                });
+                    Price = priceRoubles,
+                }
+            );
         }
 
-        public void AddToLocaleDbs(Dictionary<string, LocaleDetails> localeDetails, string newItemId)
+        public void AddToLocaleDbs(
+            Dictionary<string, LocaleDetails> localeDetails,
+            string newItemId
+        )
         {
             var defaultLocale = localeDetails.Keys.FirstOrDefault();
             if (defaultLocale == null)
                 return;
 
-            var languages = databaseService.GetLocales().Languages;
+            var languages = localeTable.Languages;
             foreach (var shortNameKey in languages)
             {
                 localeDetails.TryGetValue(shortNameKey.Key, out var newLocaleDetails);
@@ -98,7 +102,7 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
                 if (newLocaleDetails.Name == null)
                     continue;
 
-                if (databaseService.GetLocales().Global.TryGetValue(shortNameKey.Key, out var lazyLoad))
+                if (localeTable.Global.TryGetValue(shortNameKey.Key, out var lazyLoad))
                 {
                     lazyLoad.AddTransformer(localeData =>
                     {
@@ -113,7 +117,7 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
 
         public void AddToFleaPriceDb(string newItemId, int fleaPriceRoubles)
         {
-            databaseService.GetTemplates().Prices[newItemId] = fleaPriceRoubles;
+            templateTable.Prices[newItemId] = fleaPriceRoubles;
         }
 
         public void AddItemToBaseClassCache(Assembly assembly, string newItemId)
@@ -128,14 +132,16 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
             [
                 ItemTpl.HIDEOUTAREACONTAINER_WEAPONSTAND_STASH_1,
                 ItemTpl.HIDEOUTAREACONTAINER_WEAPONSTAND_STASH_2,
-                ItemTpl.HIDEOUTAREACONTAINER_WEAPONSTAND_STASH_3
+                ItemTpl.HIDEOUTAREACONTAINER_WEAPONSTAND_STASH_3,
             ];
 
             foreach (var wallId in wallStashIds)
             {
                 var wall = itemHelper.GetItem(wallId);
                 if (wall.Key)
-                    wall.Value.Properties.Grids.First().Properties.Filters.First().Filter.Add(newItemId);
+                    wall.Value.Properties.Grids.First()
+                        .Properties.Filters.First()
+                        .Filter.Add(newItemId);
             }
         }
     }

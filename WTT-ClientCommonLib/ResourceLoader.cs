@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using BepInEx.Logging;
-using EFT.Hideout;
+using EFT;
 using EFT.UI.DragAndDrop;
 using SPT.Custom.Utils;
-using UI.Hideout;
 using UnityEngine;
 using WTTClientCommonLib.Helpers;
 using WTTClientCommonLib.Models;
@@ -56,12 +54,13 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
             logger.LogError($"Error loading resources from server: {ex}");
         }
     }
+
     public async Task RegisterAudioBundlesAsync(List<string> audioBundleKeys)
     {
         try
         {
             LogHelper.LogDebug($"[AudioManager] Registering {audioBundleKeys.Count} audio bundles");
-            
+
             if (BundleManager.Bundles.Keys.Count == 0)
             {
                 await BundleManager.DownloadManifest();
@@ -71,12 +70,14 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
             {
                 if (!BundleManager.Bundles.TryGetValue(bundleKey, out var bundleItem))
                 {
-                    LogHelper.LogWarn($"[AudioManager] Audio bundle '{bundleKey}' not found in manifest");
+                    LogHelper.LogWarn(
+                        $"[AudioManager] Audio bundle '{bundleKey}' not found in manifest"
+                    );
                     continue;
                 }
 
                 var bundlePath = BundleManager.GetBundleFilePath(bundleItem);
-                
+
                 if (!File.Exists(bundlePath))
                 {
                     LogHelper.LogWarn($"[AudioManager] Bundle file not found: {bundlePath}");
@@ -100,11 +101,15 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
                         LogHelper.LogDebug($"[AudioManager] Cached audio: {clip.name}");
                     }
 
-                    LogHelper.LogDebug($"[AudioManager] Loaded {clips.Length} audio clips from {bundleKey}");
+                    LogHelper.LogDebug(
+                        $"[AudioManager] Loaded {clips.Length} audio clips from {bundleKey}"
+                    );
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.LogError($"[AudioManager] Error loading audio bundle {bundleKey}: {ex}");
+                    LogHelper.LogError(
+                        $"[AudioManager] Error loading audio bundle {bundleKey}: {ex}"
+                    );
                 }
             }
 
@@ -121,8 +126,10 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
         try
         {
             LogHelper.LogDebug("[AudioManager] Loading audio manifest from server...");
-            
-            var manifestResponse = Utils.Get<AudioManifest>("/wttcommonlib/audio/manifest/get");
+
+            var manifestResponse = Helpers.Utils.Get<AudioManifest>(
+                "/wttcommonlib/audio/manifest/get"
+            );
             if (manifestResponse == null)
             {
                 LogHelper.LogWarn("[AudioManager] No audio manifest received from server");
@@ -130,7 +137,9 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
             }
 
             Manifest = manifestResponse;
-            LogHelper.LogDebug($"[AudioManager] Loaded manifest with {Manifest.FaceCardMappings.Count} face entries");
+            LogHelper.LogDebug(
+                $"[AudioManager] Loaded manifest with {Manifest.FaceCardMappings.Count} face entries"
+            );
             LogHelper.LogDebug($"[AudioManager] Radio audio: {Manifest.RadioAudio.Count} tracks");
 
             var audioBundleKeys = manifestResponse.AudioBundles;
@@ -163,7 +172,9 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
 
     public static List<string> GetRadioAudio()
     {
-        LogHelper.LogDebug($"[AudioManager] Returning {Manifest?.RadioAudio.Count ?? 0} radio tracks");
+        LogHelper.LogDebug(
+            $"[AudioManager] Returning {Manifest?.RadioAudio.Count ?? 0} radio tracks"
+        );
         return Manifest?.RadioAudio ?? new List<string>();
     }
 
@@ -171,7 +182,9 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
     {
         try
         {
-            var voiceResponse = Utils.Get<Dictionary<string, string>>("/wttcommonlib/voices/get");
+            var voiceResponse = Helpers.Utils.Get<Dictionary<string, string>>(
+                "/wttcommonlib/voices/get"
+            );
             if (voiceResponse == null)
             {
                 logger.LogWarning("No voice data received from server");
@@ -179,9 +192,9 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
             }
 
             foreach (var kvp in voiceResponse)
-                if (!ResourceKeyManagerAbstractClass.Dictionary_0.ContainsKey(kvp.Key))
+                if (!InGameBundles._phrasesPaths.ContainsKey(kvp.Key))
                 {
-                    ResourceKeyManagerAbstractClass.Dictionary_0[kvp.Key] = kvp.Value;
+                    InGameBundles._phrasesPaths[kvp.Key] = kvp.Value;
                     LogHelper.LogDebug($"Added voice key: {kvp.Key}");
                 }
 
@@ -197,7 +210,9 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
     {
         try
         {
-            var images = Utils.Get<Dictionary<string, string>>("/wttcommonlib/slotimages/get");
+            var images = Helpers.Utils.Get<Dictionary<string, string>>(
+                "/wttcommonlib/slotimages/get"
+            );
             if (images == null)
             {
                 logger.LogWarning("No slot images");
@@ -240,13 +255,17 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
                 return;
             }
 
-            LogHelper.LogDebug($"[MarkTextures] Manifest contains {ImageManager.ShootingRangeMarks.Count} textures");
-        
+            LogHelper.LogDebug(
+                $"[MarkTextures] Manifest contains {ImageManager.ShootingRangeMarks.Count} textures"
+            );
+
             int loadedCount = 0;
             foreach (var (fileName, imageItem) in ImageManager.ShootingRangeMarks)
             {
-                LogHelper.LogDebug($"[MarkTextures] Processing texture: {fileName}, ModPath: {imageItem.ModPath}");
-            
+                LogHelper.LogDebug(
+                    $"[MarkTextures] Processing texture: {fileName}, ModPath: {imageItem.ModPath}"
+                );
+
                 try
                 {
                     var texture = await ImageManager.LoadMarkTexture(fileName);
@@ -260,16 +279,22 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
                     }
                     else
                     {
-                        LogHelper.LogWarn($"[MarkTextures] LoadImage returned null for: {fileName}");
+                        LogHelper.LogWarn(
+                            $"[MarkTextures] LoadImage returned null for: {fileName}"
+                        );
                     }
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.LogError($"[MarkTextures] Error loading texture {fileName}: {ex.Message}");
+                    LogHelper.LogError(
+                        $"[MarkTextures] Error loading texture {fileName}: {ex.Message}"
+                    );
                 }
             }
 
-            LogHelper.LogDebug($"[MarkTextures] Custom hideout icons loaded successfully ({loadedCount} total)");
+            LogHelper.LogDebug(
+                $"[MarkTextures] Custom hideout icons loaded successfully ({loadedCount} total)"
+            );
             _iconsLoaded = true;
         }
         catch (Exception ex)
@@ -282,7 +307,9 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
     {
         try
         {
-            LogHelper.LogDebug("[HideoutIcons] Loading custom hideout customization icons from server...");
+            LogHelper.LogDebug(
+                "[HideoutIcons] Loading custom hideout customization icons from server..."
+            );
 
             await ImageManager.DownloadManifest();
 
@@ -292,13 +319,17 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
                 return;
             }
 
-            LogHelper.LogDebug($"[HideoutIcons] Manifest contains {ImageManager.HideoutIcons.Count} icons");
-        
+            LogHelper.LogDebug(
+                $"[HideoutIcons] Manifest contains {ImageManager.HideoutIcons.Count} icons"
+            );
+
             int loadedCount = 0;
             foreach (var (fileName, imageItem) in ImageManager.HideoutIcons)
             {
-                LogHelper.LogDebug($"[HideoutIcons] Processing icon: {fileName}, ModPath: {imageItem.ModPath}");
-            
+                LogHelper.LogDebug(
+                    $"[HideoutIcons] Processing icon: {fileName}, ModPath: {imageItem.ModPath}"
+                );
+
                 try
                 {
                     var texture = await ImageManager.LoadImage(fileName);
@@ -309,7 +340,7 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
                             new Rect(0, 0, texture.width, texture.height),
                             new Vector2(0.5f, 0.5f)
                         );
-                        
+
                         var iconId = Path.GetFileNameWithoutExtension(fileName);
                         sprite.name = iconId;
 
@@ -319,16 +350,22 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
                     }
                     else
                     {
-                        LogHelper.LogWarn($"[HideoutIcons] LoadImage returned null for: {fileName}");
+                        LogHelper.LogWarn(
+                            $"[HideoutIcons] LoadImage returned null for: {fileName}"
+                        );
                     }
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.LogError($"[HideoutIcons] Error loading icon {fileName}: {ex.Message}");
+                    LogHelper.LogError(
+                        $"[HideoutIcons] Error loading icon {fileName}: {ex.Message}"
+                    );
                 }
             }
 
-            LogHelper.LogDebug($"[HideoutIcons] Custom hideout icons loaded successfully ({loadedCount} total)");
+            LogHelper.LogDebug(
+                $"[HideoutIcons] Custom hideout icons loaded successfully ({loadedCount} total)"
+            );
             _iconsLoaded = true;
         }
         catch (Exception ex)
@@ -337,12 +374,13 @@ public class ResourceLoader(ManualLogSource logger, AssetLoader assetLoader)
         }
     }
 
-
     private void LoadRigLayoutsFromServer()
     {
         try
         {
-            var bundleMap = Utils.Get<Dictionary<string, string>>("/wttcommonlib/riglayouts/get");
+            var bundleMap = Helpers.Utils.Get<Dictionary<string, string>>(
+                "/wttcommonlib/riglayouts/get"
+            );
             if (bundleMap == null)
             {
                 logger.LogWarning("No rig layouts received from server");

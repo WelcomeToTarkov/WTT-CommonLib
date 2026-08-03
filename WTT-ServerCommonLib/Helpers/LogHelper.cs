@@ -1,5 +1,4 @@
-﻿using SPTarkov.Server.Core.Models.Utils;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
+﻿using SPTarkov.Common.Models.Logging;
 
 namespace WTTServerCommonLib.Helpers;
 
@@ -12,12 +11,12 @@ public static class LogHelper
 #endif
     }
 
-    public static void WriteWarning(string message) 
-    { 
+    public static void WriteWarning(string message)
+    {
         var original = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine(message);
-        Console.ForegroundColor= original;
+        Console.ForegroundColor = original;
     }
 
     public static void WriteError(string message)

@@ -1,61 +1,58 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Library</OutputType>
+    <PackageId>WTT-ServerCommonLib</PackageId>
+    <Version>3.0.3</Version>
+    <Authors>GrooveypenguinX</Authors>
+    <IsPackable>true</IsPackable>
+    <Description>WTT Common Library - Server components</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <OutputPath>bin\$(Configuration)\$(ProjectName)\$(AssemblyName)-$(Version)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RootNamespace>WTTServerCommonLib</RootNamespace>
+    <Configurations>Debug;Release;Publish</Configurations>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <OutputType>Library</OutputType>
-        <PackageId>WTT-ServerCommonLib</PackageId>
-        <Version>2.0.23</Version>
-        <Authors>GrooveypenguinX</Authors>
-        <IsPackable>true</IsPackable>
-        <Description>WTT Common Library - Server components</Description>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <OutputPath>bin\$(Configuration)\$(ProjectName)\$(AssemblyName)-$(Version)\</OutputPath>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-        <RootNamespace>WTTServerCommonLib</RootNamespace>
-        <Configurations>Debug;Release;Publish</Configurations>
-        <Platforms>AnyCPU</Platforms>
-    </PropertyGroup>
+  <ItemGroup>
+    <None Include="NuGetMeta\WTT-ServerCommonLib.props" Pack="true" PackagePath="build\WTT-ServerCommonLib.props" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <None Include="NuGetMeta\WTT-ServerCommonLib.props" Pack="true" PackagePath="build\WTT-ServerCommonLib.props" />
-    </ItemGroup>
-    
-    <PropertyGroup Condition="'$(Configuration)' == ''">
-        <Configuration>Release</Configuration>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == ''">
+    <Configuration>Release</Configuration>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-        <DocumentationFile>bin\Debug\$(ProjectName)\$(AssemblyName)-$(Version)\$(AssemblyName).xml</DocumentationFile>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DocumentationFile>bin\Debug\$(ProjectName)\$(AssemblyName)-$(Version)\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-        <DocumentationFile>bin\Release\$(ProjectName)\$(AssemblyName)-$(Version)\$(AssemblyName).xml</DocumentationFile>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DocumentationFile>bin\Release\$(ProjectName)\$(AssemblyName)-$(Version)\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Publish'">
-        <DocumentationFile>bin\Publish\$(ProjectName)\$(AssemblyName)-$(Version)\$(AssemblyName).xml</DocumentationFile>
-        <DebugType>none</DebugType>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Publish'">
+    <DocumentationFile>bin\Publish\$(ProjectName)\$(AssemblyName)-$(Version)\$(AssemblyName).xml</DocumentationFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-    </PropertyGroup>
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <None Include="../README.md" Pack="true" PackagePath="" />
-    </ItemGroup>
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="SPTarkov.Reflection" Version="4.0.13" />
-        <PackageReference Include="SPTarkov.Server.Core" Version="4.0.13" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="SPTarkov.Reflection" Version="4.1.0" />
+    <PackageReference Include="SPTarkov.Server.Core" Version="4.1.0" />
+  </ItemGroup>
 
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="@echo off&#xA;setlocal enabledelayedexpansion&#xA;&#xA;REM Set variables&#xA;set MODNAME=$(TargetName)&#xA;set DLLPATH=$(TargetDir)$(TargetName).dll&#xA;set XMLPATH=$(TargetDir)$(TargetName).xml&#xA;set OUTDIR=..\..\..\SPT\user\mods\%MODNAME%&#xA;set RESOURCESDIR=$(ProjectDir)Resources&#xA;set BUILDOUTDIR=..\Build\SPT\user\mods\%MODNAME%&#xA;&#xA;REM Create output directories if they don't exist&#xA;if not exist &quot;%OUTDIR%&quot; mkdir &quot;%OUTDIR%&quot;&#xA;if not exist &quot;%BUILDOUTDIR%&quot; mkdir &quot;%BUILDOUTDIR%&quot;&#xA;&#xA;REM Clear the output directory (except the dll we're about to copy)&#xA;if exist &quot;%OUTDIR%&quot; (&#xA;    for /d %%D in (&quot;%OUTDIR%\*&quot;) do rmdir /s /q &quot;%%D&quot;&#xA;    for %%F in (&quot;%OUTDIR%\*&quot;) do (&#xA;        if /i not &quot;%%~nxF&quot;==&quot;$(TargetName).dll&quot; del /q &quot;%%F&quot;&#xA;    )&#xA;)&#xA;&#xA;REM Clear the build output directory completely&#xA;if exist &quot;%BUILDOUTDIR%&quot; (&#xA;    for /d %%D in (&quot;%BUILDOUTDIR%\*&quot;) do rmdir /s /q &quot;%%D&quot;&#xA;    for %%F in (&quot;%BUILDOUTDIR%\*&quot;) do del /q &quot;%%F&quot;&#xA;)&#xA;&#xA;REM Copy the DLL file to SPT&#xA;copy /Y &quot;%DLLPATH%&quot; &quot;%OUTDIR%\&quot; &gt;nul 2&gt;&amp;1&#xA;echo [PostBuild] Copied %MODNAME%.dll to %OUTDIR%&#xA;&#xA;REM Copy the XML file to SPT&#xA;if exist &quot;%XMLPATH%&quot; (&#xA;    copy /Y &quot;%XMLPATH%&quot; &quot;%OUTDIR%\&quot; &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied %MODNAME%.xml to %OUTDIR%&#xA;)&#xA;&#xA;REM Copy all contents from Resources folder recursively to SPT&#xA;if exist &quot;%RESOURCESDIR%&quot; (&#xA;    xcopy &quot;%RESOURCESDIR%&quot; &quot;%OUTDIR%&quot; /E /I /Y &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied Resources to %OUTDIR%&#xA;) else (&#xA;    echo [PostBuild] Warning: Resources folder not found at %RESOURCESDIR%&#xA;)&#xA;&#xA;REM Copy the DLL file to Build folder&#xA;copy /Y &quot;%DLLPATH%&quot; &quot;%BUILDOUTDIR%\&quot; &gt;nul 2&gt;&amp;1&#xA;echo [PostBuild] Copied %MODNAME%.dll to %BUILDOUTDIR%&#xA;&#xA;REM Copy the XML file to Build folder&#xA;if exist &quot;%XMLPATH%&quot; (&#xA;    copy /Y &quot;%XMLPATH%&quot; &quot;%BUILDOUTDIR%\&quot; &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied %MODNAME%.xml to %BUILDOUTDIR%&#xA;)&#xA;&#xA;REM Copy all contents from Resources folder recursively to Build folder&#xA;if exist &quot;%RESOURCESDIR%&quot; (&#xA;    xcopy &quot;%RESOURCESDIR%&quot; &quot;%BUILDOUTDIR%&quot; /E /I /Y &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied Resources to %BUILDOUTDIR%&#xA;) else (&#xA;    echo [PostBuild] Warning: Resources folder not found at %RESOURCESDIR%&#xA;)&#xA;&#xA;echo [PostBuild] Build output: %OUTDIR% and %BUILDOUTDIR%&#xA;&#xA;REM Publish to NuGet if Publish configuration&#xA;if &quot;$(Configuration)&quot;==&quot;Publish&quot; (&#xA;    echo [PostBuild] Publishing $(PackageId) v$(Version) to NuGet...&#xA;    call &quot;$(ProjectDir)nuget-publish-project.bat&quot; $(PackageId) $(Version)&#xA;)&#xA;endlocal&#xA;" />
-    </Target>
-
-
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="@echo off&#xA;setlocal enabledelayedexpansion&#xA;&#xA;REM Set variables&#xA;set MODNAME=$(TargetName)&#xA;set DLLPATH=$(TargetDir)$(TargetName).dll&#xA;set XMLPATH=$(TargetDir)$(TargetName).xml&#xA;set OUTDIR=..\..\..\SPT_Runtime\user\mods\%25MODNAME%25&#xA;set RESOURCESDIR=$(ProjectDir)Resources&#xA;set BUILDOUTDIR=..\Build\SPT_Runtime\user\mods\%25MODNAME%25&#xA;&#xA;REM Create output directories if they don't exist&#xA;if not exist &quot;%25OUTDIR%25&quot; mkdir &quot;%25OUTDIR%25&quot;&#xA;if not exist &quot;%25BUILDOUTDIR%25&quot; mkdir &quot;%25BUILDOUTDIR%25&quot;&#xA;&#xA;REM Clear the output directory (except the dll we're about to copy)&#xA;if exist &quot;%25OUTDIR%25&quot; (&#xA;    for /d %25%25D in (&quot;%25OUTDIR%25\*&quot;) do rmdir /s /q &quot;%25%25D&quot;&#xA;    for %25%25F in (&quot;%25OUTDIR%25\*&quot;) do (&#xA;        if /i not &quot;%25%25~nxF&quot;==&quot;$(TargetName).dll&quot; del /q &quot;%25%25F&quot;&#xA;    )&#xA;)&#xA;&#xA;REM Clear the build output directory completely&#xA;if exist &quot;%25BUILDOUTDIR%25&quot; (&#xA;    for /d %25%25D in (&quot;%25BUILDOUTDIR%25\*&quot;) do rmdir /s /q &quot;%25%25D&quot;&#xA;    for %25%25F in (&quot;%25BUILDOUTDIR%25\*&quot;) do del /q &quot;%25%25F&quot;&#xA;)&#xA;&#xA;REM Copy the DLL file to SPT&#xA;copy /Y &quot;%25DLLPATH%25&quot; &quot;%25OUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xA;echo [PostBuild] Copied %25MODNAME%25.dll to %25OUTDIR%25&#xA;&#xA;REM Copy the XML file to SPT&#xA;if exist &quot;%25XMLPATH%25&quot; (&#xA;    copy /Y &quot;%25XMLPATH%25&quot; &quot;%25OUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied %25MODNAME%25.xml to %25OUTDIR%25&#xA;)&#xA;&#xA;REM Copy all contents from Resources folder recursively to SPT&#xA;if exist &quot;%25RESOURCESDIR%25&quot; (&#xA;    xcopy &quot;%25RESOURCESDIR%25&quot; &quot;%25OUTDIR%25&quot; /E /I /Y &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied Resources to %25OUTDIR%25&#xA;) else (&#xA;    echo [PostBuild] Warning: Resources folder not found at %25RESOURCESDIR%25&#xA;)&#xA;&#xA;REM Copy the DLL file to Build folder&#xA;copy /Y &quot;%25DLLPATH%25&quot; &quot;%25BUILDOUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xA;echo [PostBuild] Copied %25MODNAME%25.dll to %25BUILDOUTDIR%25&#xA;&#xA;REM Copy the XML file to Build folder&#xA;if exist &quot;%25XMLPATH%25&quot; (&#xA;    copy /Y &quot;%25XMLPATH%25&quot; &quot;%25BUILDOUTDIR%25\&quot; &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied %25MODNAME%25.xml to %25BUILDOUTDIR%25&#xA;)&#xA;&#xA;REM Copy all contents from Resources folder recursively to Build folder&#xA;if exist &quot;%25RESOURCESDIR%25&quot; (&#xA;    xcopy &quot;%25RESOURCESDIR%25&quot; &quot;%25BUILDOUTDIR%25&quot; /E /I /Y &gt;nul 2&gt;&amp;1&#xA;    echo [PostBuild] Copied Resources to %25BUILDOUTDIR%25&#xA;) else (&#xA;    echo [PostBuild] Warning: Resources folder not found at %25RESOURCESDIR%25&#xA;)&#xA;&#xA;echo [PostBuild] Build output: %25OUTDIR%25 and %25BUILDOUTDIR%25&#xA;&#xA;REM Publish to NuGet if Publish configuration&#xA;if &quot;$(Configuration)&quot;==&quot;Publish&quot; (&#xA;    echo [PostBuild] Publishing $(PackageId) v$(Version) to NuGet...&#xA;    call &quot;$(ProjectDir)nuget-publish-project.bat&quot; $(PackageId) $(Version)&#xA;)&#xA;endlocal&#xA;" />
+  </Target>
 </Project>

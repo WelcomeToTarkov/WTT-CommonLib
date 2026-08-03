@@ -1,11 +1,10 @@
-﻿using Comfort.Common;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using Comfort.Common;
 using EFT;
 using HarmonyLib;
+using JsonType;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 using WTTClientCommonLib.Components;
 
 namespace WTTClientCommonLib.Patches
@@ -15,27 +14,29 @@ namespace WTTClientCommonLib.Patches
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(
-                typeof(Class308),
+                typeof(EftClientBackendSession),
                 "LocalRaidEnded",
                 new[]
                 {
                     typeof(LocalRaidSettings),
-                    typeof(RaidEndDescriptorClass),
-                    typeof(FlatItemsDataClass[]),
-                    typeof(Dictionary<string, FlatItemsDataClass[]>)
-                });
+                    typeof(SessionResult),
+                    typeof(FlatItem[]),
+                    typeof(Dictionary<string, FlatItem[]>),
+                }
+            );
         }
 
         [PatchPostfix]
         public static void Postfix(
             LocalRaidSettings settings,
-            RaidEndDescriptorClass results,
-            FlatItemsDataClass[] lostInsuredItems,
-            Dictionary<string, FlatItemsDataClass[]> transferItems)
+            SessionResult results,
+            FlatItem[] lostInsuredItems,
+            Dictionary<string, FlatItem[]> transferItems
+        )
         {
             var world = Singleton<GameWorld>.Instance;
             var player = world?.MainPlayer;
-            var questController = player?.AbstractQuestControllerClass;
+            var questController = player?.QuestController;
             var questBook = questController?.Quests;
 
             if (questBook == null)

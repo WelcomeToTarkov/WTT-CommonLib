@@ -1,11 +1,10 @@
 ﻿using System.Reflection;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using Path = System.IO.Path;
@@ -15,31 +14,26 @@ namespace WTTServerCommonLib.Services;
 [Injectable(InjectionType.Singleton)]
 public class WTTCustomHeadService(
     ISptLogger<WTTCustomHeadService> logger,
-    DatabaseService databaseService,
+    TemplateTable templateTable,
+    LocaleTable localeTable,
     ModHelper modHelper,
     ConfigHelper configHelper
 )
 {
-    private DatabaseTables? _database;
-
     /// <summary>
     /// Loads custom head configs from JSON/JSONC files and registers them to the game database.
-    /// 
+    ///
     /// Heads are loaded from the mod's "db/CustomHeads" directory (or a custom path if specified).
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
     public async Task CreateCustomHeads(Assembly assembly, string? relativePath = null)
-
     {
         try
         {
-            
             var assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
             var defaultDir = Path.Combine("db", "CustomHeads");
             var finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
-
-            if (_database == null) _database = databaseService.GetTables();
 
             if (!Directory.Exists(finalDir))
             {
@@ -47,7 +41,9 @@ public class WTTCustomHeadService(
                 return;
             }
 
-            var headConfigDicts = await configHelper.LoadAllJsonFiles<Dictionary<string, CustomHeadConfig>>(finalDir);
+            var headConfigDicts = await configHelper.LoadAllJsonFiles<
+                Dictionary<string, CustomHeadConfig>
+            >(finalDir);
 
             if (headConfigDicts.Count == 0)
             {
@@ -67,7 +63,10 @@ public class WTTCustomHeadService(
                         totalHeadsCreated++;
             }
 
-            LogHelper.Debug(logger, $"Created {totalHeadsCreated} custom heads from {headConfigDicts.Count} files");
+            LogHelper.Debug(
+                logger,
+                $"Created {totalHeadsCreated} custom heads from {headConfigDicts.Count} files"
+            );
         }
         catch (Exception ex)
         {
@@ -79,12 +78,6 @@ public class WTTCustomHeadService(
     {
         try
         {
-            if (_database == null)
-            {
-                logger.Error("Database not initialized");
-                return false;
-            }
-
             var customizationItem = GenerateHeadCustomizationItem(headId, customHeadConfig);
 
             AddHeadToTemplates(headId, customizationItem, customHeadConfig.AddHeadToPlayer);
@@ -101,7 +94,10 @@ public class WTTCustomHeadService(
         }
     }
 
-    private CustomizationItem GenerateHeadCustomizationItem(string headId, CustomHeadConfig customHeadConfig)
+    private CustomizationItem GenerateHeadCustomizationItem(
+        string headId,
+        CustomHeadConfig customHeadConfig
+    )
     {
         return new CustomizationItem
         {
@@ -119,76 +115,71 @@ public class WTTCustomHeadService(
                 BodyPart = "Head",
                 IntegratedArmorVest = false,
                 ProfileVersions = [],
-                Prefab = new Prefab
-                {
-                    Path = customHeadConfig.Path,
-                    Rcid = ""
-                },
-                WatchPrefab = new Prefab
-                {
-                    Path = "",
-                    Rcid = ""
-                },
-                WatchPosition = new XYZ
+                Prefab = new Prefab { Path = customHeadConfig.Path, Rcid = "" },
+                WatchPrefab = new Prefab { Path = "", Rcid = "" },
+                WatchPosition = new Vector3
                 {
                     X = 0,
                     Y = 0,
-                    Z = 0
+                    Z = 0,
                 },
-                WatchRotation = new XYZ
+                WatchRotation = new Vector3
                 {
                     X = 0,
                     Y = 0,
-                    Z = 0
+                    Z = 0,
                 },
                 Game = [],
                 Body = "",
                 Hands = "",
-                Feet = ""
+                Feet = "",
             },
-            Prototype = "5cc2e4d014c02e000d0115f8"
+            Prototype = "5cc2e4d014c02e000d0115f8",
         };
     }
 
     private void AddHeadToCustomizationStorage(string headId, bool addHeadToPlayer)
     {
-        if (_database == null) return;
+        if (!addHeadToPlayer)
+            return;
 
-        if (!addHeadToPlayer) return;
-
-        var customizationStorage = _database.Templates.CustomisationStorage;
+        var customizationStorage = templateTable.CustomisationStorage;
 
         var headStorage = new CustomisationStorage
         {
             Id = headId,
             Source = CustomisationSource.DEFAULT,
-            Type = CustomisationType.HEAD
+            Type = CustomisationType.HEAD,
         };
 
         customizationStorage.Add(headStorage);
     }
 
-    private void AddHeadToTemplates(string headId, CustomizationItem customizationItem, bool addHeadToPlayer)
+    private void AddHeadToTemplates(
+        string headId,
+        CustomizationItem customizationItem,
+        bool addHeadToPlayer
+    )
     {
-        if (_database == null) return;
+        templateTable.Customization[headId] = customizationItem;
 
-        var templates = _database.Templates;
-        templates.Customization[headId] = customizationItem;
-
-        if (addHeadToPlayer) templates.Character.Add(headId);
+        if (addHeadToPlayer)
+            templateTable.Character.Add(headId);
     }
 
     private void AddHeadLocales(string headId, CustomHeadConfig customHeadConfig)
     {
-        if (_database == null || customHeadConfig.Locales == null) return;
+        if (customHeadConfig.Locales == null)
+            return;
 
-        var globalLocales = _database.Locales.Global;
+        var globalLocales = localeTable.Global;
         var headLocaleKey = $"{headId} Name";
 
         foreach (var (localeCode, lazyLocale) in globalLocales)
             lazyLocale.AddTransformer(localeData =>
             {
-                if (localeData == null) return localeData;
+                if (localeData == null)
+                    return localeData;
 
                 if (customHeadConfig.Locales.TryGetValue(localeCode, out var localizedName))
                     localeData[headLocaleKey] = localizedName;

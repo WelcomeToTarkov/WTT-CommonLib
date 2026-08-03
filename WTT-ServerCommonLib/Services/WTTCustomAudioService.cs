@@ -1,7 +1,6 @@
-﻿using System.Reflection;
+﻿using SPTarkov.Common.Logger;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
-using SPTarkov.Server.Core.Utils.Logger;
+using SPTarkov.Server.Core.Helpers.Server;
 using WTTServerCommonLib.Helpers;
 
 namespace WTTServerCommonLib.Services;
@@ -10,7 +9,7 @@ namespace WTTServerCommonLib.Services;
 public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudioService> logger)
 {
     private readonly List<string> _audioBundleKeys = new();
-    private readonly Dictionary<string, FaceCardAudioEntry> _faceCardAudio = new(); 
+    private readonly Dictionary<string, FaceCardAudioEntry> _faceCardAudio = new();
     private readonly List<string> _radioAudio = new();
 
     /// <summary>
@@ -27,7 +26,7 @@ public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudio
     }
 
     /// <summary>
-    /// Adds a custom audio key associated with a specific face name. 
+    /// Adds a custom audio key associated with a specific face name.
     /// Optionally marks the audio to play on radio only when the face is selected.
     /// </summary>
     /// <param name="faceName">The unique identifier of the face card.</param>
@@ -35,7 +34,11 @@ public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudio
     /// <param name="playOnRadioIfFaceIsSelected">
     /// If true, the audio will be included in the radio pool only when the face is actively selected. Defaults to false.
     /// </param>
-    public void CreateFaceCardAudio(string faceName, string audioKey, bool playOnRadioIfFaceIsSelected = false)
+    public void CreateFaceCardAudio(
+        string faceName,
+        string audioKey,
+        bool playOnRadioIfFaceIsSelected = false
+    )
     {
         if (!_faceCardAudio.TryGetValue(faceName, out var entry))
         {
@@ -58,14 +61,13 @@ public class WTTCustomAudioService(ModHelper modHelper, SptLogger<WTTCustomAudio
         LogHelper.Debug(logger, $"[AudioService] Added radio audio: {audioKey}");
     }
 
-
     public AudioManifest GetAudioManifest()
     {
         return new AudioManifest
         {
             AudioBundles = _audioBundleKeys,
             FaceCardMappings = _faceCardAudio,
-            RadioAudio = _radioAudio
+            RadioAudio = _radioAudio,
         };
     }
 }
