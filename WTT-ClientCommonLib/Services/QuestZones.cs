@@ -127,6 +127,10 @@ internal class QuestZones
         newZone.transform.rotation = rotation;
 
         var trigger = newZone.AddComponent<PlaceItemTrigger>();
+        if (customQuestZone.TimeRestriction != null)
+        {
+            ZoneTimeRestrictionTracker.Set(trigger, customQuestZone.TimeRestriction);
+        }
         trigger.SetId(customQuestZone.ZoneId);
 
         newZone.layer = LayerMask.NameToLayer("Triggers");
@@ -162,6 +166,10 @@ internal class QuestZones
         newZone.transform.rotation = rotation;
 
         var trigger = newZone.AddComponent<ExperienceTrigger>();
+        if (customQuestZone.TimeRestriction != null)
+        {
+            ZoneTimeRestrictionTracker.Set(trigger, customQuestZone.TimeRestriction);
+        }
         trigger.SetId(customQuestZone.ZoneId);
 
         newZone.layer = LayerMask.NameToLayer("Triggers");
@@ -197,6 +205,10 @@ internal class QuestZones
         newZone.transform.rotation = rotation;
 
         var trigger = newZone.AddComponent<TriggerWithId>();
+        if (customQuestZone.TimeRestriction != null)
+        {
+            ZoneTimeRestrictionTracker.Set(trigger, customQuestZone.TimeRestriction);
+        }
         trigger.SetId(customQuestZone.ZoneId);
 
         newZone.layer = LayerMask.NameToLayer("Triggers");
@@ -241,6 +253,10 @@ internal class QuestZones
         newZone.transform.rotation = rotation;
 
         var trigger = newZone.AddComponent<SalvageItemTrigger>();
+        if (customQuestZone.TimeRestriction != null)
+        {
+            ZoneTimeRestrictionTracker.Set(trigger, customQuestZone.TimeRestriction);
+        }
         trigger.SetId(customQuestZone.ZoneId);
 
         var rewards =
@@ -294,6 +310,10 @@ internal class QuestZones
         newZone.transform.rotation = rotation;
 
         var flareTrigger = newZone.AddComponent<ZoneFlareTrigger>();
+        if (customQuestZone.TimeRestriction != null)
+        {
+            ZoneTimeRestrictionTracker.Set(flareTrigger, customQuestZone.TimeRestriction);
+        }
         flareTrigger.SetId(customQuestZone.ZoneId);
 
         newZone.AddComponent<MoveObjectsToAdditionalPhysSceneMarker>();

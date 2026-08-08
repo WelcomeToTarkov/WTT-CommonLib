@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using Comfort.Common;
 using EFT;
@@ -7,7 +6,6 @@ using EFT.Quests;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using WTTClientCommonLib.Components;
-using WTTClientCommonLib.Helpers;
 
 internal class ItemDroppedAtPlacePatch : ModulePatch
 {
