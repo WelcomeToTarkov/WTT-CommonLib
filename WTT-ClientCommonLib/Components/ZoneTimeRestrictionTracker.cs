@@ -31,11 +31,19 @@ public static class ZoneTimeRestrictionTracker
     ///     Remove a trigger's time restriction, if one is tracked.
     /// </summary>
     /// <param name="trigger">The trigger to remove the restriction from</param>
-    public static void Clear(TriggerWithId trigger)
+    public static void Remove(TriggerWithId trigger)
     {
         if (!trigger) { return; }
 
         Active.Remove(trigger, out _);
+    }
+
+    /// <summary>
+    ///     Clear the list of time restrictions.
+    /// </summary>
+    public static void Clear()
+    {
+        Active.Clear();
     }
 
     /// <summary>

@@ -354,6 +354,7 @@ internal class QuestZones
     {
         _usedGroupPositions.Clear();
         _salvageRewards.Clear();
+        ZoneTimeRestrictionTracker.Clear();
 
         foreach (var zone in zones)
         {

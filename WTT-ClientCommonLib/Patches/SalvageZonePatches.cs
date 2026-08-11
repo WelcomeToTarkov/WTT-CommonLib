@@ -38,7 +38,7 @@ namespace WTTClientCommonLib.Patches
         {
             // Clearing the zone time restriction when removing a trigger zone.
             if (ZoneTimeRestrictionTracker.Get(zone) != null) 
-                ZoneTimeRestrictionTracker.Clear(zone);
+                ZoneTimeRestrictionTracker.Remove(zone);
             
             if (zone is not SalvageItemTrigger salvage)
                 return;
