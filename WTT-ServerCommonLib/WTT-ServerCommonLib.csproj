@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
     <PackageId>WTT-ServerCommonLib</PackageId>
-    <Version>3.0.3</Version>
+    <Version>3.0.4</Version>
     <Authors>GrooveypenguinX</Authors>
     <IsPackable>true</IsPackable>
     <Description>WTT Common Library - Server components</Description>
