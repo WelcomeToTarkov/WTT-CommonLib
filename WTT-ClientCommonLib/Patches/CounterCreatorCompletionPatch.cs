@@ -19,11 +19,13 @@ namespace WTTClientCommonLib.Patches
             if (__instance == null || condition == null)
                 return;
 
-            if (condition is ConditionCounterCreator cc)
-            {
-                __result = IsCounterCreatorComplete(__instance, cc);
+            // Plain ConditionCounterCreator must keep the original evaluation
+            // (Quest.IsDone() short-circuit + recursive child-condition check).
+            // Replacing it with a counter-only check breaks vanilla quests such as
+            // "Operation Aquarius - Part 1" whose CounterCreator conditions never get
+            // a persisted TaskConditionCounter from the SPT server.
+            if (condition is ConditionCounterCreator)
                 return;
-            }
 
             if (condition is ConditionSalvage || condition is ConditionLeaveItemAtLocation)
             {
