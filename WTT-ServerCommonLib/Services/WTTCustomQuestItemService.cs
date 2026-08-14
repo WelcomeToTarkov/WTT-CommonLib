@@ -259,7 +259,7 @@ public class WTTCustomQuestItemService(
     private string GenerateInternalName(
     string modName,
     string newItemId,
-    CustomItemConfig config,
+    CustomQuestItemConfig config,
     TemplateItem itemClone
 )
     {
