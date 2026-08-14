@@ -1,6 +1,4 @@
-﻿using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-
-namespace WTTServerCommonLib.Models;
+﻿namespace WTTServerCommonLib.Models;
 
 public class CustomQuestZone
 {
@@ -17,8 +15,6 @@ public class CustomQuestZone
     public List<ZoneTransforms>? GroupPosition { get; set; }
 
     public SalvageConfig? Salvage { get; set; }
-    
-    public DaytimeCounter? TimeRestriction { get; set; }
 }
 
 public class SalvageConfig

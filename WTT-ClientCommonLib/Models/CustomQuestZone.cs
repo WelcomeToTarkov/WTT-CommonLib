@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using EFT.Quests;
 
 namespace WTTClientCommonLib.Models;
 
@@ -19,8 +18,6 @@ public class CustomQuestZone
     public List<ZoneTransforms>? GroupPosition { get; set; }
 
     public SalvageConfig? Salvage { get; set; }
-    
-    public ConditionTimeComparer? TimeRestriction { get; set; }
 }
 
 public class SalvageConfig
