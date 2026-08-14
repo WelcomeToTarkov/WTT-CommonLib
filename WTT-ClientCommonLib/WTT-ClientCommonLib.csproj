@@ -16,7 +16,6 @@
     <RootNamespace>WTTClientCommonLib</RootNamespace>
     <Platforms>AnyCPU</Platforms>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
