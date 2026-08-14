@@ -7,7 +7,6 @@ using Comfort.Common;
 using Diz.Utils;
 using EFT;
 using EFT.Communications;
-using EFT.Interactive;
 using EFT.InventoryLogic;
 using EFT.Quests;
 using EFT.UI;
@@ -39,16 +38,10 @@ namespace WTTClientCommonLib.Patches
             var owner = (GamePlayerOwner)__args[0];
             var interactive = __args[1];
 
-            var player = owner.Player;
-            if (interactive is TriggerWithId trigger && trigger.TryGetTimeRestrictions(out var restrictions))
-            {
-                var hour = player.GameWorld.GameDateTime.Calculate().Hour; 
-                return Enumerable.Range(restrictions!.from, restrictions.to).Contains(hour);;
-            }
-
             if (interactive is not SalvageItemTrigger salvageTrigger)
                 return true;
 
+            var player = owner.Player;
             var inventoryController = player.InventoryController as InventoryController;
             if (inventoryController == null)
             {
