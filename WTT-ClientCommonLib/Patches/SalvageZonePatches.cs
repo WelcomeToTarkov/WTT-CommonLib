@@ -36,6 +36,10 @@ namespace WTTClientCommonLib.Patches
         [PatchPostfix]
         public static void Postfix(Player __instance, TriggerWithId zone)
         {
+            // Clearing the zone time restriction when removing a trigger zone.
+            if (ZoneTimeRestrictionTracker.Get(zone) != null) 
+                ZoneTimeRestrictionTracker.Remove(zone);
+            
             if (zone is not SalvageItemTrigger salvage)
                 return;
 
@@ -61,7 +65,7 @@ namespace WTTClientCommonLib.Patches
             var player = __instance.Player;
             if (player == null)
                 return true;
-
+            
             if (
                 player.InteractableObject != null
                 || player.PlaceItemZone != null
@@ -73,7 +77,7 @@ namespace WTTClientCommonLib.Patches
             {
                 return true;
             }
-
+            
             var salvage = SalvageZoneTracker.Get(player);
             if (salvage == null)
                 return true;
