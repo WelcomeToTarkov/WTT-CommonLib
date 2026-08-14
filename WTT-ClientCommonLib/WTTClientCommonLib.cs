@@ -17,7 +17,7 @@ using WTTClientCommonLib.Services;
 namespace WTTClientCommonLib;
 
 [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
-[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "3.0.3")]
+[BepInPlugin("com.wtt.commonlib", "WTT-ClientCommonLib", "3.0.4")]
 public class WTTClientCommonLib : BaseUnityPlugin
 {
     private static CommandProcessor.CommandProcessor _commandProcessor;
