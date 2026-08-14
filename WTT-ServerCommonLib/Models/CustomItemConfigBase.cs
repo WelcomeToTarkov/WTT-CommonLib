@@ -8,6 +8,9 @@ public abstract class CustomItemConfigBase
     [JsonPropertyName("itemTplToClone")]
     public required string ItemTplToClone { get; set; }
 
+    [JsonPropertyName("newName")]
+    public string? NewName { get; set; }
+
     [JsonPropertyName("parentId")]
     public required string ParentId { get; set; }
 

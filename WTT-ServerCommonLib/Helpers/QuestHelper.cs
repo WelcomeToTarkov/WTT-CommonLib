@@ -165,6 +165,53 @@ public class QuestHelper(ISptLogger<QuestHelper> logger)
         }
     }
 
+    public void AddArmorToEquipmentInclusive(
+        Dictionary<MongoId, Quest> quests,
+        string questId,
+        string[] armorIds
+    )
+    {
+        if (
+            armorIds == null
+            || armorIds.Length == 0
+            || !quests.TryGetValue(questId, out var quest)
+            || quest.Conditions.AvailableForFinish == null
+        )
+        {
+            return;
+        }
+
+        foreach (var condition in quest.Conditions.AvailableForFinish)
+        {
+            if (condition is not
+                {
+                    ConditionType: "CounterCreator",
+                    Counter.Conditions: not null
+                })
+            {
+                continue;
+            }
+
+            foreach (var counterCondition in condition.Counter.Conditions)
+            {
+                if (counterCondition is not
+                    {
+                        ConditionType: "Equipment",
+                        EquipmentInclusive: not null
+                    })
+                {
+                    continue;
+                }
+
+                var newCombination = armorIds.ToList();
+                var combinations = counterCondition.EquipmentInclusive.ToList();
+                combinations.Add(newCombination);
+
+                counterCondition.EquipmentInclusive = combinations;
+            }
+        }
+    }
+
     public void AddWeaponsToFindOrHandoverCondition(
         Dictionary<MongoId, Quest> quests,
         string questId,

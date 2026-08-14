@@ -83,7 +83,22 @@ public class WTTCustomClothingService(
             logger.Error($"Error loading clothing configs: {ex.Message}");
         }
     }
+    private bool CustomizationIdExists(string id)
+    {
+        return templateTable.Customization.ContainsKey(id);
+    }
 
+    private bool EnsureCustomizationDoesNotExist(string id, string label, CustomClothingConfig config)
+    {
+        if (!CustomizationIdExists(id))
+            return true;
+
+        logger.Error(
+            $"Cannot add {label} '{id}' for outfit '{config.OutfitId}' because it already exists in templateTable.Customization."
+        );
+
+        return false;
+    }
     private bool ProcessClothingConfig(CustomClothingConfig config)
     {
         try
@@ -106,6 +121,15 @@ public class WTTCustomClothingService(
     {
         try
         {
+            if (!EnsureCustomizationDoesNotExist(config.TopId!, "top", config))
+                return false;
+
+            if (!EnsureCustomizationDoesNotExist(config.HandsId!, "hands", config))
+                return false;
+
+            if (!EnsureCustomizationDoesNotExist(config.SuiteId!, "suite", config))
+                return false;
+
             // Create top customization item
             var topItem = new CustomizationItem
             {
@@ -198,6 +222,11 @@ public class WTTCustomClothingService(
     {
         try
         {
+            if (!EnsureCustomizationDoesNotExist(config.BottomId!, "bottom", config))
+                return false;
+
+            if (!EnsureCustomizationDoesNotExist(config.SuiteId!, "suite", config))
+                return false;
             // Create bottom customization item
             var bottomItem = new CustomizationItem
             {
