@@ -24,7 +24,6 @@ namespace WTTClientCommonLib.Patches
 
             if (condition is ConditionCounterCreator cc)
             {
-                __result = IsCounterCreatorComplete(__instance, cc);
                 return;
             }
 
