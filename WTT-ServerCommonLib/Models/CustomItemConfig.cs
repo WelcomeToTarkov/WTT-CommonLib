@@ -24,6 +24,10 @@ public class CustomItemConfig : CustomItemConfigBase
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? AddToStaticLootContainers { get; set; }
     
+    [JsonPropertyName("inheritParentData")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? InheritParentData { get; set; }
+    
     [JsonPropertyName("inheritExtensionData")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? InheritExtensionData { get; set; }

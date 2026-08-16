@@ -258,6 +258,9 @@ public class WTTCustomItemServiceExtended(
 
     private void ProcessAdditionalProperties(string newItemId, CustomItemConfig config)
     {
+        if (config.InheritParentData == true)
+            itemRegistrationHelper.AddParentData(newItemId);
+        
         if (config.InheritExtensionData == true)
             itemRegistrationHelper.AddParentExtensionData(newItemId);
         

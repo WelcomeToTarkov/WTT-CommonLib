@@ -197,5 +197,30 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
                         .Filter.Add(newItemId);
             }
         }
+
+        public void AddParentData(string newItemId)
+        {
+            if (!templateTable.Items.TryGetValue(newItemId, out var item)
+                || !templateTable.Items.TryGetValue(item.Parent, out var parent)
+                || item.Properties == null
+                || parent.Properties == null) { return; }
+
+            var type = typeof(TemplateItemProperties);
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var property in properties)
+            {
+                if (!property.CanRead || !property.CanWrite) { continue; }
+
+                if (property.Name == "ExtensionData") { continue; }
+                    
+                var target = property.GetValue(item.Properties);
+
+                if (target != null) { continue; }
+                    
+                var source = property.GetValue(parent.Properties);
+                    
+                if (source != null) { property.SetValue(item.Properties, source); }
+            }
+        }
     }
 }
