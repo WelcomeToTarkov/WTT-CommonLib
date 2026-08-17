@@ -210,15 +210,12 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
             foreach (var property in properties)
             {
                 if (!property.CanRead || !property.CanWrite) { continue; }
-
                 if (property.Name == "ExtensionData") { continue; }
                     
                 var target = property.GetValue(item.Properties);
-
                 if (target != null) { continue; }
                     
                 var source = property.GetValue(parent.Properties);
-                    
                 if (source != null) { property.SetValue(item.Properties, source); }
             }
         }
