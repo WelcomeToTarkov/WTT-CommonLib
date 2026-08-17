@@ -350,7 +350,13 @@ await wttCommon.CustomItemServiceExtended.CreateCustomItems(assembly,
           ]
         }
       }
-    }
+    },
+    
+    // Should missing parent data be copied to its properties?
+    "inheritParentData": true,
+    
+    // Should missing extension data be copied to its properties?
+    "inheritExtensionData": true,
   }
 }
 ```
