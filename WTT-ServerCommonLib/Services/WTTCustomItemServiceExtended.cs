@@ -4,9 +4,13 @@ using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Server;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Enums;
+using SPTarkov.Server.Core.Models.Spt.Launcher;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils.Cloners;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using WTTServerCommonLib.Constants;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
@@ -222,10 +226,18 @@ public class WTTCustomItemServiceExtended(
         itemClone!.Id = newItemId;
         itemClone.Parent = NameHelper.ResolveId(config.ParentId, ItemMaps.ItemBaseClassMap);
 
+        var modName = assembly.GetName().Name ?? "unknown_mod";
+        string newName = GenerateInternalName(modName, newItemId, config, itemClone);
+
         itemRegistrationHelper.UpdateBaseItemPropertiesWithOverrides(
             config.OverrideProperties,
             itemClone
         );
+
+        itemClone.Name = newName;
+        itemClone.Properties.Name = newName;
+        itemClone.Properties.ShortName = newName;
+        itemClone.Properties.Description = newName;
 
         itemRegistrationHelper.AddToItemsDb(newItemId, itemClone);
 
@@ -255,6 +267,38 @@ public class WTTCustomItemServiceExtended(
             itemRegistrationHelper.AddToWeaponShelf(newItemId);
         }
     }
+    private string GenerateInternalName(
+        string modName,
+        string newItemId,
+        CustomItemConfig config,
+        TemplateItem itemClone
+    )
+    {
+        if (!string.IsNullOrWhiteSpace(config.NewName))
+            return $"[{modName}]_({config.NewName})";
+
+        if (
+            !string.IsNullOrWhiteSpace(config.OverrideProperties?.Name)
+            && itemClone.Properties.Name != config.OverrideProperties.Name
+        )
+        {
+            return $"[{modName}]_({config.OverrideProperties.Name})";
+        }
+
+        var itemName = config.Locales?["en"]?.Name;
+
+        if (string.IsNullOrWhiteSpace(itemName))
+            itemName = config.Locales?.FirstOrDefault().Value?.Name;
+
+        if (string.IsNullOrWhiteSpace(itemName))
+            itemName = itemClone.Properties.Name;
+
+        if (string.IsNullOrWhiteSpace(itemName))
+            itemName = newItemId;
+
+        return $"[{modName}]_({itemName})";
+    }
+
 
     private void ProcessAdditionalProperties(string newItemId, CustomItemConfig config)
     {
