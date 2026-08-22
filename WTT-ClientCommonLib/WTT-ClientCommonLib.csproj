@@ -1,25 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>WTT-ClientCommonLib</AssemblyName>
-    <Description>A common library for adding slot images, rig layouts, and voices to the client</Description>
-    <PackageId>WTT-ClientCommonLib</PackageId>
-    <AssemblyVersion>$(Version)</AssemblyVersion>
-    <FileVersion>$(Version)</FileVersion>
-    <Version>3.0.4</Version>
-    <Authors>GrooveypenguinX</Authors>
-    <Description>WTT Common Library - Client components</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
-    <Configurations>Debug;Release;UNITY_EDITOR;Publish</Configurations>
-    <RootNamespace>WTTClientCommonLib</RootNamespace>
-    <Platforms>AnyCPU</Platforms>
+	<PluginGuid>com.wtt.commonlib</PluginGuid>
+	<PluginName>WTT-ClientCommonLib</PluginName>
+	<Version>3.0.5</Version>
+	<Authors>GrooveypenguinX</Authors>
+	<RootNamespace>WTTClientCommonLib</RootNamespace>
+	<Description>A common library for adding slot images, rig layouts, and voices to the client</Description>
+	<PackageId>$(PluginName)</PackageId>
+	<AssemblyName>$(PluginName)</AssemblyName>
+	<AssemblyVersion>$(Version)</AssemblyVersion>
+	<FileVersion>$(Version)</FileVersion>
+	<Description>WTT Common Library - Client components</Description>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<LangVersion>latest</LangVersion>
+	<Configurations>Debug;Release;UNITY_EDITOR;Publish</Configurations>
+	<Platforms>AnyCPU</Platforms>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <Target Name="GeneratePluginConstants" BeforeTargets="CoreCompile">
+	    <ItemGroup>
+		    <WttPluginSource Include="namespace WTTClientCommonLib" />
+		    <WttPluginSource Include="{" />
+		    <WttPluginSource Include="internal static class PluginConstants" />
+		    <WttPluginSource Include="{" />
+		    <WttPluginSource Include="    public const string Guid = &quot;$(PluginGuid)&quot;%3B" />
+		    <WttPluginSource Include="    public const string Name = &quot;$(PluginName)&quot;%3B" />
+		    <WttPluginSource Include="    public const string Version = &quot;$(Version)&quot;%3B" />
+		    <WttPluginSource Include="}" />
+		    <WttPluginSource Include="}" />
+	    </ItemGroup>
+
+	    <WriteLinesToFile File="$(IntermediateOutputPath)PluginConstants.g.cs" Lines="@(WttPluginSource)" Overwrite="true" />
+
+	    <ItemGroup>
+		    <Compile Include="$(IntermediateOutputPath)PluginConstants.g.cs" />
+	    </ItemGroup>
+    </Target>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <DocumentationFile>bin\Debug\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
 
@@ -36,12 +58,13 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="BepInEx.PluginInfoProps" Version="2.0.0" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="" />
-    <None
-      Include="..\..\..\BepInEx\patchers\FixPluginTypesSerialization.dll"
-      Link="Patchers\FixPluginTypesSerialization.dll"
-    />
+    <None Include="..\..\..\BepInEx\patchers\FixPluginTypesSerialization.dll" Link="Patchers\FixPluginTypesSerialization.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />
