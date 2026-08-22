@@ -1,3 +1,5 @@
+using System.Reflection;
+using JetBrains.Annotations;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Items;
@@ -67,6 +69,7 @@ public class WTTCustomItemServiceExtended(
     /// </summary>
     /// <param name="assembly">The calling assembly, used to determine the mod folder location</param>
     /// <param name="relativePath">(OPTIONAL) Custom path relative to the mod folder</param>
+    [UsedImplicitly]
     public async Task CreateCustomItems(Assembly assembly, string? relativePath = null)
     {
         var file = Path.Combine(
@@ -220,7 +223,7 @@ public class WTTCustomItemServiceExtended(
             );
 
         var itemClone = cloner.Clone(itemToClone);
-        itemClone.Id = newItemId;
+        itemClone!.Id = newItemId;
         itemClone.Parent = NameHelper.ResolveId(config.ParentId, ItemMaps.ItemBaseClassMap);
 
         var modName = assembly.GetName().Name ?? "unknown_mod";
@@ -299,6 +302,12 @@ public class WTTCustomItemServiceExtended(
 
     private void ProcessAdditionalProperties(string newItemId, CustomItemConfig config)
     {
+        if (config.InheritParentData == true)
+            itemRegistrationHelper.AddParentData(newItemId);
+        
+        if (config.InheritExtensionData == true)
+            itemRegistrationHelper.AddParentExtensionData(newItemId);
+        
         if (config is { AddToTraders: true, Traders: not null })
             traderItemHelper.AddItem(config, newItemId);
 

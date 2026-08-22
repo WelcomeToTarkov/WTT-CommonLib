@@ -83,6 +83,59 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
                 }
             );
         }
+        
+        // TODO: Use return value in validation errors logic
+        // ReSharper disable once UnusedMethodReturnValue.Global
+        public bool AddParentExtensionData(string newItemId)
+        {
+            if (!templateTable.Items.TryGetValue(newItemId, out var item))
+            {
+                logger.Warning($"Unable to add extension data for {newItemId}: not found in template table.");
+                return false;
+            }
+
+            if (!templateTable.Items.TryGetValue(item.Parent, out var parent))
+            {
+                logger.Warning($"Unable to find parent of {newItemId} in template table.");
+                return false;
+            }
+            
+            var itemProps = item.Properties;
+            if (itemProps is null)
+            {
+                logger.Warning($"OverrideProperties of {item.Id} is null.");
+                return false;
+            }
+            
+            var parentProps = parent.Properties;
+            if (parentProps is null)
+            {
+                logger.Warning($"OverrideProperties of {parent.Id} is null.");
+                return false;
+            }
+            
+            var parentPropsExtensionData = parentProps.ExtensionData;
+            if (parentPropsExtensionData is null)
+            {
+                logger.Warning($"Extension data of {parent.Id}'s properties is null.");
+                return false;
+            }
+
+            var itemPropsExtensionData = itemProps.ExtensionData;
+            if (itemPropsExtensionData is null)
+            {
+                item.Properties!.ExtensionData = parentPropsExtensionData;
+                return true;
+            }
+
+            foreach (var property in itemPropsExtensionData)
+            {
+                if (property.Key == null || property.Value == null) { continue; }
+                item.Properties!.ExtensionData?[property.Key] = property.Value;
+            }
+
+            return true;
+        }
 
         public void AddToLocaleDbs(
             Dictionary<string, LocaleDetails> localeDetails,
@@ -142,6 +195,28 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers
                     wall.Value.Properties.Grids.First()
                         .Properties.Filters.First()
                         .Filter.Add(newItemId);
+            }
+        }
+
+        public void AddParentData(string newItemId)
+        {
+            if (!templateTable.Items.TryGetValue(newItemId, out var item)
+                || !templateTable.Items.TryGetValue(item.Parent, out var parent)
+                || item.Properties == null
+                || parent.Properties == null) { return; }
+
+            var type = typeof(TemplateItemProperties);
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var property in properties)
+            {
+                if (!property.CanRead || !property.CanWrite) { continue; }
+                if (property.Name == "ExtensionData") { continue; }
+                    
+                var target = property.GetValue(item.Properties);
+                if (target != null) { continue; }
+                    
+                var source = property.GetValue(parent.Properties);
+                if (source != null) { property.SetValue(item.Properties, source); }
             }
         }
     }
