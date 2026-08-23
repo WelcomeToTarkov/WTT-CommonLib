@@ -207,69 +207,40 @@ public static class ImageManager
 
     public static async Task<bool> ShouldAcquire(ImageItem image, ImageType type)
     {
-        var fikaInstalled = WTTClientCommonLib.WTTClientCommonLib.FikaInstalled;
+        var filepath = WTTClientCommonLib.WTTClientCommonLib.FikaInstalled
+            ? Path.Combine(GetCachePath(type), image.FileName)
+            : GetImageFilePath(image, type);
 
-        // If Fika is installed, always download (headless client can't access local mod files)
-        if (fikaInstalled)
+        var valid = await IsCacheValid(filepath, image);
+
+        if (valid)
         {
-            LogHelper.LogDebug(
-                $"[ShouldAcquire] Fika detected, forcing download for {image.FileName}"
-            );
-
-            var cachePath = GetCachePath(type);
-            var cacheFilepath = cachePath + image.FileName;
-
-            if (VFS.Exists(cacheFilepath))
-            {
-                var data = await VFS.ReadFileAsync(cacheFilepath);
-                var crc = Crc32.HashToUInt32(data);
-
-                if (crc == image.Crc)
-                {
-                    LogHelper.LogDebug(
-                        $"[ShouldAcquire] CACHE: File up-to-date in cache: {image.FileName}"
-                    );
-                    return false;
-                }
-
-                LogHelper.LogDebug(
-                    $"[ShouldAcquire] CACHE: File invalid, re-acquiring: {image.FileName}"
-                );
-                return true;
-            }
-
-            LogHelper.LogDebug($"[ShouldAcquire] CACHE: File missing, acquiring: {image.FileName}");
-            return true;
+            LogHelper.LogDebug($"[ShouldAcquire] File is current: {image.FileName}");
+            return false;
         }
 
-        var filepath = GetImageFilePath(image, type);
-
-        if (VFS.Exists(filepath))
-        {
-            if (RequestHandler.IsLocal)
-            {
-                LogHelper.LogDebug($"[ShouldAcquire] MOD: Loading locally {image.FileName}");
-                return false;
-            }
-            var data = await VFS.ReadFileAsync(filepath);
-            var crc = Crc32.HashToUInt32(data);
-
-            if (crc == image.Crc)
-            {
-                LogHelper.LogDebug($"[ShouldAcquire] CACHE: Loading locally {image.FileName}");
-                return false;
-            }
-
-            LogHelper.LogDebug(
-                $"[ShouldAcquire] CACHE: Image is invalid, (re-)acquiring {image.FileName}"
-            );
-            return true;
-        }
-
-        LogHelper.LogDebug($"[ShouldAcquire] CACHE: Image is missing, acquiring {image.FileName}");
+        LogHelper.LogDebug($"[ShouldAcquire] Acquiring: {image.FileName}");
         return true;
     }
+    private static async Task<bool> IsCacheValid(string filepath, ImageItem image)
+    {
+        if (!VFS.Exists(filepath))
+            return false;
 
+        var data = await VFS.ReadFileAsync(filepath);
+        var crc = Crc32.CRC32BytesPHP(data);
+
+        if (crc != image.Crc)
+        {
+            LogHelper.LogDebug(
+                $"[ImageManager] CRC mismatch for {image.FileName}: " +
+                $"expected {image.Crc}, got {crc}"
+            );
+            return false;
+        }
+
+        return true;
+    }
     private static async Task<Texture2D?> LoadImageInternal(
         string imageName,
         ImageItem image,
