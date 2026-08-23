@@ -36,8 +36,15 @@ namespace WTTClientCommonLib.Patches
         [PatchPostfix]
         public static void Postfix(Player __instance, TriggerWithId zone)
         {
+            if (ZoneTimeRestrictionTracker.Get(zone) != null)
+            {
+                ZoneTimeRestrictionTracker.Remove(zone);
+            }
+            
             if (zone is not SalvageItemTrigger salvage)
+            {
                 return;
+            }
 
             SalvageZoneTracker.Clear(__instance, salvage);
 
