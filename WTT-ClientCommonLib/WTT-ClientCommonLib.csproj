@@ -2,10 +2,10 @@
   <PropertyGroup>
 	<PluginGuid>com.wtt.commonlib</PluginGuid>
 	<PluginName>WTT-ClientCommonLib</PluginName>
-	<Version>3.0.5</Version>
+	<Version>3.0.6</Version>
 	<Authors>GrooveypenguinX</Authors>
 	<RootNamespace>WTTClientCommonLib</RootNamespace>
-	<Description>A common library for adding slot images, rig layouts, and voices to the client</Description>
+	<Description>Client portion of the commonlib project</Description>
 	<PackageId>$(PluginName)</PackageId>
 	<AssemblyName>$(PluginName)</AssemblyName>
 	<AssemblyVersion>$(Version)</AssemblyVersion>
@@ -111,9 +111,6 @@
     </Reference>
     <Reference Include="spt-common">
       <HintPath>..\..\..\BepInEx\plugins\spt\spt-common.dll</HintPath>
-    </Reference>
-    <Reference Include="spt-custom">
-      <HintPath>..\..\..\BepInEx\plugins\spt\spt-custom.dll</HintPath>
     </Reference>
     <Reference Include="spt-custom">
       <HintPath>..\..\..\BepInEx\plugins\spt\spt-custom.dll</HintPath>

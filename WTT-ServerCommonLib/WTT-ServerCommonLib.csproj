@@ -1,12 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+	<ModName>WTT-ServerCommonLib</ModName>
+	<ModGuid>com.wtt.commonlib</ModGuid>
+	<Version>3.0.6</Version>
+	<ModAuthor>GrooveypenguinX</ModAuthor>
+	<SptushonkaVersion>4.1.3</SptushonkaVersion>
+	<TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
-    <PackageId>WTT-ServerCommonLib</PackageId>
-    <Version>3.0.5</Version>
-    <Authors>GrooveypenguinX</Authors>
+	<PackageId>$(ModName)</PackageId>
+	<AssemblyName>$(ModName)</AssemblyName>
+	<SptVersion>~$(SptushonkaVersion)</SptVersion>
+	<Authors>$(ModAuthor)</Authors>
+	<License>MIT</License>
     <IsPackable>true</IsPackable>
     <Description>WTT Common Library - Server components</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -17,6 +24,32 @@
     <Configurations>Debug;Release;Publish</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
+
+<Target Name="GenerateModConstants" BeforeTargets="CoreCompile">
+	<ItemGroup>
+		<ModSource Include="namespace $(RootNamespace);" />
+		<ModSource Include="{" />
+		<ModSource Include="internal static class ModConstants" />
+		<ModSource Include="{" />
+		<ModSource Include="    public const string Guid = &quot;$(ModGuid)&quot;%3B" />
+		<ModSource Include="    public const string Name = &quot;$(ModName)&quot;%3B" />
+		<ModSource Include="    public const string Author = &quot;$(ModAuthor)&quot;%3B" />
+		<ModSource Include="    public const string Version = &quot;$(Version)&quot;%3B" />
+		<ModSource Include="    public const string SptVersion = &quot;$(SptVersion)&quot;%3B" />
+		<ModSource Include="    public const string License = &quot;$(License)&quot;%3B" />
+		<ModSource Include="}" />
+		<ModSource Include="}" />
+	</ItemGroup>
+
+	<WriteLinesToFile
+		File="$(IntermediateOutputPath)ModConstants.g.cs"
+		Lines="@(ModSource)"
+		Overwrite="true" />
+
+	<ItemGroup>
+		<Compile Include="$(IntermediateOutputPath)ModConstants.g.cs" />
+	</ItemGroup>
+</Target>
 
   <ItemGroup>
     <None Include="NuGetMeta\WTT-ServerCommonLib.props" Pack="true" PackagePath="build\WTT-ServerCommonLib.props" />
@@ -48,8 +81,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SPTarkov.Reflection" Version="4.1.0" />
-    <PackageReference Include="SPTarkov.Server.Core" Version="4.1.0" />
+    <PackageReference Include="SPTushonka.Common" Version="$(SptushonkaVersion)" />
+    <PackageReference Include="SPTushonka.DI" Version="$(SptushonkaVersion)" />
+    <PackageReference Include="SPTushonka.Reflection" Version="$(SptushonkaVersion)" />
+    <PackageReference Include="SPTushonka.Server.Core" Version="$(SptushonkaVersion)" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

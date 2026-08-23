@@ -13,18 +13,22 @@ namespace WTTServerCommonLib;
 
 public record ModMetadata : IModMetadata
 {
-    public string ModGuid { get; init; } = "com.wtt.commonlib";
-    public string Name { get; init; } = "WTT-ServerCommonLib";
-    public string Author { get; init; } = "GrooveypenguinX";
+    public string ModGuid { get; init; } = ModConstants.Guid;
+    public string Name { get; init; } = ModConstants.Name;
+    public string Author { get; init; } = ModConstants.Author;
     public List<string>? Contributors { get; init; }
+
     public Version Version { get; init; } =
-        new(typeof(ModMetadata).Assembly.GetName().Version?.ToString(3));
-    public Range SptVersion { get; init; } = new("~4.1.0");
+        new(ModConstants.Version);
+
+    public Range SptVersion { get; init; } =
+        new(ModConstants.SptVersion);
+
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, Range>? ModDependencies { get; init; }
     public string? Url { get; init; }
-    public string License { get; init; } = "WTT";
-    public bool HasPrepatcher { get; init; } = false;
+    public string License { get; init; } = new(ModConstants.License);
+    public bool HasPrepatcher { get; init; }
 }
 
 [Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.Preload)]

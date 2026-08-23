@@ -5,7 +5,7 @@
         <Description>A common library for adding slot images, rig layouts, and voices to the client</Description>
         <AssemblyVersion>$(Version)</AssemblyVersion>
         <FileVersion>$(Version)</FileVersion>
-        <Version>3.0.5</Version>
+        <Version>3.0.6</Version>
         <Authors>GrooveypenguinX</Authors>
         <Description>WTT Common Library - Fika components</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -35,15 +35,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="../README.md" Pack="true" PackagePath=""/>
+        <None Include="../README.md" Pack="true" PackagePath="" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Remove="build\**"/>
-        <Compile Remove="Interfaces\**"/>
-        <EmbeddedResource Remove="build\**"/>
-        <EmbeddedResource Remove="Interfaces\**"/>
-        <None Remove="build\**"/>
-        <None Remove="Interfaces\**"/>
+        <Compile Remove="build\**" />
+        <Compile Remove="Interfaces\**" />
+        <EmbeddedResource Remove="build\**" />
+        <EmbeddedResource Remove="Interfaces\**" />
+        <None Remove="build\**" />
+        <None Remove="Interfaces\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\WTT-ClientCommonLib\WTT-ClientCommonLib.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -125,9 +128,6 @@
         <Reference Include="UnityEngine.UnityWebRequestWWWModule">
             <HintPath>..\..\..\EscapeFromTarkov_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
         </Reference>
-        <Reference Include="WTT-ClientCommonLib">
-          <HintPath>..\Build\BepInEx\plugins\WTT-ClientCommonLib\WTT-ClientCommonLib.dll</HintPath>
-        </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -143,10 +143,6 @@
             <Generator>SettingsSingleFileGenerator</Generator>
             <LastGenOutput>Settings.Designer.cs</LastGenOutput>
         </None>
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\WTT-ClientCommonLib\WTT-ClientCommonLib.csproj" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
