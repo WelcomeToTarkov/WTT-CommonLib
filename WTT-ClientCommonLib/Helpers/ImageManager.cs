@@ -228,7 +228,7 @@ public static class ImageManager
             return false;
 
         var data = await VFS.ReadFileAsync(filepath);
-        var crc = Crc32.CRC32BytesPHP(data);
+        var crc = global::Crc32.CRC32BytesPHP(data);
 
         if (crc != image.Crc)
         {
