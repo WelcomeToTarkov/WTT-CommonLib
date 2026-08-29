@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Comfort.Common;
+﻿using Comfort.Common;
 using EFT;
 using EFT.Ballistics;
 using EFT.InventoryLogic;
