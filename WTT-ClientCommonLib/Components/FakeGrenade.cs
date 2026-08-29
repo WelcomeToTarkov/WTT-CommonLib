@@ -2,11 +2,9 @@
 using JetBrains.Annotations;
 using UnityEngine;
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
 namespace WTTClientCommonLib.Components;
 
-[method: UsedImplicitly]
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public class FakeGrenade(
     float fuzeArmTimeSec,
     float minDist,
